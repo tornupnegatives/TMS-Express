@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+# Cmake
+cmake-build-debug/
+build/
+
+# macOS
+.DS_Store
+
+# Testing binaries (for now...)
+test/
