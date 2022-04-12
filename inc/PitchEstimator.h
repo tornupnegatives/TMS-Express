@@ -7,12 +7,7 @@
 
 class PitchEstimator {
 public:
-    PitchEstimator(int sampleRate);
-    int estimatePeriod(float *segment, int size);
-
-private:
-    int sampleRate;
-    float *autocorrelation(float *samples, int size, int lag);
+    int estimatePeriod(float *xcorr, int size);
 };
 
 #endif //TMS_EXPRESS_PITCHESTIMATOR_H
