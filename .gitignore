@@ -40,3 +40,6 @@ build/
 
 # Testing binaries (for now...)
 test/
+
+# IDEs
+.idea/

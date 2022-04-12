@@ -3,15 +3,6 @@ project(TMS-Express)
 set(CMAKE_CXX_STANDARD 14)
 
 # Set debug flags
-# https://stackoverflow.com/a/58784558/15709321
-if (CMAKE_BUILD_TYPE STREQUAL "")
-    # Build type is not set eg. command was "cmake .."
-    message(STATUS "  Diag: Build type was unspecified, set to Debug")
-    set(CMAKE_BUILD_TYPE Debug)
-else ()
-    message(STATUS "  Diag: Build type specified as '${CMAKE_BUILD_TYPE}'")
-endif ()
-
 if (${CMAKE_BUILD_TYPE} STREQUAL Debug)
     set_directory_properties(PROPERTIES COMPILE_DEFINITIONS "_DEBUG")
 else ()
@@ -29,7 +20,8 @@ add_executable(${PROJECT_NAME}
         src/main.cpp
         src/AudioBuffer.cpp
         src/PitchEstimator.cpp
-        inc/debug.h)
+        src/Autocorrelator.cpp
+        src/CoefficientSolver.cpp)
 
 target_link_libraries(${PROJECT_NAME}
         sndfile
