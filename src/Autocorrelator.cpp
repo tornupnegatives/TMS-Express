@@ -24,9 +24,13 @@ float *Autocorrelator::autocorrelation(float *segment, bool normalize) {
         }
 
         xcorr[i] = sum;
+    }
 
-        if (normalize)
-            xcorr[i] /= xcorr[0];
+    if (normalize) {
+        float scale = xcorr[0];
+        for (int i = 0; i < size; i++) {
+            xcorr[i] /= scale;
+        }
     }
 
     return  xcorr;
