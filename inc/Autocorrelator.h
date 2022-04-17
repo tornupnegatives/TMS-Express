@@ -7,16 +7,10 @@
 
 class Autocorrelator {
 public:
-    Autocorrelator();
-    ~Autocorrelator();
-
-    void autocorrelation(float *samples, int size);
-    float *result(int *size);
-    float *normalizedResult(int *size);
+    Autocorrelator(int samplesPerSegment);
+    float *autocorrelation(float *segment, bool normalize = true);
 
 private:
-    float *xcorr;
-    float *normalizedXcorr;
     int size;
 };
 

@@ -9,11 +9,14 @@
 
 class AudioBuffer {
 public:
-    int numSegments;
-
     AudioBuffer(const char *path, int targetSampleRate, float windowSize);
     ~AudioBuffer();
-    float *segment(int i, int *size);
+
+    float *getSegment(int i, int *size);
+    float *getSamples(int *size);
+    int getSampleRate();
+    int getNumSegments();
+    int getSamplesPerSegment();
 
 private:
     int size;
@@ -21,15 +24,12 @@ private:
     int channels;
     int sampleRate;
     int samplesPerSegment;
+    int numSegments;
 
     int frames();
     void mixdown();
     void resample(int targetSampleRate);
     void padFinalSegment();
-
-    // TODO: Implement AudioBufferPreProcessor
-    // preEmphasize(alpha)
-    // filter(cutoff)
 };
 
 #endif //TMS_EXPRESS_AUDIOBUFFER_H
