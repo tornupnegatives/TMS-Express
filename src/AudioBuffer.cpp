@@ -7,14 +7,14 @@
 #include <samplerate.h>
 #include <sndfile.hh>
 
-// Initialize an AudioBuffer from a file at the given path, resamples it to the
-// target sample rate, and segments it into n windows
+// Initialize an AudioBuffer from a file
+//
+// Also mixes to mono, downsamples to the
+// target sample rate, and zero-pads for
+// segmentation
 AudioBuffer::AudioBuffer(const char *path, int targetSampleRate, float windowSize) {
     // Import audio file
     SndfileHandle file = SndfileHandle(path);
-    DEBUG("File:\t\t\t%s\n", path);
-    DEBUG("Sample rate:\t%d\n", file.samplerate());
-    DEBUG("Channels:\t\t%d\n", file.channels());
 
     // Gather metadata
     size = (int) file.frames() * file.channels();
@@ -24,29 +24,27 @@ AudioBuffer::AudioBuffer(const char *path, int targetSampleRate, float windowSiz
     // Read samples
     samples = (float *) malloc(sizeof(float) * size);
     sf_count_t readSamples = file.read(samples, size);
-    DEBUG("Read %lld samples\n", readSamples);
 
     // Mixdown & resample
     mixdown();
-    DEBUG("Mixed to %d samples\n", size);
     resample(targetSampleRate);
-    DEBUG("Resampled to %d Hz (%d samples)\n", sampleRate, size);
 
     // Calculate number of segments
     samplesPerSegment = (int) (windowSize * 1e-3 * sampleRate);
     numSegments = size / samplesPerSegment;
-    DEBUG("Slicing into %d segments (%d samples per segment)\n", numSegments, samplesPerSegment);
 
     // Pad final segment
     padFinalSegment();
-    DEBUG("After padding: %d segments (%d samples)\n", numSegments, size);
 }
 
 AudioBuffer::~AudioBuffer() {
-    free(samples);
+    if (samples != nullptr) {
+        free(samples);
+    }
 }
 
-float *AudioBuffer::segment(int i, int *size) {
+// Return a segment of audio for analysis
+float *AudioBuffer::getSegment(int i, int *size) {
     if (i < numSegments) {
         *size = samplesPerSegment;
         return samples + (samplesPerSegment * i);
@@ -54,6 +52,29 @@ float *AudioBuffer::segment(int i, int *size) {
         *size = 0;
         return nullptr;
     }
+}
+
+// Return the entire array of audio samples
+float *AudioBuffer::getSamples(int *size) {
+    if (samples != nullptr) {
+        *size = AudioBuffer::size;
+        return samples;
+    } else {
+        *size = 0;
+        return nullptr;
+    }
+}
+
+int AudioBuffer::getSampleRate() {
+    return sampleRate;
+}
+
+int AudioBuffer::getNumSegments() {
+    return numSegments;
+}
+
+int AudioBuffer::getSamplesPerSegment() {
+    return samplesPerSegment;
 }
 
 int AudioBuffer::frames() {
