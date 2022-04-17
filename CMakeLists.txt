@@ -21,7 +21,9 @@ add_executable(${PROJECT_NAME}
         src/AudioBuffer.cpp
         src/PitchEstimator.cpp
         src/Autocorrelator.cpp
-        src/CoefficientSolver.cpp)
+        src/CoefficientSolver.cpp
+        src/AudioPreprocessor.cpp
+        src/LowerVocalTractAnalyzer.cpp)
 
 target_link_libraries(${PROJECT_NAME}
         sndfile
