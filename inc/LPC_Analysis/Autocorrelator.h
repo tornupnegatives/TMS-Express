@@ -7,11 +7,11 @@
 
 class Autocorrelator {
 public:
-    Autocorrelator(int samplesPerSegment);
+    explicit Autocorrelator(int samplesPerSegment);
     float *autocorrelation(float *segment, bool normalize = true);
 
 private:
-    int size;
+    int samplesPerSegment;
 };
 
 #endif //TMS_EXPRESS_AUTOCORRELATOR_H

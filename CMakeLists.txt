@@ -18,11 +18,16 @@ endif(UNIX)
 include_directories(inc/)
 add_executable(${PROJECT_NAME}
         src/main.cpp
-        src/AudioBuffer.cpp
-        src/Autocorrelator.cpp
-        src/AudioPreprocessor.cpp
-        src/LowerVocalTractAnalyzer.cpp
-        src/UpperVocalTractAnalyzer.cpp)
+
+        src/Audio/AudioBuffer.cpp
+        src/Audio/AudioPreprocessor.cpp
+
+        src/LPC_Analysis/Autocorrelator.cpp
+        src/LPC_Analysis/LowerVocalTractAnalyzer.cpp
+        src/LPC_Analysis/UpperVocalTractAnalyzer.cpp
+
+        src/Frame_Encoder/TmsFrame.cpp
+        src/Frame_Encoder/Frame.cpp)
 
 target_link_libraries(${PROJECT_NAME}
         sndfile

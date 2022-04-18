@@ -2,7 +2,7 @@
 // Created by Joseph Bellahcen on 4/14/22.
 //
 
-#include "AudioPreprocessor.h"
+#include "Audio/AudioPreprocessor.h"
 #include <cmath>
 
 AudioPreprocessor::AudioPreprocessor(AudioBuffer *audioBuffer) {
@@ -80,9 +80,9 @@ void AudioPreprocessor::highpassFilter(float cutoff) {
 // See AudioPreprocessor::hammingWindow(float *segment, int size)
 void AudioPreprocessor::hammingWindow() {
     for (int i = 0; i < buffer->getNumSegments(); i++) {
-        int size;
-        float *segment = buffer->getSegment(i, &size);
-        hammingWindow(segment, size);
+        float *segment = buffer->getSegment(i);
+        int samplesPerSegment = buffer->getSamplesPerSegment();
+        hammingWindow(segment, samplesPerSegment);
     }
 }
 
@@ -100,9 +100,9 @@ void AudioPreprocessor::hammingWindow() {
 // where a = 0.54
 //
 // The window is applied to the signal via multiplication
-void AudioPreprocessor::hammingWindow(float *segment, int size) {
-    for (int i = 0; i < size; i++) {
-        float theta = 2.0f * (float) M_PI * (float) i / (float) size;
+void AudioPreprocessor::hammingWindow(float *segment, int samplesPerSegment) {
+    for (int i = 0; i < samplesPerSegment; i++) {
+        float theta = 2.0f * (float) M_PI * (float) i / (float) samplesPerSegment;
         float window = 0.54f - 0.46f * cosf(theta);
 
         segment[i] *= window;

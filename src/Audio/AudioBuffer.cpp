@@ -2,8 +2,8 @@
 // Created by Joseph Bellahcen on 4/6/22.
 //
 
-#include "AudioBuffer.h"
-#include "debug.h"
+#include "Audio/AudioBuffer.h"
+
 #include <samplerate.h>
 #include <sndfile.hh>
 
@@ -17,13 +17,13 @@ AudioBuffer::AudioBuffer(const char *path, int targetSampleRate, float windowSiz
     SndfileHandle file = SndfileHandle(path);
 
     // Gather metadata
-    size = (int) file.frames() * file.channels();
-    sampleRate = file.samplerate();
-    channels = file.channels();
+    AudioBuffer::size = (int) file.frames() * file.channels();
+    AudioBuffer::sampleRate = file.samplerate();
+    AudioBuffer::channels = file.channels();
 
     // Read samples
     samples = (float *) malloc(sizeof(float) * size);
-    sf_count_t readSamples = file.read(samples, size);
+    __attribute__((unused)) sf_count_t readSamples = file.read(samples, size);
 
     // Mixdown & resample
     mixdown();
@@ -44,12 +44,10 @@ AudioBuffer::~AudioBuffer() {
 }
 
 // Return a segment of audio for analysis
-float *AudioBuffer::getSegment(int i, int *size) {
+float *AudioBuffer::getSegment(int i) {
     if (i < numSegments) {
-        *size = samplesPerSegment;
         return samples + (samplesPerSegment * i);
     } else {
-        *size = 0;
         return nullptr;
     }
 }
@@ -65,19 +63,19 @@ float *AudioBuffer::getSamples(int *size) {
     }
 }
 
-int AudioBuffer::getSampleRate() {
+int AudioBuffer::getSampleRate() const {
     return sampleRate;
 }
 
-int AudioBuffer::getNumSegments() {
+int AudioBuffer::getNumSegments() const {
     return numSegments;
 }
 
-int AudioBuffer::getSamplesPerSegment() {
+int AudioBuffer::getSamplesPerSegment() const {
     return samplesPerSegment;
 }
 
-int AudioBuffer::frames() {
+int AudioBuffer::frames() const {
     return size / channels;
 }
 

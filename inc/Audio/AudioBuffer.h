@@ -5,18 +5,16 @@
 #ifndef TMS_EXPRESS_AUDIOBUFFER_H
 #define TMS_EXPRESS_AUDIOBUFFER_H
 
-#include <sndfile.hh>
-
 class AudioBuffer {
 public:
     AudioBuffer(const char *path, int targetSampleRate, float windowSize);
     ~AudioBuffer();
 
-    float *getSegment(int i, int *size);
+    float *getSegment(int i);
     float *getSamples(int *size);
-    int getSampleRate();
-    int getNumSegments();
-    int getSamplesPerSegment();
+    int getSampleRate() const;
+    int getNumSegments() const;
+    int getSamplesPerSegment() const;
 
 private:
     int size;
@@ -26,7 +24,7 @@ private:
     int samplesPerSegment;
     int numSegments;
 
-    int frames();
+    int frames() const;
     void mixdown();
     void resample(int targetSampleRate);
     void padFinalSegment();

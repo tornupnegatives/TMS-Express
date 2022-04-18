@@ -7,22 +7,15 @@
 
 class LowerVocalTractAnalyzer {
 public:
-    enum voicing {VOICED, UNVOICED};
+    enum voicing {UNVOICED, VOICED};
     LowerVocalTractAnalyzer(int numSegments, int samplesPerSegment, float unvoicedThreshold = 0.3);
-    ~LowerVocalTractAnalyzer();
 
-    void estimatePitch(int i, float *xcorr);
-    void detectVoicing(int i, float *xcorr);
-
-    int *getPitches();
-    voicing *getVoicings();
+    int estimatePitch(float *xcorr);
+    voicing detectVoicing(int pitch, float xcorr_0);
 
 private:
-    int numSegments;
-    int segmentSize;
+    int samplesPerSegment;
     float unvoicedThreshold;
-    int *pitches;
-    voicing *voicings;
 };
 
 #endif //TMS_EXPRESS_LOWERVOCALTRACTANALYZER_H

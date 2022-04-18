@@ -9,7 +9,7 @@
 
 class AudioPreprocessor {
 public:
-    AudioPreprocessor(AudioBuffer *audioBuffer);
+    explicit AudioPreprocessor(AudioBuffer *audioBuffer);
 
     void preEmphasize(float alpha = -0.9375);
     void lowpassFilter(float cutoff);

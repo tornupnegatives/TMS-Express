@@ -2,11 +2,11 @@
 // Created by Joseph Bellahcen on 4/11/22.
 //
 
-#include "Autocorrelator.h"
+#include "LPC_Analysis/Autocorrelator.h"
 #include <cstdlib>
 
 Autocorrelator::Autocorrelator(int samplesPerSegment) {
-    Autocorrelator::size = samplesPerSegment;
+    Autocorrelator::samplesPerSegment = samplesPerSegment;
 }
 
 // Calculate the autocorrelation r_xx of the samples
@@ -14,12 +14,12 @@ Autocorrelator::Autocorrelator(int samplesPerSegment) {
 // To further aid in analysis, the autocorrelation
 // is normalized by default
 float *Autocorrelator::autocorrelation(float *segment, bool normalize) {
-    auto xcorr = (float *) malloc(sizeof(float) * size);
+    auto xcorr = (float *) malloc(sizeof(float) * samplesPerSegment);
 
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < samplesPerSegment; i++) {
         float sum = 0.0;
 
-        for (int j = 0; j < size - i; j++) {
+        for (int j = 0; j < samplesPerSegment - i; j++) {
             sum += segment[j] * segment[j + i];
         }
 
@@ -28,7 +28,7 @@ float *Autocorrelator::autocorrelation(float *segment, bool normalize) {
 
     if (normalize) {
         float scale = xcorr[0];
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < samplesPerSegment; i++) {
             xcorr[i] /= scale;
         }
     }
