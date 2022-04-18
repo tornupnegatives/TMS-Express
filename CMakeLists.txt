@@ -19,11 +19,10 @@ include_directories(inc/)
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/AudioBuffer.cpp
-        src/PitchEstimator.cpp
         src/Autocorrelator.cpp
-        src/CoefficientSolver.cpp
         src/AudioPreprocessor.cpp
-        src/LowerVocalTractAnalyzer.cpp)
+        src/LowerVocalTractAnalyzer.cpp
+        src/UpperVocalTractAnalyzer.cpp)
 
 target_link_libraries(${PROJECT_NAME}
         sndfile

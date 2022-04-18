@@ -42,13 +42,25 @@ void LowerVocalTractAnalyzer::estimatePitch(int i, float *xcorr) {
     LowerVocalTractAnalyzer::pitches[i] = period;
 }
 
-// Determine whether the given segment is voiced (vowel) or unvoiced (consonant)
+// TODO: Determine whether the given segment is voiced (vowel) or unvoiced (consonant)
 //
-//
+// Because voicing detection can be difficult, several metrics are taken into
+// account to form a hypothesis space:
+//  Signal energy
+//      Compared against threshold
+//  Normalized short-term autocorrelation coefficient
+//      r(1) = R(1) / R(0) (thres = 0.25)
+//      Will be close to zero for unvoiced frames
+//  First LPC coefficient
+//      Near x for unvoiced and y for voiced
 void LowerVocalTractAnalyzer::detectVoicing(int i, float *xcorr) {
-
+        LowerVocalTractAnalyzer::voicings[i] = VOICED;
 }
 
 int *LowerVocalTractAnalyzer::getPitches() {
     return pitches;
+}
+
+LowerVocalTractAnalyzer::voicing *LowerVocalTractAnalyzer::getVoicings() {
+    return voicings;
 }
