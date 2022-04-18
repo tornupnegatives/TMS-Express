@@ -34,26 +34,19 @@ int main() {
         // Step 3. Estimate pitch via autocorrelation
         lowerVocalTractAnalyzer.estimatePitch(i, xcorr);
 
-        // Step 4. Compute LPC coefficients
+        // Step 4. Determine voicing
+        lowerVocalTractAnalyzer.detectVoicing(i, xcorr);
+
+        // Step 5. Compute LPC coefficients
         upperVocalTractAnalyzer.lpcAnalysis(i, xcorr);
         float *coeff = upperVocalTractAnalyzer.getReflectorCoefficients(i);
 
-        // Step 5. Compute energy
+        // Step 6. Compute energy
         upperVocalTractAnalyzer.estimateEnergy(i, segment);
-
-        // Step 6. Determine voicing
-
-        // Step 6. Reflect LPC coefficients via TMS5220 lattice filter
 
         // Step 7. Cleanup
         free(xcorr);
     }
-
-    /*
-    int *pitches = lowerVocalTractAnalyzer.getPitches();
-    for (int i = 0; i < numSegments; i++)
-        printf("%d\n",pitches[i]);
-        */
 
     // Convert frames to bitstream
 
