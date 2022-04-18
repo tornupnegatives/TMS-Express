@@ -2,25 +2,14 @@
 // Created by Joseph Bellahcen on 4/16/22.
 //
 
+#include "LPC_Analysis/LowerVocalTractAnalyzer.h"
+
 #include <algorithm>
 #include <cstdlib>
-#include "LowerVocalTractAnalyzer.h"
 
 LowerVocalTractAnalyzer::LowerVocalTractAnalyzer(int numSegments, int samplesPerSegment, float unvoicedThreshold) {
-    LowerVocalTractAnalyzer::numSegments = numSegments;
-    LowerVocalTractAnalyzer::segmentSize = samplesPerSegment;
+    LowerVocalTractAnalyzer::samplesPerSegment = samplesPerSegment;
     LowerVocalTractAnalyzer::unvoicedThreshold = unvoicedThreshold;
-
-    LowerVocalTractAnalyzer::pitches = (int *) malloc(sizeof(int) * numSegments);
-    LowerVocalTractAnalyzer::voicings = (voicing *) malloc(sizeof(voicing) * numSegments);
-}
-
-LowerVocalTractAnalyzer::~LowerVocalTractAnalyzer() {
-    if (pitches != nullptr)
-        free(pitches);
-
-    if (voicings != nullptr)
-        free(voicings);
 }
 
 // Estimate the pitch period of the segment from its autocorrelation
@@ -35,11 +24,11 @@ LowerVocalTractAnalyzer::~LowerVocalTractAnalyzer() {
 // local minimum, offset the samples to begin there,
 // and then find the second local maximum. Then the distance
 // between these two addresses can be computed via pointer arithmetic
-void LowerVocalTractAnalyzer::estimatePitch(int i, float *xcorr) {
-    int minIdx = std::distance(xcorr, std::min_element(xcorr, xcorr + segmentSize));
-    int period = std::distance(xcorr, std::max_element(xcorr + minIdx, xcorr + segmentSize));
+int LowerVocalTractAnalyzer::estimatePitch(float *xcorr) {
+    int minIdx = std::distance(xcorr, std::min_element(xcorr, xcorr + samplesPerSegment));
+    int period = std::distance(xcorr, std::max_element(xcorr + minIdx, xcorr + samplesPerSegment));
 
-    LowerVocalTractAnalyzer::pitches[i] = period;
+    return period;
 }
 
 // Determine whether the segment is voiced (vowel) or unvoiced (consontant)
@@ -52,21 +41,13 @@ void LowerVocalTractAnalyzer::estimatePitch(int i, float *xcorr) {
 // If the sample is nearly periodic, the ratio will be large and
 // the segment is likely voiced. Otherwise, if the segment more
 // closely resembles white noise, it is likely unvoiced
-void LowerVocalTractAnalyzer::detectVoicing(int i, float *xcorr) {
+LowerVocalTractAnalyzer::voicing LowerVocalTractAnalyzer::detectVoicing(int pitch, float xcorr_0) {
     // TODO: Implement min/max pitch ranges
-    float ratio = xcorr[pitches[i]] / xcorr[0];
+    float  ratio = (float) pitch / xcorr_0;
 
     if (ratio >= unvoicedThreshold) {
-        LowerVocalTractAnalyzer::voicings[i] = VOICED;
+        return VOICED;
     } else {
-        LowerVocalTractAnalyzer::voicings[i] = UNVOICED;
+        return UNVOICED;
     }
-}
-
-int *LowerVocalTractAnalyzer::getPitches() {
-    return pitches;
-}
-
-LowerVocalTractAnalyzer::voicing *LowerVocalTractAnalyzer::getVoicings() {
-    return voicings;
 }
