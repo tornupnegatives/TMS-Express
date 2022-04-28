@@ -5,7 +5,6 @@
 #include "LPC_Analysis/LowerVocalTractAnalyzer.h"
 
 #include <algorithm>
-#include <cstdlib>
 
 LowerVocalTractAnalyzer::LowerVocalTractAnalyzer(int numSegments, int samplesPerSegment, float unvoicedThreshold) {
     LowerVocalTractAnalyzer::samplesPerSegment = samplesPerSegment;

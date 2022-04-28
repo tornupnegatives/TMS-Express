@@ -59,5 +59,7 @@ float UpperVocalTractAnalyzer::energy(float *segment) {
         sum += segment[j] * segment[j];
     }
 
-    return sqrtf(sum / (float) samplesPerSegment);
+    float rootSum = sqrtf(sum / (float) samplesPerSegment);
+
+    return rootSum;
 }
