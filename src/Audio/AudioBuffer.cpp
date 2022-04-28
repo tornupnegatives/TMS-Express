@@ -43,6 +43,31 @@ AudioBuffer::~AudioBuffer() {
     }
 }
 
+int AudioBuffer::getSize() const {
+    return size;
+}
+
+int AudioBuffer::getSampleRate() const {
+    return sampleRate;
+}
+
+int AudioBuffer::getSamplesPerSegment() const {
+    return samplesPerSegment;
+}
+
+int AudioBuffer::getNumSegments() const {
+    return numSegments;
+}
+
+// Return the entire array of audio samples
+float *AudioBuffer::getSamples() {
+    if (samples != nullptr) {
+        return samples;
+    } else {
+        return nullptr;
+    }
+}
+
 // Return a segment of audio for analysis
 float *AudioBuffer::getSegment(int i) {
     if (i < numSegments) {
@@ -50,29 +75,6 @@ float *AudioBuffer::getSegment(int i) {
     } else {
         return nullptr;
     }
-}
-
-// Return the entire array of audio samples
-float *AudioBuffer::getSamples(int *size) {
-    if (samples != nullptr) {
-        *size = AudioBuffer::size;
-        return samples;
-    } else {
-        *size = 0;
-        return nullptr;
-    }
-}
-
-int AudioBuffer::getSampleRate() const {
-    return sampleRate;
-}
-
-int AudioBuffer::getNumSegments() const {
-    return numSegments;
-}
-
-int AudioBuffer::getSamplesPerSegment() const {
-    return samplesPerSegment;
 }
 
 int AudioBuffer::frames() const {
