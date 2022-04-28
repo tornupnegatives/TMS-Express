@@ -5,6 +5,8 @@
 #ifndef TMS_EXPRESS_FRAME_H
 #define TMS_EXPRESS_FRAME_H
 
+#include "Tms5220CodingTable.h"
+
 class Frame {
 public:
     explicit Frame(int order);
@@ -28,7 +30,8 @@ private:
     float *reflectorCoefficients;
     float energy;
 
-    int closestValueFinder();
+    int closestValueIndexFinderInt(int value, int *codingTableEntry, int size);
+    int closestValueIndexFinderFloat(float value, float *codingTableEntry, int size);
 };
 
 #endif //TMS_EXPRESS_FRAME_H
