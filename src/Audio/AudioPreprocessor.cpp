@@ -7,7 +7,8 @@
 
 AudioPreprocessor::AudioPreprocessor(AudioBuffer *audioBuffer) {
     AudioPreprocessor::buffer = audioBuffer;
-    AudioPreprocessor::samples = buffer->getSamples(&(AudioPreprocessor::size));
+    AudioPreprocessor::size = buffer->getSize();
+    AudioPreprocessor::samples = buffer->getSamples();
     AudioPreprocessor::filter_dt = 1.0f / (float) audioBuffer->getSampleRate();
 }
 
@@ -33,7 +34,7 @@ void AudioPreprocessor::preEmphasize(float alpha) {
 // frequencies may lead to more accurate results. The optimum
 // frequency band is between 300-3400 Hz
 //
-// In the time domain, a high/lowpass filter can be implemeted
+// In the time domain, a high/lowpass filter can be implemented
 // as an exponential moving average
 //
 //  y[i] = y[i-1] + a * (x[i] - y[i-1])

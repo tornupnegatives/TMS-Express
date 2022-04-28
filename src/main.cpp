@@ -13,7 +13,7 @@ void printUsage() {
     printf("usage: tms_express filename\n");
 }
 
-void packFrames(Frame *frames, AudioBuffer *buffer, int order) {
+void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
     // Preprocess audio
     auto preprocessor = AudioPreprocessor(buffer);
     preprocessor.preEmphasize();
@@ -51,29 +51,22 @@ void packFrames(Frame *frames, AudioBuffer *buffer, int order) {
         float energy = upperTract.energy(segment);
 
         // Step 7. Store parameters in frame
-        auto frame = Frame(order, pitch, (int) voicing, coeff, energy);
+        frames[i] = new Frame(order, pitch, (int) voicing, coeff, energy);
 
-        if (i == 13) {
-            frame.setPitch(pitch);
-            frame.setVoicing(voicing);
-            frame.setEnergy(energy);
-            frame.setCoefficients(coeff);
-        }
-
-        // Cleanup
+        // Step 8. Cleanup
         free(xcorr);
         free(coeff);
     }
 }
 
 int main(int argc, char **argv) {
-    /* Argument parsing */
+    // Argument parsing
     if (argc == 1) {
         printUsage();
         exit(EXIT_FAILURE);
     }
 
-    /* Ensure file exists */
+    // Ensure file exists
     char *filepath = argv[1];
     struct stat file;
     if (stat (filepath, &file) != 0) {
@@ -81,10 +74,16 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    /* Pack frames */
+    // Pack frames
     auto buffer = AudioBuffer(filepath, 8000, 25);
-    Frame *frames = nullptr;
+    Frame **frames = (Frame **) malloc(sizeof(Frame *) * buffer.getNumSegments());
     packFrames(frames, &buffer, 11);
+
+    // Cleanup
+    for (int i = 0; i < buffer.getNumSegments(); i++)
+        delete frames[i];
+
+    free(frames);
 }
 
 /*
@@ -113,4 +112,3 @@ void debugFrame(int i) {
     }
 }
  */
-
