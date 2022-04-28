@@ -10,19 +10,20 @@ public:
     AudioBuffer(const char *path, int targetSampleRate, float windowSize);
     ~AudioBuffer();
 
-    float *getSegment(int i);
-    float *getSamples(int *size);
+    int getSize() const;
     int getSampleRate() const;
-    int getNumSegments() const;
     int getSamplesPerSegment() const;
+    int getNumSegments() const;
+    float *getSamples();
+    float *getSegment(int i);
 
 private:
     int size;
-    float *samples;
-    int channels;
     int sampleRate;
+    int channels;
     int samplesPerSegment;
     int numSegments;
+    float *samples;
 
     int frames() const;
     void mixdown();
