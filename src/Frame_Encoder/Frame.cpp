@@ -10,6 +10,8 @@
 
 #include "Frame_Encoder/Tms5220CodingTable.h"
 
+using namespace Tms5220CodingTable;
+
 Frame::Frame(int order) {
     Frame::order = order;
     Frame::pitch = 0;
@@ -58,8 +60,8 @@ void Frame::setEnergy(float energy) {
 // the closest value to the given frame parameter, and return its index
 
 int Frame::getQuantizedPitch() {
-    int *pitchTable = const_cast<int *>(Tms5220CodingTable().pitch);
-    int pitchTableSize = Tms5220CodingTable().pitchSize;
+    const int *pitchTable = Tms5220CodingTable::pitch;
+    const int pitchTableSize = Tms5220CodingTable::pitchSize;
 
     int pitchIdx = closestValueIndexFinderInt(pitch, pitchTable, pitchTableSize);
     return pitchIdx;
@@ -71,12 +73,12 @@ unsigned char Frame::getQuantizedVoicing() {
 
 int *Frame::getQuantizedCoefficients() {
     auto quantizedCoeff = (int *) malloc(sizeof(int) * order);
-    float **ks = const_cast<float **>(Tms5220CodingTable().ks);
-    int *kSizes = Tms5220CodingTable().kSizes;
+    const float **ks = Tms5220CodingTable::ks;
+    const int *kSizes = Tms5220CodingTable::kSizes;
 
     for (int i = 0; i < order - 1; i++) {
-        float *kTableEntry = ks[i];
-        int kTableSize = kSizes[i];
+        const float *kTableEntry = ks[i];
+        const int kTableSize = kSizes[i];
         float k = reflectorCoefficients[i];
 
         int kIdx = closestValueIndexFinderFloat(k, kTableEntry, kTableSize);
@@ -87,25 +89,25 @@ int *Frame::getQuantizedCoefficients() {
 }
 
 int Frame::getQuantizedEnergy() {
-    float wholeEnergy = (int) (energy * 5000.0f);
+    int wholeEnergy = (int) (energy * 5000.0f);
 
-    int *rms = const_cast<int *>(Tms5220CodingTable().rms);
-    int rmsSize = Tms5220CodingTable().rmsSize;
+    const int *rms = Tms5220CodingTable::rms;
+    const int rmsSize = Tms5220CodingTable::rmsSize;
 
     int energyIdx = closestValueIndexFinderInt(wholeEnergy, rms, rmsSize);
     return  energyIdx;
 }
 
-int Frame::closestValueIndexFinderInt(int value, int *codingTableEntry, int size) {
+int Frame::closestValueIndexFinderInt(int value, const int *codingTableEntry, int size) {
     // Get first element in coding table which is NOT less than the given value
-    int *offset = std::lower_bound(codingTableEntry, codingTableEntry + size, value);
+    const int *offset = std::lower_bound(codingTableEntry, codingTableEntry + size, value);
     int distance = offset - codingTableEntry;
     return distance;
 }
 
-int Frame::closestValueIndexFinderFloat(float value, float *codingTableEntry, int size) {
+int Frame::closestValueIndexFinderFloat(float value, const float *codingTableEntry, int size) {
     // Get first element in coding table which is NOT less than the given value
-    float *offset = std::lower_bound(codingTableEntry, codingTableEntry + size, value);
+    const float *offset = std::lower_bound(codingTableEntry, codingTableEntry + size, value);
     int distance = offset - codingTableEntry;
     return distance;
 }
