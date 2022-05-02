@@ -43,6 +43,8 @@ int LowerVocalTractAnalyzer::estimatePitch(float *xcorr) {
 LowerVocalTractAnalyzer::voicing LowerVocalTractAnalyzer::detectVoicing(int pitch, float *xcorr) {
     float  ratio = xcorr[pitch] / xcorr[0];
 
+    // TODO: Also check against min pitch period
+
     if (ratio >= unvoicedThreshold) {
         return VOICED;
     } else {

@@ -13,6 +13,22 @@ void printUsage() {
     printf("usage: tms_express filename\n");
 }
 
+void printFrame(Frame *frame, float *samples, int samplesSize, int lpcOrder, int frameID) {
+    printf("Frame %d Data:\n", frameID);
+
+    printf("Pitch: %d\n", frame->getQuantizedPitch());
+    printf("Voicing: %d\n", frame->getQuantizedVoicing());
+    printf("Energy: %d\n", frame->getQuantizedEnergy());
+
+    printf("Coeff: [");
+    int *coeff = frame->getQuantizedCoefficients();
+    for (int i = 0; i < lpcOrder; i++)
+        printf("%d ", coeff[i]);
+    printf("\b]\n\n");
+
+    free(coeff);
+}
+
 void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
     // Preprocess audio
     auto preprocessor = AudioPreprocessor(buffer);
@@ -42,16 +58,19 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
         int pitch = lowerTract.estimatePitch(xcorr);
 
         // Step 4. Determine voicing
-        LowerVocalTractAnalyzer::voicing voicing = lowerTract.detectVoicing(pitch, xcorr[0]);
+        LowerVocalTractAnalyzer::voicing voicing = lowerTract.detectVoicing(pitch, xcorr);
 
         // Step 5. Compute LPC coefficients
-        float *coeff = upperTract.lpcCoefficients(xcorr);
+        float loss;
+        float *coeff = upperTract.lpcCoefficients(xcorr, &loss);
 
         // Step 6. Compute energy
-        float energy = upperTract.energy(segment);
+        float energy = upperTract.gain(segment, loss);
 
         // Step 7. Store parameters in frame
         frames[i] = new Frame(order, pitch, (int) voicing, coeff, energy);
+
+        printFrame(frames[i], segment, samplesPerSegment, 11, i);
 
         // Step 8. Cleanup
         free(xcorr);
@@ -85,30 +104,3 @@ int main(int argc, char **argv) {
 
     free(frames);
 }
-
-/*
-void debugFrame(int i) {
-    if (i == 13) {
-        printf("\nSegment 13\n");
-
-        printf("Samples: [");
-        for (int j = 0; j < samplesPerSegment; j++)
-            printf("%f, ", segment[j]);
-        printf("%f]\n", segment[samplesPerSegment - 1]);
-
-        printf("Xcorr: [");
-        for (int j = 0; j < samplesPerSegment; j++)
-            printf("%f, ", xcorr[j]);
-        printf("%f]\n", xcorr[samplesPerSegment - 1]);
-
-        printf("Pitch: %d\n", pitch);
-        printf("Voicing: %d\n", voicing);
-        printf("Energy: %f\n", energy);
-
-        printf("Coeff: [");
-        for (int j = 1; j < order; j++)
-            printf("%f, ", coeff[j]);
-        printf("%f]\n", coeff[order]);
-    }
-}
- */

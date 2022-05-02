@@ -89,12 +89,12 @@ int *Frame::getQuantizedCoefficients() {
 }
 
 int Frame::getQuantizedEnergy() {
-    int wholeEnergy = (int) (energy * 5000.0f);
+    //int wholeEnergy = (int) (energy * 5000.0f);
 
     const int *rms = Tms5220CodingTable::rms;
     const int rmsSize = Tms5220CodingTable::rmsSize;
 
-    int energyIdx = closestValueIndexFinderInt(wholeEnergy, rms, rmsSize);
+    int energyIdx = closestValueIndexFinderInt(energy, rms, rmsSize);
     return  energyIdx;
 }
 
