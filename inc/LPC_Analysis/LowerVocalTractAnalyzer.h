@@ -8,10 +8,10 @@
 class LowerVocalTractAnalyzer {
 public:
     enum voicing {UNVOICED, VOICED};
-    LowerVocalTractAnalyzer(int numSegments, int samplesPerSegment, float unvoicedThreshold = 0.3);
+    LowerVocalTractAnalyzer(int numSegments, int samplesPerSegment, float unvoicedThreshold = 0.25);
 
     int estimatePitch(float *xcorr);
-    voicing detectVoicing(int pitch, float xcorr_0);
+    voicing detectVoicing(int pitch, float *xcorr);
 
 private:
     int samplesPerSegment;

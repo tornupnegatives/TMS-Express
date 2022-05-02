@@ -40,9 +40,8 @@ int LowerVocalTractAnalyzer::estimatePitch(float *xcorr) {
 // If the sample is nearly periodic, the ratio will be large and
 // the segment is likely voiced. Otherwise, if the segment more
 // closely resembles white noise, it is likely unvoiced
-LowerVocalTractAnalyzer::voicing LowerVocalTractAnalyzer::detectVoicing(int pitch, float xcorr_0) {
-    // TODO: Implement min/max pitch ranges
-    float  ratio = (float) pitch / xcorr_0;
+LowerVocalTractAnalyzer::voicing LowerVocalTractAnalyzer::detectVoicing(int pitch, float *xcorr) {
+    float  ratio = xcorr[pitch] / xcorr[0];
 
     if (ratio >= unvoicedThreshold) {
         return VOICED;
