@@ -41,13 +41,19 @@ void FrameEncoder::serialize(char *path) {
 
     // Convert the binary stream to hex, one byte at a time
     for (int i = 0; i < binStream.size(); i+= 8) {
-        auto byte = binStream.substr(i, 8).c_str();
-        binToHex(byte);
+        auto byte = binStream.substr(i, 8);;
+        binToHex(byte.c_str());
     }
 
     // Remove trailing comma
     hexStream.erase(hexStream.size() - 1);
     printf("%s\n", hexStream.c_str());
+
+    FILE *lpcOut = fopen(path, "w");
+    if (lpcOut != nullptr) {
+        fputs(hexStream.c_str(), lpcOut);
+        fclose(lpcOut);
+    }
 }
 
 void FrameEncoder::frameToBinary(Frame *frame) {
@@ -108,7 +114,7 @@ void FrameEncoder::binToHex(const char *bin) {
     reverse(binStr.begin(), binStr.end());
     int byte = std::stoi(binStr, nullptr, 2);
 
-    char hexByte[2];
+    char hexByte[4];
     sprintf(hexByte, "%02x,", byte);
     hexStream.append(hexByte);
 }

@@ -34,8 +34,8 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
     // Preprocess audio
     auto preprocessor = AudioPreprocessor(buffer);
     preprocessor.preEmphasize();
-    preprocessor.lowpassFilter(3400);
-    preprocessor.highpassFilter(300);
+    preprocessor.lowpassFilter(3800);
+    preprocessor.highpassFilter(3800);
     preprocessor.hammingWindow();
 
     // Prepare segmentation and framing
@@ -103,5 +103,5 @@ int main(int argc, char **argv) {
 
     // Write to file
     auto frameEncoder = FrameEncoder(frames, numFrames);
-    frameEncoder.serialize("OUT");
+    frameEncoder.serialize(argv[2]);
 }

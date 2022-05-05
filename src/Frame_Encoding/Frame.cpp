@@ -26,6 +26,10 @@ Frame::Frame(int order, int pitch, int voicing, float *coefficients, float energ
     Frame::voicing = voicing;
     Frame::energy = energy;
 
+    if (energy < Tms5220CodingTable::rms[1]) {
+        Frame::energy = 0;
+    }
+
     // Make a copy of the reflector coefficients so that LPC analysis structures may be deallocated
     //
     // Because the first LPC coefficient is always zero, offset the pointer by one and ignore

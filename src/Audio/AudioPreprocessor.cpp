@@ -67,7 +67,7 @@ void AudioPreprocessor::lowpassFilter(float cutoff) {
 void AudioPreprocessor::highpassFilter(float cutoff) {
     float rc = 1.0f / (2.0f * (float) M_PI * cutoff);
     float a = rc / (rc + filter_dt);
-    float previousSample = samples[0];
+    float previousSample = samples[1];
 
     for (int i = 2; i < size; i++) {
         float temp = samples[i];

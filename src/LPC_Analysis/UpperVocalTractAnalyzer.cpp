@@ -61,13 +61,10 @@ float *UpperVocalTractAnalyzer::lpcCoefficients(float *xcorr, float *loss) {
 
 // Predict the log-energy of the LPC-encoded signal
 //
-// During LPC encoding, the signal loses some of its
-// energy. The residual energy which remains can be
-// easily found by taking the original energy and
-// multiplying it by the loss proportion
+// In the context of LPC, the gain may be expressed
+// as the root-means-squared deviation
 //
-// The energy can be expressed on the decibel scale
-// for ease of quantization
+// The gain is expressed on the decibel scale
 float UpperVocalTractAnalyzer::gain(float *segment, float loss) {
     // Compute the energy of the original signal
     float signalEnergy = 0.0f;
@@ -75,16 +72,18 @@ float UpperVocalTractAnalyzer::gain(float *segment, float loss) {
         signalEnergy += segment[j] * segment[j];
     }
 
-    // Per the nature of compression, some information
-    // about the original signal (energy) will be lost.
-    // What remains is known as the residual energy
-    float residualEnergy = signalEnergy * loss;
+    signalEnergy /= samplesPerSegment;
 
-    // Convert the energy to power
-    float power = residualEnergy / samplesPerSegment;
-
-    // Express power on the decibel scale
-    float gain = 10.f * abs(log10(power));
+    // Compute RMS deviation
+    //
+    // The variance is a means-squared quantity, but
+    // the explicit computation of the sqaure root
+    // may be omitted due to the properties of the
+    // log function
+    //
+    // The constant 10e-10 prevents calculating log(0)
+    float variance = signalEnergy * loss;
+    float gain = 10.f * abs(log10(variance + 10e-10));
 
     return gain;
 }
