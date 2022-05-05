@@ -67,5 +67,3 @@ namespace Tms5220CodingTable {
 };
 
 #endif //TMS_EXPRESS_TMS5220CODINGTABLE_H
-
-
