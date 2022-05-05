@@ -23,7 +23,6 @@ private:
     std::string hexStream;
 
     static constexpr int energySize = 4;
-    static constexpr int repeatSize = 1;
     static constexpr int pitchSize = 6;
     static constexpr int k1_k2Size = 5;
     static constexpr int k3_k7Size = 4;

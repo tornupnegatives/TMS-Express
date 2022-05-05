@@ -128,7 +128,7 @@ void AudioBuffer::resample(int targetSampleRate) {
 void AudioBuffer::padFinalSegment() {
     int segmentedSize = samplesPerSegment * numSegments;
 
-    if (segmentedSize != size) {
+    if (size < segmentedSize) {
         // Allocate room for an extra segment
         auto paddedSamples = (float *) calloc(segmentedSize, sizeof(float));
         memcpy(paddedSamples, samples, sizeof(float) * size);
