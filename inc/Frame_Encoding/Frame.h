@@ -5,8 +5,6 @@
 #ifndef TMS_EXPRESS_FRAME_H
 #define TMS_EXPRESS_FRAME_H
 
-#include "Tms5220CodingTable.h"
-
 class Frame {
 public:
     explicit Frame(int order);

@@ -2,13 +2,13 @@
 // Created by Joseph Bellahcen on 4/18/22.
 //
 
-#include "Frame_Encoder/Frame.h"
+#include "Frame_Encoding/Frame.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
 
-#include "Frame_Encoder/Tms5220CodingTable.h"
+#include "Frame_Encoding/Tms5220CodingTable.h"
 
 using namespace Tms5220CodingTable;
 

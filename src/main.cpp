@@ -3,7 +3,8 @@
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LowerVocalTractAnalyzer.h"
 #include "LPC_Analysis/UpperVocalTractAnalyzer.h"
-#include "Frame_Encoder/Frame.h"
+#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/FrameEncoder.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -22,7 +23,7 @@ void printFrame(Frame *frame, float *samples, int samplesSize, int lpcOrder, int
 
     printf("Coeff: [");
     int *coeff = frame->getQuantizedCoefficients();
-    for (int i = 0; i < lpcOrder; i++)
+    for (int i = 0; i < lpcOrder - 1; i++)
         printf("%d ", coeff[i]);
     printf("\b]\n\n");
 
@@ -88,19 +89,19 @@ int main(int argc, char **argv) {
     // Ensure file exists
     char *filepath = argv[1];
     struct stat file;
-    if (stat (filepath, &file) != 0) {
+    if (stat(filepath, &file) != 0) {
         printf("Specified file does not exist: %s\n", filepath);
         exit(EXIT_FAILURE);
     }
 
     // Pack frames
     auto buffer = AudioBuffer(filepath, 8000, 25);
-    Frame **frames = (Frame **) malloc(sizeof(Frame *) * buffer.getNumSegments());
+    int numFrames = buffer.getNumSegments();
+
+    Frame **frames = (Frame **) malloc(sizeof(Frame *) * numFrames);
     packFrames(frames, &buffer, 11);
 
-    // Cleanup
-    for (int i = 0; i < buffer.getNumSegments(); i++)
-        delete frames[i];
-
-    free(frames);
+    // Write to file
+    auto frameEncoder = FrameEncoder(frames, numFrames);
+    frameEncoder.serialize("OUT");
 }

@@ -26,8 +26,9 @@ add_executable(${PROJECT_NAME}
         src/LPC_Analysis/LowerVocalTractAnalyzer.cpp
         src/LPC_Analysis/UpperVocalTractAnalyzer.cpp
 
-        src/Frame_Encoder/TmsFrame.cpp
-        src/Frame_Encoder/Frame.cpp)
+        src/Frame_Encoding/Frame.cpp
+        src/Frame_Encoding/FrameEncoder.cpp
+        )
 
 target_link_libraries(${PROJECT_NAME}
         sndfile
