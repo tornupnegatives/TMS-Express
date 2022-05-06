@@ -27,7 +27,7 @@ UpperVocalTractAnalyzer::UpperVocalTractAnalyzer(int samplesPerSegment, int orde
 // which involves a pxp Toeplitz matrix A, the coefficient vector b,
 // and the autocorrelation coefficients c. The algorithm implemented
 // here is the Levinson-Durbin recursion
-float *UpperVocalTractAnalyzer::lpcCoefficients(float *xcorr, float *loss) {
+float *UpperVocalTractAnalyzer::lpcCoefficients(float *xcorr, float *error) {
     auto k = (float *) malloc(sizeof(float) * (order + 1));
     float *r = xcorr;
 
@@ -55,35 +55,16 @@ float *UpperVocalTractAnalyzer::lpcCoefficients(float *xcorr, float *loss) {
         }
     }
 
-    *loss = e[order];
+    *error = e[order];
     return k;
 }
 
-// Predict the log-energy of the LPC-encoded signal
+// Compute the prediction gain of the segment
 //
-// In the context of LPC, the gain may be expressed
-// as the root-means-squared deviation
-//
-// The gain is expressed on the decibel scale
-float UpperVocalTractAnalyzer::gain(float *segment, float loss) {
-    // Compute the energy of the original signal
-    float signalEnergy = 0.0f;
-    for (int j = 0; j < samplesPerSegment; j++) {
-        signalEnergy += segment[j] * segment[j];
-    }
-
-    signalEnergy /= samplesPerSegment;
-
-    // Compute RMS deviation
-    //
-    // The variance is a means-squared quantity, but
-    // the explicit computation of the sqaure root
-    // may be omitted due to the properties of the
-    // log function
-    //
-    // The constant 10e-10 prevents calculating log(0)
-    float variance = signalEnergy * loss;
-    float gain = 10.f * abs(log10(variance + 10e-10));
-
+// The LPC prediction gain is the ratio between
+// the energy of the original segment and
+// the prediction error
+float UpperVocalTractAnalyzer::gain(float segmentEnergy, float predictionError) {
+    float gain = 10.f * log10(segmentEnergy / predictionError);
     return gain;
 }

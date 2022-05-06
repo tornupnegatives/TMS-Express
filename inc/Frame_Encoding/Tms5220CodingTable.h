@@ -6,7 +6,7 @@
 #define TMS_EXPRESS_TMS5220CODINGTABLE_H
 
 namespace Tms5220CodingTable {
-    static const int rms[16] = {0, 52, 87, 123, 174, 246, 348, 491, 694, 981,
+    static const float rms[16] = {0, 52, 87, 123, 174, 246, 348, 491, 694, 981,
                          1385, 1957, 2764, 3904, 5514, 7789};
     static const int rmsSize = 16;
 

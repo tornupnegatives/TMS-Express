@@ -9,6 +9,7 @@ class Autocorrelator {
 public:
     explicit Autocorrelator(int samplesPerSegment);
     float *autocorrelation(float *segment);
+    float energy(float *segment);
 
 private:
     int samplesPerSegment;

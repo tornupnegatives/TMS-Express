@@ -9,8 +9,8 @@ class UpperVocalTractAnalyzer {
 public:
     UpperVocalTractAnalyzer(int samplesPerSegment, int order);
 
-    float *lpcCoefficients(float *xcorr, float *loss);
-    float gain(float *segment, float loss);
+    float *lpcCoefficients(float *xcorr, float *error);
+    float gain(float segmentEnergy, float predictionError);
 
 private:
     int samplesPerSegment;
