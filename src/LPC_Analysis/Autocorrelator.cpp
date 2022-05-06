@@ -10,10 +10,7 @@ Autocorrelator::Autocorrelator(int samplesPerSegment) {
 }
 
 // Calculate the autocorrelation r_xx of the samples
-//
-// To further aid in analysis, the autocorrelation
-// is normalized by default
-float *Autocorrelator::autocorrelation(float *segment, bool normalize) {
+float *Autocorrelator::autocorrelation(float *segment) {
     auto xcorr = (float *) malloc(sizeof(float) * samplesPerSegment);
 
     for (int i = 0; i < samplesPerSegment; i++) {
@@ -24,13 +21,6 @@ float *Autocorrelator::autocorrelation(float *segment, bool normalize) {
         }
 
         xcorr[i] = sum;
-    }
-
-    if (normalize) {
-        float scale = xcorr[0];
-        for (int i = 0; i < samplesPerSegment; i++) {
-            xcorr[i] /= scale;
-        }
     }
 
     return  xcorr;
