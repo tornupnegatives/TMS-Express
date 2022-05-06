@@ -35,7 +35,7 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
     auto preprocessor = AudioPreprocessor(buffer);
     preprocessor.preEmphasize();
     preprocessor.lowpassFilter(3800);
-    preprocessor.highpassFilter(3800);
+    preprocessor.highpassFilter(300);
     preprocessor.hammingWindow();
 
     // Prepare segmentation and framing

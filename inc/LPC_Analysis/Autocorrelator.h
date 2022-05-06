@@ -8,7 +8,7 @@
 class Autocorrelator {
 public:
     explicit Autocorrelator(int samplesPerSegment);
-    float *autocorrelation(float *segment, bool normalize = true);
+    float *autocorrelation(float *segment);
 
 private:
     int samplesPerSegment;
