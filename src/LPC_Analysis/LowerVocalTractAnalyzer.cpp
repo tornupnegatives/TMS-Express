@@ -6,8 +6,10 @@
 
 #include <algorithm>
 
-LowerVocalTractAnalyzer::LowerVocalTractAnalyzer(int numSegments, int samplesPerSegment, float unvoicedThreshold) {
+LowerVocalTractAnalyzer::LowerVocalTractAnalyzer(int samplesPerSegment, int sampleRate, int minPitchHz, int maxPitchHz, float unvoicedThreshold) {
     LowerVocalTractAnalyzer::samplesPerSegment = samplesPerSegment;
+    LowerVocalTractAnalyzer::minPitchPeriod = sampleRate / maxPitchHz;
+    LowerVocalTractAnalyzer::maxPitchPeriod = sampleRate/ minPitchHz;
     LowerVocalTractAnalyzer::unvoicedThreshold = unvoicedThreshold;
 }
 
@@ -16,16 +18,15 @@ LowerVocalTractAnalyzer::LowerVocalTractAnalyzer(int numSegments, int samplesPer
 // Because a small enough segment of speech is roughly periodic,
 // the autocorrelation will also be periodic. This makes it a
 // useful estimator of pitch
-//
-// The global maximum of the autocorrelation will occur at the
-// very first sample. An easy way to find the period between
-// this peak and the next local maximum is to find the first
-// local minimum, offset the samples to begin there,
-// and then find the second local maximum. Then the distance
-// between these two addresses can be computed via pointer arithmetic
 int LowerVocalTractAnalyzer::estimatePitch(float *xcorr) {
-    int minIdx = std::distance(xcorr, std::min_element(xcorr, xcorr + samplesPerSegment));
-    int period = std::distance(xcorr, std::max_element(xcorr + minIdx, xcorr + samplesPerSegment));
+    // Restrict search window to autocorrelation lags which
+    // are within the target pitch periods
+    float *xcorrStart = xcorr + minPitchPeriod;
+    float *xcorrEnd = xcorr + minPitchPeriod + maxPitchPeriod;
+
+    // Identify the maximum element in the pitch window and find its distance
+    // from the start of the array
+    int period = std::distance(xcorr, std::max_element(xcorrStart, xcorrEnd));
 
     return period;
 }

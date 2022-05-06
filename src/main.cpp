@@ -44,7 +44,7 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
 
     // Prepare LPC analysis structures
     auto autocorrelator = Autocorrelator(samplesPerSegment);
-    auto lowerTract = LowerVocalTractAnalyzer(numSegments, samplesPerSegment);
+    auto lowerTract = LowerVocalTractAnalyzer(samplesPerSegment);
     auto upperTract = UpperVocalTractAnalyzer(samplesPerSegment, order);
 
     // Pack frames
