@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <cmath>
 
 #include "Frame_Encoding/Tms5220CodingTable.h"
 
@@ -17,18 +18,14 @@ Frame::Frame(int order) {
     Frame::pitch = 0;
     Frame::voicing = 0;
     Frame::reflectorCoefficients = (float *) malloc(sizeof(float) * order);
-    Frame::energy = 0.0f;
+    Frame::gain = 0.0f;
 }
 
-Frame::Frame(int order, int pitch, int voicing, float *coefficients, float energy) {
+Frame::Frame(int order, int pitch, int voicing, float *coefficients, float gain) {
     Frame::order = order;
     Frame::pitch = pitch;
     Frame::voicing = voicing;
-    Frame::energy = energy;
-
-    if (energy < Tms5220CodingTable::rms[1]) {
-        Frame::energy = 0;
-    }
+    Frame::gain = gain;
 
     // Make a copy of the reflector coefficients so that LPC analysis structures may be deallocated
     //
@@ -56,8 +53,8 @@ void Frame::setCoefficients(float *coefficients) {
     memcpy(reflectorCoefficients, coefficients + 1, sizeof(float) * order);
 }
 
-void Frame::setEnergy(float energy) {
-    Frame::energy = energy;
+void Frame::setGain(float gain) {
+    Frame::gain = gain;
 }
 
 // The below getQuantized*() functions query the TMS5220 coding table to find
@@ -92,14 +89,12 @@ int *Frame::getQuantizedCoefficients() {
     return quantizedCoeff;
 }
 
-int Frame::getQuantizedEnergy() {
-    //int wholeEnergy = (int) (energy * 5000.0f);
-
-    const int *rms = Tms5220CodingTable::rms;
+int Frame::getQuantizedGain() {
+    const float *rms = Tms5220CodingTable::rms;
     const int rmsSize = Tms5220CodingTable::rmsSize;
 
-    int energyIdx = closestValueIndexFinderInt(energy, rms, rmsSize);
-    return  energyIdx;
+    int energyIdx = closestValueIndexFinderFloat(gain, rms, rmsSize);
+    return energyIdx;
 }
 
 int Frame::closestValueIndexFinderInt(int value, const int *codingTableEntry, int size) {

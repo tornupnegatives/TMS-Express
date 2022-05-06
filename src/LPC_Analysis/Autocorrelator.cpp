@@ -20,8 +20,17 @@ float *Autocorrelator::autocorrelation(float *segment) {
             sum += segment[j] * segment[j + i];
         }
 
-        xcorr[i] = sum;
+        xcorr[i] = sum / (float) samplesPerSegment;
     }
 
-    return  xcorr;
+    return xcorr;
+}
+
+float Autocorrelator::energy(float *segment) {
+    float sum = 0.0f;
+    for (int i = 0; i < samplesPerSegment; i++) {
+        sum += segment[i] * segment[i];
+    }
+
+    return sum / (float) samplesPerSegment;
 }

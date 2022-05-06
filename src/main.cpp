@@ -19,7 +19,7 @@ void printFrame(Frame *frame, float *samples, int samplesSize, int lpcOrder, int
 
     printf("Pitch: %d\n", frame->getQuantizedPitch());
     printf("Voicing: %d\n", frame->getQuantizedVoicing());
-    printf("Energy: %d\n", frame->getQuantizedEnergy());
+    printf("Gain: %d\n", frame->getQuantizedGain());
 
     printf("Coeff: [");
     int *coeff = frame->getQuantizedCoefficients();
@@ -54,6 +54,7 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
 
         // Step 2. Compute normalized autocorrelation
         float *xcorr = autocorrelator.autocorrelation(segment);
+        float energy = autocorrelator.energy(segment);
 
         // Step 3. Estimate pitch period
         int pitch = lowerTract.estimatePitch(xcorr);
@@ -62,14 +63,14 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
         LowerVocalTractAnalyzer::voicing voicing = lowerTract.detectVoicing(pitch, xcorr);
 
         // Step 5. Compute LPC coefficients
-        float loss;
-        float *coeff = upperTract.lpcCoefficients(xcorr, &loss);
+        float error;
+        float *coeff = upperTract.lpcCoefficients(xcorr, &error);
 
         // Step 6. Compute energy
-        float energy = upperTract.gain(segment, loss);
+        float gain = upperTract.gain(energy, error);
 
         // Step 7. Store parameters in frame
-        frames[i] = new Frame(order, pitch, (int) voicing, coeff, energy);
+        frames[i] = new Frame(order, pitch, (int) voicing, coeff, gain);
 
         printFrame(frames[i], segment, samplesPerSegment, 11, i);
 

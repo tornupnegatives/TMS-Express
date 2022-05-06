@@ -58,12 +58,12 @@ void FrameEncoder::serialize(char *path) {
 
 void FrameEncoder::frameToBinary(Frame *frame) {
     // At minimum, a frame will contain an energy parameter
-    int energy = frame->getQuantizedEnergy();
-    auto energyBin = std::bitset<energySize>(energy).to_string();
-    binStream.append(energyBin);
+    int gain = frame->getQuantizedGain();
+    auto gainBin = std::bitset<energySize>(gain).to_string();
+    binStream.append(gainBin);
 
     // A zero energy frame contains no further parameters
-    if (energy == 0) {
+    if (gain == 0) {
         return;
     }
 
