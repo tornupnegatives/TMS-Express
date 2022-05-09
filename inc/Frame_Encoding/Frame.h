@@ -28,8 +28,7 @@ private:
     float *reflectorCoefficients;
     float gain;
 
-    int closestValueIndexFinderInt(int value, const int *codingTableEntry, int size);
-    int closestValueIndexFinderFloat(float value, const float *codingTableEntry, int size);
+    int closestValueIndex(float value, const float *codingTableEntry, int size);
 };
 
 #endif //TMS_EXPRESS_FRAME_H

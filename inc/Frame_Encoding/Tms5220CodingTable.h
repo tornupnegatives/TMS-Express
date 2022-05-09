@@ -10,7 +10,7 @@ namespace Tms5220CodingTable {
                          1385, 1957, 2764, 3904, 5514, 7789};
     static const int rmsSize = 16;
 
-    static const int pitch[64] = {0, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+    static const float pitch[64] = {0, 15, 16, 17, 18, 19, 20, 21, 22, 23,
                            24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
                            34, 35, 36, 37, 38, 39, 40, 41, 42, 44,
                            46, 48, 50, 52, 53, 56, 58, 60, 62, 65,
@@ -59,7 +59,7 @@ namespace Tms5220CodingTable {
     static const float k9[8] = {-0.50000f, -0.34286f, -0.18571f, 0.02857f, 0.12857f, 0.28571f,
                          0.44286f, 0.60000f};
 
-    static const float k10[8] = {-0.40000f, -0.25714f, -0.11429, 0.02857f, 0.17143f, 0.31429f,
+    static const float k10[8] = {-0.40000f, -0.25714f, -0.11429f, 0.02857f, 0.17143f, 0.31429f,
                           0.45714f, 0.60000f};
 
     static const float *ks[10] = {k1, k2, k3, k4, k5, k6, k7, k8, k9, k10};
