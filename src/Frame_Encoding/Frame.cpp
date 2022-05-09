@@ -4,10 +4,8 @@
 
 #include "Frame_Encoding/Frame.h"
 
-#include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <cmath>
 
 #include "Frame_Encoding/Tms5220CodingTable.h"
 
@@ -61,10 +59,10 @@ void Frame::setGain(float gain) {
 // the closest value to the given frame parameter, and return its index
 
 int Frame::getQuantizedPitch() {
-    const int *pitchTable = Tms5220CodingTable::pitch;
+    const float *pitchTable = Tms5220CodingTable::pitch;
     const int pitchTableSize = Tms5220CodingTable::pitchSize;
 
-    int pitchIdx = closestValueIndexFinderInt(pitch, pitchTable, pitchTableSize);
+    int pitchIdx = closestValueIndex(pitch, pitchTable, pitchTableSize);
     return pitchIdx;
 }
 
@@ -82,7 +80,7 @@ int *Frame::getQuantizedCoefficients() {
         const int kTableSize = kSizes[i];
         float k = reflectorCoefficients[i];
 
-        int kIdx = closestValueIndexFinderFloat(k, kTableEntry, kTableSize);
+        int kIdx = closestValueIndex(k, kTableEntry, kTableSize);
         quantizedCoeff[i] = kIdx;
     }
 
@@ -93,20 +91,28 @@ int Frame::getQuantizedGain() {
     const float *rms = Tms5220CodingTable::rms;
     const int rmsSize = Tms5220CodingTable::rmsSize;
 
-    int energyIdx = closestValueIndexFinderFloat(gain, rms, rmsSize);
-    return energyIdx;
+    int gainIdx = closestValueIndex(gain, rms, rmsSize);
+    return gainIdx;
 }
 
-int Frame::closestValueIndexFinderInt(int value, const int *codingTableEntry, int size) {
-    // Get first element in coding table which is NOT less than the given value
-    const int *offset = std::lower_bound(codingTableEntry, codingTableEntry + size, value);
-    int distance = offset - codingTableEntry;
-    return distance;
-}
+int Frame::closestValueIndex(float value, const float *codingTableEntry, int size) {
+    // First, check if the value is within the lower bound of the array values
+    if (value <= codingTableEntry[0]) {
+        return 0;
+    }
 
-int Frame::closestValueIndexFinderFloat(float value, const float *codingTableEntry, int size) {
-    // Get first element in coding table which is NOT less than the given value
-    const float *offset = std::lower_bound(codingTableEntry, codingTableEntry + size, value);
-    int distance = offset - codingTableEntry;
-    return distance;
+    // Check the elements to the left and right to find where the value best fits
+    for (int i = 0; i < size; i++) {
+        float rightEntry = codingTableEntry[i];
+        float leftEntry = codingTableEntry[i - 1];
+
+        if (value < rightEntry) {
+            float rightDistance = rightEntry - value;
+            float leftDistance = value - leftEntry;
+
+            return (rightDistance < leftDistance) ? i : i - 1;
+        }
+    }
+
+    return size - 1;
 }
