@@ -26,8 +26,13 @@ AudioBuffer::AudioBuffer(const char *path, int targetSampleRate, float windowSiz
     __attribute__((unused)) sf_count_t readSamples = file.read(samples, size);
 
     // Mixdown & resample
-    mixdown();
-    resample(targetSampleRate);
+    if (channels != 1) {
+        mixdown();
+    }
+
+    if (sampleRate != targetSampleRate) {
+        resample(targetSampleRate);
+    }
 
     // Calculate number of segments
     samplesPerSegment = (int) (windowSize * 1e-3 * sampleRate);
