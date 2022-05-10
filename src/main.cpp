@@ -5,6 +5,7 @@
 #include "LPC_Analysis/UpperVocalTractAnalyzer.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
+#include "Frame_Encoding/FramePostProcessor.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -34,7 +35,7 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
     // Preprocess audio
     auto preprocessor = AudioPreprocessor(buffer);
     preprocessor.preEmphasize();
-    preprocessor.lowpassFilter(3800);
+    preprocessor.lowpassFilter(48000);
     preprocessor.highpassFilter(300);
     preprocessor.hammingWindow();
 
@@ -59,15 +60,15 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
         // Step 3. Estimate pitch period
         int pitch = lowerTract.estimatePitch(xcorr);
 
-        // Step 4. Determine voicing
-        LowerVocalTractAnalyzer::voicing voicing = lowerTract.detectVoicing(pitch, xcorr);
-
         // Step 5. Compute LPC coefficients
         float error;
         float *coeff = upperTract.lpcCoefficients(xcorr, &error);
 
         // Step 6. Compute energy
-        float gain = upperTract.gain(energy, error);
+        float gain = upperTract.gain(error);
+
+        // Step 4. Determine voicing
+        Voicing voicing = lowerTract.detectVoicing(segment, energy, xcorr, gain, pitch);
 
         // Step 7. Store parameters in frame
         frames[i] = new Frame(order, pitch, (int) voicing, coeff, gain);
@@ -78,6 +79,10 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
         free(xcorr);
         free(coeff);
     }
+
+    auto framePostprocessor = FramePostProcessor(frames, numSegments);
+    framePostprocessor.normalizeGain();
+    //framePostprocessor.shiftGain(2);
 }
 
 int main(int argc, char **argv) {
@@ -95,10 +100,11 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    // Pack frames
+    // Import audio into segmented buffer
     auto buffer = AudioBuffer(filepath, 8000, 25);
     int numFrames = buffer.getNumSegments();
 
+    // Perform LPC analysis and framing
     Frame **frames = (Frame **) malloc(sizeof(Frame *) * numFrames);
     packFrames(frames, &buffer, 11);
 
