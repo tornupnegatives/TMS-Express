@@ -5,6 +5,9 @@
 #ifndef TMS_EXPRESS_FRAME_H
 #define TMS_EXPRESS_FRAME_H
 
+#define VOICED true
+#define UNVOICED false
+
 class Frame {
 public:
     explicit Frame(int order);
@@ -14,12 +17,16 @@ public:
     void setPitch(int pitch);
     void setVoicing(int voicing);
     void setCoefficients(float *coefficients);
+
+    float getGain();
     void setGain(float gain);
 
     int getQuantizedPitch();
     unsigned char getQuantizedVoicing();
     int *getQuantizedCoefficients();
+
     int getQuantizedGain();
+    void setQuantizedGain(int gain);
 
 private:
     int order;

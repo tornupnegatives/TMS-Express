@@ -55,6 +55,10 @@ void Frame::setGain(float gain) {
     Frame::gain = gain;
 }
 
+float Frame::getGain() {
+    return gain;
+}
+
 // The below getQuantized*() functions query the TMS5220 coding table to find
 // the closest value to the given frame parameter, and return its index
 
@@ -93,6 +97,10 @@ int Frame::getQuantizedGain() {
 
     int gainIdx = closestValueIndex(gain, rms, rmsSize);
     return gainIdx;
+}
+
+void Frame::setQuantizedGain(int gain) {
+    Frame::gain = Tms5220CodingTable::rms[gain];
 }
 
 int Frame::closestValueIndex(float value, const float *codingTableEntry, int size) {
