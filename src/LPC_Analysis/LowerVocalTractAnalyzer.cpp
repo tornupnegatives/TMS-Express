@@ -5,6 +5,7 @@
 #include "LPC_Analysis/LowerVocalTractAnalyzer.h"
 
 #include <algorithm>
+#include <cmath>
 
 LowerVocalTractAnalyzer::LowerVocalTractAnalyzer(int samplesPerSegment, int sampleRate, int minPitchHz, int maxPitchHz, float unvoicedThreshold) {
     LowerVocalTractAnalyzer::samplesPerSegment = samplesPerSegment;
@@ -19,14 +20,14 @@ LowerVocalTractAnalyzer::LowerVocalTractAnalyzer(int samplesPerSegment, int samp
 // the autocorrelation will also be periodic. This makes it a
 // useful estimator of pitch
 int LowerVocalTractAnalyzer::estimatePitch(float *xcorr) {
-    // Restrict search window to autocorrelation lags which
-    // are within the target pitch periods
+    // Restrict search window to autocorrelation lags which are within the target pitch periods
     float *xcorrStart = xcorr + minPitchPeriod;
     float *xcorrEnd = xcorr + minPitchPeriod + maxPitchPeriod;
 
-    // Identify the maximum element in the pitch window and find its distance
-    // from the start of the array
-    int period = std::distance(xcorr, std::max_element(xcorrStart, xcorrEnd));
+    // Identify the first local minimum and subsequent local maximum
+    // The distance between these values likely corresponds to the pitch of the segment
+    auto firstLocalMin = std::min_element(xcorrStart, xcorrEnd);
+    int period = (int) std::distance(xcorr, std::max_element(firstLocalMin, xcorrEnd));
 
     return period;
 }
@@ -41,12 +42,22 @@ int LowerVocalTractAnalyzer::estimatePitch(float *xcorr) {
 // If the sample is nearly periodic, the ratio will be large and
 // the segment is likely voiced. Otherwise, if the segment more
 // closely resembles white noise, it is likely unvoiced
-LowerVocalTractAnalyzer::voicing LowerVocalTractAnalyzer::detectVoicing(int pitch, float *xcorr) {
-    float  ratio = xcorr[pitch] / xcorr[0];
+Voicing LowerVocalTractAnalyzer::detectVoicing(float *segment, float energy, float *xcorr, float gain, int pitchPeriod) {
+    float magnitude = 0.0f;
+    for (int i = 0; i < samplesPerSegment; i++) {
+        magnitude += abs(segment[i]);
+    }
 
-    // TODO: Also check against min pitch period
+    // TODO: Gold-Rabiner pitch detector FIRST, then Use Gold-Rabiner voicing score
+    // TODO: check if K1 > unvoicedThreshold (per LPC by Peter Richards)
+    float k = xcorr[1] / xcorr[0];
 
-    if (ratio >= unvoicedThreshold) {
+    if (pitchPeriod > maxPitchPeriod)
+        return UNVOICED;
+
+    float avg = (0.6f * magnitude) + (0.4f * k);
+
+    if (avg> unvoicedThreshold) {
         return VOICED;
     } else {
         return UNVOICED;
