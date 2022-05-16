@@ -3,6 +3,7 @@
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LowerVocalTractAnalyzer.h"
 #include "LPC_Analysis/UpperVocalTractAnalyzer.h"
+#include "Pitch_Estimation/PitchEstimator.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostProcessor.h"
@@ -10,6 +11,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <sys/stat.h>
+#include <cmath>
+#include <vector>
 
 void printUsage() {
     printf("usage: tms_express filename\n");
@@ -17,6 +20,11 @@ void printUsage() {
 
 void printFrame(Frame *frame, float *samples, int samplesSize, int lpcOrder, int frameID) {
     printf("Frame %d Data:\n", frameID);
+
+    printf("Samples: [");
+    for (int i = 0; i < samplesSize; i++)
+        printf("%f ", samples[i]);
+    printf("\b]\n\n");
 
     printf("Pitch: %d\n", frame->getQuantizedPitch());
     printf("Voicing: %d\n", frame->getQuantizedVoicing());
@@ -73,7 +81,14 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
         // Step 7. Store parameters in frame
         frames[i] = new Frame(order, pitch, (int) voicing, coeff, gain);
 
-        printFrame(frames[i], segment, samplesPerSegment, 11, i);
+        if (i == 13) {
+            printFrame(frames[i], segment, samplesPerSegment, 11, i);
+
+            auto pitchEstimator = PitchEstimator();
+
+            vector<float> segmentVector = vector<float>(segment, segment + samplesPerSegment);
+            pitchEstimator.estimatePitch(&segmentVector);
+        }
 
         // Step 8. Cleanup
         free(xcorr);

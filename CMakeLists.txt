@@ -26,6 +26,10 @@ add_executable(${PROJECT_NAME}
         src/LPC_Analysis/LowerVocalTractAnalyzer.cpp
         src/LPC_Analysis/UpperVocalTractAnalyzer.cpp
 
+        src/Pitch_Estimation/PitchEstimator.cpp
+        src/Pitch_Estimation/PulseTrainGenerator.cpp
+        src/Pitch_Estimation/RundownCircuit.cpp
+
         src/Frame_Encoding/Frame.cpp
         src/Frame_Encoding/FramePostProcessor.cpp
         src/Frame_Encoding/FrameEncoder.cpp
