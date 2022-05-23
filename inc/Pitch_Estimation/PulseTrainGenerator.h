@@ -5,35 +5,28 @@
 #ifndef TMS_EXPRESS_PULSETRAINGENERATOR_H
 #define TMS_EXPRESS_PULSETRAINGENERATOR_H
 
-#define MAXPEAK true
-#define MINPEAK false
-
 #include <vector>
+#include "Pitch_Estimation/RundownCircuit.h"
 
 using namespace std;
 
-
 class PulseTrainGenerator {
 public:
-    enum PulseTrainModes {
-        PULSETRAIN_MODE_AMPLITUDE,
-        PULSETRAIN_MODE_MAXTOMIN,
-        PULSETRAIN_MODE_PEAKTOPEAK
-    };
-
     PulseTrainGenerator();
 
+    enum MeasurementType {
+        MAX_PEAK = 0,
+        MIN_PEAK = 3,
+    };
+
     void reset();
-    void update(float peak, int loc, bool type);
+    void update(float peak, int loc, MeasurementType type);
+    const vector<vector<int>> getEstimateMatrix();
 
 private:
-    vector<float> amplitudes;
-    vector<float> maxToMinDistances;
-    vector<float> peakToPeakDistances;
-    vector<int> peakLocs;
-
-    int getLastMaxLoc();
-    int getLastMinLoc();
+    vector<vector<int>> locs;
+    vector<vector<float>> measurements;
+    vector<RundownCircuit> rundowns;
 };
 
 #endif //TMS_EXPRESS_PULSETRAINGENERATOR_H

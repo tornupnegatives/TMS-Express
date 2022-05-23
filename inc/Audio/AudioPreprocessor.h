@@ -11,18 +11,14 @@ class AudioPreprocessor {
 public:
     explicit AudioPreprocessor(AudioBuffer *audioBuffer);
 
-    void preEmphasize(float alpha = -0.9375);
-    void lowpassFilter(float cutoff);
-    void highpassFilter(float cutoff);
-    void hammingWindow();
+    void preEmphasize(float *segment, float alpha = -0.9375);
+    void lowpassFilter(float *segment, float cutoff);
+    void highpassFilter(float *segment, float cutoff);
+    void hammingWindow(float *segment);
 
 private:
-    AudioBuffer *buffer;
-    float *samples;
-    int size;
+    int samplesPerSegment;
     float filter_dt;
-
-    static void hammingWindow(float *segment, int size);
 };
 
 #endif //TMS_EXPRESS_AUDIOPREPROCESSOR_H

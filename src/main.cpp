@@ -42,10 +42,10 @@ void printFrame(Frame *frame, float *samples, int samplesSize, int lpcOrder, int
 void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
     // Preprocess audio
     auto preprocessor = AudioPreprocessor(buffer);
-    preprocessor.preEmphasize();
-    preprocessor.lowpassFilter(48000);
-    preprocessor.highpassFilter(300);
-    preprocessor.hammingWindow();
+    //preprocessor.preEmphasize();
+    //preprocessor.lowpassFilter(48000);
+    //preprocessor.highpassFilter(300);
+    //preprocessor.hammingWindow();
 
     // Prepare segmentation and framing
     int samplesPerSegment = buffer->getSamplesPerSegment();
@@ -56,17 +56,37 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
     auto lowerTract = LowerVocalTractAnalyzer(samplesPerSegment);
     auto upperTract = UpperVocalTractAnalyzer(samplesPerSegment, order);
 
+    auto pitchEstimator = PitchEstimator();
+
     // Pack frames
     for (int i = 0; i < numSegments; i++) {
         // Step 1. Get buffer segment
         float *segment = buffer->getSegment(i);
 
+        // Step N. Apply lowpass filter for pitch estimation
+        float *lowpassedSegment = (float *) malloc(samplesPerSegment * sizeof(float));
+        memcpy(lowpassedSegment, segment, samplesPerSegment);
+        preprocessor.lowpassFilter(lowpassedSegment, 300);
+
+        // After pitch estimation, apply preemphasis and hamming window
+        preprocessor.preEmphasize(segment);
+        preprocessor.lowpassFilter(segment, 48000);
+        preprocessor.highpassFilter(segment, 300);
+        preprocessor.hammingWindow(segment);
+
         // Step 2. Compute normalized autocorrelation
         float *xcorr = autocorrelator.autocorrelation(segment);
         float energy = autocorrelator.energy(segment);
 
+
+
+
         // Step 3. Estimate pitch period
+        auto segmentVector = vector<float>(lowpassedSegment, lowpassedSegment + samplesPerSegment);
         int pitch = lowerTract.estimatePitch(xcorr);
+        //pitch = pitchEstimator.estimatePitch(segmentVector);
+        //pitch = lowerTract.estimatePitch(xcorr);
+
 
         // Step 5. Compute LPC coefficients
         float error;
@@ -77,18 +97,23 @@ void packFrames(Frame **frames, AudioBuffer *buffer, int order) {
 
         // Step 4. Determine voicing
         Voicing voicing = lowerTract.detectVoicing(segment, energy, xcorr, gain, pitch);
+        int coincidence;
+        pitch = pitchEstimator.estimatePitch(segmentVector, &coincidence);
+
+        float differncedEnegy = 0.0f;
+        for (int i = 1; i < samplesPerSegment; i++)
+            differncedEnegy += pow(segment[i] - segment[i - 1], 2);
+
+        differncedEnegy /= energy;
+
+        //voicing = ((10 * coincidence) - differncedEnegy - 109) > 0;
+
+           //voicing = UNVOICED;
 
         // Step 7. Store parameters in frame
         frames[i] = new Frame(order, pitch, (int) voicing, coeff, gain);
 
-        if (i == 13) {
-            printFrame(frames[i], segment, samplesPerSegment, 11, i);
-
-            auto pitchEstimator = PitchEstimator();
-
-            vector<float> segmentVector = vector<float>(segment, segment + samplesPerSegment);
-            pitchEstimator.estimatePitch(&segmentVector);
-        }
+        printFrame(frames[i], segment, samplesPerSegment, 10, i);
 
         // Step 8. Cleanup
         free(xcorr);

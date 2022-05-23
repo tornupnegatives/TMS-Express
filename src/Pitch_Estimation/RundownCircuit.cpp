@@ -6,11 +6,10 @@
 
 #include <cmath>
 
-// Initialize a new RundownCircuit with default parameters
 RundownCircuit::RundownCircuit(int sampleRateHz, float windowWidthMs) {
     sampleRate = sampleRateHz;
-    averagePeriod = sampleRateHz * 22.5 * 1e-3;
-    blankingInterval = sampleRateHz * (22.5 / 2) * 1e-4;
+    averagePeriod = sampleRateHz * windowWidthMs * 1e-3;
+    blankingInterval = sampleRateHz * (windowWidthMs / 2) * 1e-4;
     decayConstant = averagePeriod / 0.695;
 
     lastLoc = 0;
