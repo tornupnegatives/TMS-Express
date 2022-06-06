@@ -1,41 +1,46 @@
-//
-// Created by Joseph Bellahcen on 4/18/22.
-//
-
 #ifndef TMS_EXPRESS_FRAME_H
 #define TMS_EXPRESS_FRAME_H
 
-#define VOICED true
-#define UNVOICED false
+#include <vector>
 
 class Frame {
 public:
-    explicit Frame(int order);
-    Frame(int order, int pitch, int voicing, float *coefficients, float gain);
-    ~Frame();
+    Frame(int pitchPeriod, bool isVoiced, float gainDB, std::vector<float> coeffs);
 
-    void setPitch(int pitch);
-    void setVoicing(int voicing);
-    void setCoefficients(float *coefficients);
+    int getPitch() const;
+    void setPitch(int pitchPeriod);
 
-    float getGain();
-    void setGain(float gain);
+    bool getVoicing() const;
+    void setVoicing(bool isVoiced);
 
-    int getQuantizedPitch();
-    unsigned char getQuantizedVoicing();
-    int *getQuantizedCoefficients();
+    float getGain() const;
+    void setGain(float gainDb);
 
-    int getQuantizedGain();
-    void setQuantizedGain(int gain);
+    std::vector<float> getCoeffs();
+    void setCoeffs(std::vector<float> coeffs);
+
+    int getQuantizedPitchIdx() const;
+    int getQuantizedVoicingIdx() const;
+    int getQuantizedGainIdx() const;
+    std::vector<int> getQuantizedCoeffsIdx();
+
+    void setQuantizedGain(int offset);
+
+    bool isVoiced() const;
+    bool isSilent() const;
+    bool isRepeat();
+
+    void print(int index = -1);
+    std::string toBinary();
 
 private:
-    int order;
     int pitch;
-    int voicing;
-    float *reflectorCoefficients;
+    bool voicedFrame;
     float gain;
+    std::vector<float> reflectorCoeffs;
 
-    int closestValueIndex(float value, const float *codingTableEntry, int size);
+    static int closestIndexFinder(float value, std::vector<float> codingTableEntry);
+    static std::string valueToBinary(int value, int bitWidth);
 };
 
 #endif //TMS_EXPRESS_FRAME_H

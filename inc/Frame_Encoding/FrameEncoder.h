@@ -1,36 +1,25 @@
-//
-// Created by Joseph Bellahcen on 5/1/22.
-//
+#ifndef TMS_EXPRESS_FRAMEENCODER_H
+#define TMS_EXPRESS_FRAMEENCODER_H
 
-#ifndef TMS_EXPRESS_FRAMEBITSTREAM_H
-#define TMS_EXPRESS_FRAMEBITSTREAM_H
-
-#include "Frame_Encoding/Frame.h"
-
-#include <bitset>
+#include "Frame.h"
+#include <string>
 
 class FrameEncoder {
 public:
-    FrameEncoder(Frame **frames, int count);
-    ~FrameEncoder();
+    explicit FrameEncoder(bool hexPrefix = false, char separator = ',');
+    explicit FrameEncoder(const std::vector<Frame> &frames, bool hexPrefix = false, char separator = ',');
 
-    void serialize(char *path);
+    void appendFrame(Frame frame);
+    void appendFrames(const std::vector<Frame> &frames);
+    std::string toHex(bool shouldAppendStopFrame = true);
 
 private:
-    Frame **frames;
-    int count;
-    std::string binStream;
-    std::string hexStream;
+    bool includeHexPrefix;
+    char byteSeparator;
+    std::vector<std::string> bytes;
 
-    static constexpr int energySize = 4;
-    static constexpr int pitchSize = 6;
-    static constexpr int k1_k2Size = 5;
-    static constexpr int k3_k7Size = 4;
-    static constexpr int k8_k10Size = 3;
-
-    void frameToBinary(Frame *frame);
-    void binToHex(const char *bin);
     void appendStopFrame();
+    std::string byteToHex(const std::string& byte) const;
 };
 
-#endif //TMS_EXPRESS_FRAMEBITSTREAM_H
+#endif //TMS_EXPRESS_FRAMEENCODER_H

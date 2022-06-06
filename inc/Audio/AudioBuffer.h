@@ -1,34 +1,33 @@
-//
-// Created by Joseph Bellahcen on 4/6/22.
-//
-
 #ifndef TMS_EXPRESS_AUDIOBUFFER_H
 #define TMS_EXPRESS_AUDIOBUFFER_H
 
+#include <vector>
+
 class AudioBuffer {
 public:
-    AudioBuffer(const char *path, int targetSampleRate, float windowSize);
-    ~AudioBuffer();
+    explicit AudioBuffer(const std::string &path, int targetSampleRateHz = 8000, float windowWidthMs = 25.0f);
+    AudioBuffer(const AudioBuffer &buffer);
 
-    int getSize() const;
-    int getSampleRate() const;
-    int getSamplesPerSegment() const;
-    int getNumSegments() const;
-    float *getSamples();
-    float *getSegment(int i);
+    unsigned int getSampleRate() const;
+    unsigned int getNSegments() const;
+
+    std::vector<float> getSamples();
+    void setSamples(const std::vector<float> &newSamples);
+
+    std::vector<float> getSegment(int i);
+
+    __attribute__((unused)) std::vector<std::vector<float>> getSegments();
+
+    __attribute__((unused)) void exportAudio(const std::string &path);
 
 private:
-    int size;
-    int sampleRate;
-    int channels;
-    int samplesPerSegment;
-    int numSegments;
-    float *samples;
+    unsigned int sampleRate;
+    unsigned int samplesPerSegment;
+    unsigned int nSegments;
+    std::vector<float> samples;
 
-    int frames() const;
-    void mixdown();
-    void resample(int targetSampleRate);
-    void padFinalSegment();
+    void mixToMono(int nChannels);
+    void resample(int targetSampleRateHz);
 };
 
 #endif //TMS_EXPRESS_AUDIOBUFFER_H

@@ -1,63 +1,59 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class: FramePostprocessor
 //
-// Created by Joseph Bellahcen on 5/8/22.
+// Description: After LPC analysis and Frame packing, postprocessing may improve the quality and realism of synthesized
+//              speech. The FramePostprocessor facilitates such modifications.
 //
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Frame_Encoding/FramePostProcessor.h"
-#include "LPC_Analysis/LowerVocalTractAnalyzer.h"
+#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/FramePostprocessor.h"
+#include <vector>
 
-FramePostProcessor::FramePostProcessor(Frame **frames, int count, float maxVoicedGainDB, float maxUnvoicedGainDB) {
-    FramePostProcessor::frames = frames;
-    FramePostProcessor::count = count;
-    FramePostProcessor::maxVoicedGain = maxVoicedGainDB;
-    FramePostProcessor::maxUnvoicedGain = maxUnvoicedGainDB;
+FramePostprocessor::FramePostprocessor(std::vector<Frame> *frames, float maxVoicedGainDB, float maxUnvoicedGainDB) {
+    frameData = frames;
+    maxVoicedGain = maxVoicedGainDB;
+    maxUnvoicedGain = maxUnvoicedGainDB;
 }
 
-// Normalize gain of all frames
-//
-// Voiced and unvoiced frames are normalized independently
-void FramePostProcessor::normalizeGain() {
-    normalizeGain(VOICED);
-    normalizeGain(UNVOICED);
+void FramePostprocessor::normalizeGain() {
+    normalizeGain(true);
+    normalizeGain(false);
 }
 
-// Normalize the gain across all frames of given voicing
-//
-// Gain normalization can produce more realistic synthesized speech
-// by constraining audio levels to the usual range of human speech
-void FramePostProcessor::normalizeGain(Voicing voicing) {
-    // Compute max gain for frame category
+void FramePostprocessor::normalizeGain(bool voiced) {
+    // Compute the max gain value for a Frame category
     float maxGain = 0.0f;
-    for (int i = 0; i < count; i++) {
-        Frame *frame = frames[i];
-        Voicing frameVoicing = frame->getQuantizedVoicing();
-        float frameGain = frame->getGain();
+    for (const Frame &frame : *frameData) {
+        bool isVoiced = frame.isVoiced();
+        float gain = frame.getGain();
 
-        if (frameVoicing == voicing && frameGain > maxGain) {
-            maxGain = frameGain;
+        if (isVoiced == voiced && gain > maxGain) {
+            maxGain = gain;
         }
     }
 
-    // Apply scaling factor based on frame voicing
-    float scale = ((voicing) ? maxVoicedGain : maxUnvoicedGain) / maxGain;
-    for (int i = 0; i < count; i++) {
-        Frame *frame = frames[i];
-        Voicing frameVoicing = frame->getQuantizedVoicing();
-        float frameGain = frame->getGain();
+    // Apply scaling factor
+    float scale = (voiced ? maxVoicedGain : maxUnvoicedGain) / maxGain;
+    for (Frame &frame : *frameData) {
+        bool isVoiced = frame.isVoiced();
+        float gain = frame.getGain();
 
-        if (frameVoicing == voicing) {
-            float scaledGain = frameGain * scale;
-            frame->setGain(scaledGain);
+        if (isVoiced == voiced) {
+            float scaledGain = gain * scale;
+            frame.setGain(scaledGain);
         }
     }
 }
 
-void FramePostProcessor::shiftGain(int offset) {
-    for (int i = 0; i < count; i++) {
-        Frame *frame = frames[i];
-        int frameQuantizedGain = frame->getQuantizedGain();
+void FramePostprocessor::shiftGain(int offset) {
+    for (Frame &frame : *frameData) {
+        int quantizedGain = frame.getQuantizedGainIdx();
 
-        if (frameQuantizedGain > 0) {
-            frame->setQuantizedGain(frameQuantizedGain + offset);
+        // Do not attempt to amplify silent frames
+        if (quantizedGain > 0) {
+            frame.setQuantizedGain(quantizedGain + offset);
         }
     }
 }

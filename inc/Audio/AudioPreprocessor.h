@@ -1,28 +1,25 @@
-//
-// Created by Joseph Bellahcen on 4/14/22.
-//
-
 #ifndef TMS_EXPRESS_AUDIOPREPROCESSOR_H
 #define TMS_EXPRESS_AUDIOPREPROCESSOR_H
 
 #include "AudioBuffer.h"
+#include <vector>
 
 class AudioPreprocessor {
 public:
-    explicit AudioPreprocessor(AudioBuffer *audioBuffer);
+    explicit AudioPreprocessor();
 
-    void preEmphasize(float alpha = -0.9375);
-    void lowpassFilter(float cutoff);
-    void highpassFilter(float cutoff);
-    void hammingWindow();
+    enum FilterBiquadMode {FILTER_LOWPASS, FILTER_HIGHPASS, FILTER_NONE};
+
+    void applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, FilterBiquadMode mode);
+    void applyPreemphasis(AudioBuffer &buffer, float alpha = -0.9375);
+    void applyHammingWindow(std::vector<float> &segment);
 
 private:
-    AudioBuffer *buffer;
-    float *samples;
-    int size;
-    float filter_dt;
+    FilterBiquadMode lastFilterMode;
+    unsigned int lastCutoffHz;
+    std::vector<float> coeffs;
 
-    static void hammingWindow(float *segment, int size);
+    void setCoefficients(FilterBiquadMode mode, unsigned int cutoff);
 };
 
 #endif //TMS_EXPRESS_AUDIOPREPROCESSOR_H

@@ -1,28 +1,26 @@
-//
-// Created by Joseph Bellahcen on 5/8/22.
-//
-
 #ifndef TMS_EXPRESS_FRAMEPOSTPROCESSOR_H
 #define TMS_EXPRESS_FRAMEPOSTPROCESSOR_H
 
-#include "Frame_Encoding/Frame.h"
-#include "LPC_Analysis/LowerVocalTractAnalyzer.h"
+#include "Frame.h"
+#include <vector>
 
-class FramePostProcessor {
+class FramePostprocessor {
 public:
-    FramePostProcessor(Frame **frames, int count, float maxVoicedGainDB = 37.5, float maxUnvoicedGainDB = 37.5);
+    explicit FramePostprocessor(std::vector<Frame> *frames, float maxVoicedGainDB = 37.5, float maxUnvoicedGainDB = 37.5);
 
     void normalizeGain();
     void shiftGain(int offset);
     void detectRepeatFrames();
 
+    // TODO: implement
+    void fixPitch(int freqHz);
+
 private:
-    Frame **frames;
-    int count;
+    std::vector<Frame> *frameData;
     float maxVoicedGain;
     float maxUnvoicedGain;
 
-    void normalizeGain(Voicing voicing);
+    void normalizeGain(bool voiced);
 };
 
 #endif //TMS_EXPRESS_FRAMEPOSTPROCESSOR_H

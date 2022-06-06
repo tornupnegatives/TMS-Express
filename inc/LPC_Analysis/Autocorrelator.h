@@ -1,18 +1,11 @@
-//
-// Created by Joseph Bellahcen on 4/11/22.
-//
-
 #ifndef TMS_EXPRESS_AUTOCORRELATOR_H
 #define TMS_EXPRESS_AUTOCORRELATOR_H
 
+#include <vector>
+
 class Autocorrelator {
 public:
-    explicit Autocorrelator(int samplesPerSegment);
-    float *autocorrelation(float *segment);
-    float energy(float *segment);
-
-private:
-    int samplesPerSegment;
+    static std::vector<float> process(const std::vector<float>& segment);
 };
 
 #endif //TMS_EXPRESS_AUTOCORRELATOR_H

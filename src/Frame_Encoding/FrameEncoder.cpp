@@ -1,127 +1,120 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class: FrameEncoder
 //
-// Created by Joseph Bellahcen on 5/1/22.
+// Description: The FrameEncoder generates a bitstream representing a Frame vector. This bitstream adheres to the LPC-10
+//              specification, and data is segmented into reversed hex bytes to mimic the behavior of the TMS6100 Voice
+//              Synthesis Memory device.
 //
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Frame_Encoding/FrameEncoder.h"
+#include "Frame_Encoding/Frame.h"
 
-#include <bitset>
-#include <cstdlib>
-
-FrameEncoder::FrameEncoder(Frame **frames, int count) {
-    FrameEncoder::frames = frames;
-    FrameEncoder::count = count;
-
-    FrameEncoder::binStream = std::string();
-    FrameEncoder::hexStream = std::string();
+FrameEncoder::FrameEncoder(bool hexPrefix, char separator) {
+    includeHexPrefix = hexPrefix;
+    byteSeparator = separator;
+    bytes = std::vector<std::string>(1, "");
 }
 
-FrameEncoder::~FrameEncoder() {
-    // Free frames
-    for (int i = 0; i < count; i++) {
-        if (frames[i] != nullptr) {
-            delete frames[i];
-        }
-    }
+FrameEncoder::FrameEncoder(const std::vector<Frame> &frames, bool hexPrefix, char separator) {
+    includeHexPrefix = hexPrefix;
+    byteSeparator = separator;
+    bytes = std::vector<std::string>(1, "");
 
-    if (frames != nullptr) {
-        free(frames);
-    }
+    appendFrames(frames);
 }
 
-void FrameEncoder::serialize(char *path) {
-    // Convert all frames into a single bitstream
-    for (int i = 0; i < count; i++) {
-        auto frame = frames[i];
-        frameToBinary(frame);
+// Extract the binary representation of a Frame, segment it into bytes, and store the data
+//
+// The binary representation of a Frame is seldom cleanly divisible into bytes. As such, the first few bits of a Frame
+// may be packed into the empty space of an existing vector element, or the last few bits may partially occupy a new
+// vector element
+void FrameEncoder::appendFrame(Frame frame) {
+    auto bin = frame.toBinary();
+
+    // Check to see if the previous byte is incomplete (contains less than 8 characters), and fill it if so
+    auto emptyBitsInLastByte = 8 - bytes.back().size();
+    if (emptyBitsInLastByte != 0) {
+        bytes.back() += bin.substr(0, emptyBitsInLastByte);
+        bin.erase(0, emptyBitsInLastByte);
     }
 
-    // A stop frame signals to the TMS5220 that
-    // the talk sequence is finished
-    appendStopFrame();
+    // Segment the rest of the binary frame into bytes. The final byte will likely be incomplete, but that will be
+    // addressed either in a subsequent call to appendFrame() or during hex stream generation
+    while (!bin.empty()) {
+        auto byte = bin.substr(0, 8);
+        bytes.push_back(byte);
 
-    // Convert the binary stream to hex, one byte at a time
-    for (int i = 0; i < binStream.size(); i+= 8) {
-        auto byte = binStream.substr(i, 8);;
-        binToHex(byte.c_str());
-    }
-
-    // Remove trailing comma
-    hexStream.erase(hexStream.size() - 1);
-    printf("%s\n", hexStream.c_str());
-
-    FILE *lpcOut = fopen(path, "w");
-    if (lpcOut != nullptr) {
-        fputs(hexStream.c_str(), lpcOut);
-        fclose(lpcOut);
+        bin.erase(0, 8);
     }
 }
 
-void FrameEncoder::frameToBinary(Frame *frame) {
-    // At minimum, a frame will contain an energy parameter
-    int gain = frame->getQuantizedGain();
-    auto gainBin = std::bitset<energySize>(gain).to_string();
-    binStream.append(gainBin);
-
-    // A zero energy frame contains no further parameters
-    if (gain == 0) {
-        return;
+// Extract the binary representation of an entire vector of Frames, and slice it into bytes
+void FrameEncoder::appendFrames(const std::vector<Frame> &frames) {
+    for (const auto &frame: frames) {
+        appendFrame(frame);
     }
-
-    // TODO: Detect repeat frames
-    // A repeat frame will also contain the repeat and pitch parameters
-    bool repeat = false;
-    binStream.append(repeat ? "1" : "0");
-
-    // An unvoiced frame has zero pitch
-    bool voiced = frame->getQuantizedVoicing();
-    int pitch =  voiced ? frame->getQuantizedPitch() : 0;
-
-    auto pitchBin = std::bitset<pitchSize>(pitch).to_string();
-    binStream.append(pitchBin);
-
-    if (repeat) {
-        return;
-    }
-
-    // Both voiced and unvoiced frames contain reflector coefficients or
-    // "k parameters." Unvoiced frames contain four, while voiced frames contain ten
-    int *coeffs = frame->getQuantizedCoefficients();
-    const int numParams = voiced ? 10 : 4;
-
-    // Not all k parameters are the same width
-    for (int i = 0; i < numParams; i++) {
-        int coeff = coeffs[i];
-        std::string coeffBin;
-
-        if (i < 2) {
-            coeffBin = std::bitset<k1_k2Size>(coeff).to_string();
-
-        } else if (i < 7) {
-            coeffBin = std::bitset<k3_k7Size>(coeff).to_string();
-
-        } else {
-            coeffBin = std::bitset<k8_k10Size>(coeff).to_string();
-        }
-
-        binStream.append(coeffBin);
-    }
-
-    free(coeffs);
 }
 
-void FrameEncoder::binToHex(const char *bin) {
-    std::string binStr = std::string(bin);
-    reverse(binStr.begin(), binStr.end());
-    int byte = std::stoi(binStr, nullptr, 2);
+// Serialize the Frame data to a stream of hex bytes
+std::string FrameEncoder::toHex(bool shouldAppendStopFrame) {
+    std::string hexStream;
 
-    char hexByte[4];
-    sprintf(hexByte, "%02x,", byte);
-    hexStream.append(hexByte);
+    if (shouldAppendStopFrame) {
+        appendStopFrame();
+    }
+
+    // Pad final byte with zeros
+    auto emptyBitsInLastByte = 8 - bytes.back().size();
+    if (emptyBitsInLastByte != 0) {
+        bytes.back() += std::string(emptyBitsInLastByte, '0');
+    }
+
+    // Reverse each byte and convert to hex
+    for (auto byte : bytes) {
+        std::reverse(byte.begin(), byte.end());
+        hexStream += byteToHex(byte) + byteSeparator;
+    }
+
+    // Remove final trailing comma
+    hexStream.erase(hexStream.end() - 1);
+
+    return hexStream;
 }
 
-// Pack a stop frame and add it to the filestream
+// End the hex stream with a stop frame, which signifies to the TMS5220 that the Speak External command has completed
+// and the device should halt execution
 void FrameEncoder::appendStopFrame() {
-    const int stopFrame = 0x0f;
-    auto energyBin = std::bitset<energySize>(stopFrame).to_string();
-    binStream.append(energyBin);
+    auto bin = std::string("1111");
+
+    // Check to see if the previous byte is incomplete (contains less than 8 characters), and fill it if so
+    auto emptyBitsInLastByte = 8 - bytes.back().size();
+    if (emptyBitsInLastByte != 0) {
+        bytes.back() += bin.substr(0, emptyBitsInLastByte);
+        bin.erase(0, emptyBitsInLastByte);
+    }
+
+    // Segment the rest of the binary frame into bytes. The final byte will likely be incomplete, but that will be
+    // addressed either in a subsequent call to appendFrame() or during hex stream generation
+    while (!bin.empty()) {
+        auto byte = bin.substr(0, 8);
+        bytes.push_back(byte);
+
+        bin.erase(0, 8);
+    }
+}
+
+std::string FrameEncoder::byteToHex(const std::string &byte) const {
+    int value = std::stoi(byte, nullptr, 2);
+
+    char hexByte[6];
+
+    if (includeHexPrefix) {
+        sprintf(hexByte, "0x%02x", value);
+    } else {
+        sprintf(hexByte, "%02x", value);
+    }
+
+    return {hexByte};
 }
