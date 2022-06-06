@@ -10,6 +10,7 @@
 #include "Audio/AudioBuffer.h"
 #include <samplerate.h>
 #include <sndfile.hh>
+#include <stdexcept>
 #include <vector>
 
 // Extract 8kHz mono audio samples from the provided file

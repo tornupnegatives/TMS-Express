@@ -10,6 +10,7 @@
 
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/Frame.h"
+#include <algorithm>
 
 FrameEncoder::FrameEncoder(bool hexPrefix, char separator) {
     includeHexPrefix = hexPrefix;

@@ -9,6 +9,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "LPC_Analysis/PitchEstimator.h"
+#include <algorithm>
 #include <vector>
 
 PitchEstimator::PitchEstimator(int sampleRateHz, int minFrqHz, int maxFrqHz) {

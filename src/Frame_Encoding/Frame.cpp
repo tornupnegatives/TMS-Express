@@ -11,7 +11,7 @@
 
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/Tms5220CodingTable.h"
-
+#include <algorithm>
 #include <iostream>
 #include <vector>
 

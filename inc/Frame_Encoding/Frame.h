@@ -1,6 +1,7 @@
 #ifndef TMS_EXPRESS_FRAME_H
 #define TMS_EXPRESS_FRAME_H
 
+#include <string>
 #include <vector>
 
 class Frame {
