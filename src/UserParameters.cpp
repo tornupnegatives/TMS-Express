@@ -19,25 +19,26 @@ UserParameters::UserParameters(int argc, char **argv) {
     // Build Boost options
     auto desc = po::options_description("Allowed options");
     desc.add_options()
-        ("help", "display summary of allowed options")
-        ("input", value<std::string>(),"path to audio file for processing")
+        ("help,h", "display summary of allowed options")
+        ("input,i", value<std::string>(),"path to audio file for processing")
         ("width", value<float>()->default_value(25.0), "width of segmentation window (ms)")
-        ("highpass", value<int>()->default_value(600), "highpass filter cutoff (Hz)")
+        ("highpass,", value<int>()->default_value(600), "highpass filter cutoff (Hz)")
         ("lowpass", value<int>()->default_value(400), "lowpass filter cutoff (Hz)")
         ("alpha", value<float>()->default_value(-0.9375), "pre-emphasis alpha")
         ("include-prefix", value<bool>()->default_value(false), "prefix hex output with \"0x\"")
         ("separator", value<char>()->default_value(','), "bitstream separator")
         ("include-stop-frame", value<bool>()->default_value(true), "end the bitstream with a stop frame")
+        ("gain", value<int>()->default_value(1), "increase the prediction gain by offsetting the coding table index")
         ("max-voiced-gain", value<float>()->default_value(37.5), "max gain (dB) for voiced frames")
         ("max-unvoiced-gain", value<float>()->default_value(37.5), "max gain (dB) for unvoiced frames")
         ("max-frq", value<int>()->default_value(50), "max pitch frequency (Hz)")
         ("min-frq", value<int>()->default_value(500), "min pitch frequency (Hz)")
-        ("output", value<std::string>(), "path to output bitstream")
+        ("output,o", value<std::string>(), "path to output bitstream")
         ;
 
     // Get arguments
     po:boost::program_options::variables_map variables;
-    po::store(po::command_line_parser(argc, argv).options(desc).run(), variables);
+    po::store(po::command_line_parser(argc, argv).options(desc).allow_unregistered().run(), variables);
     po::notify(variables);
 
     // Input validation
@@ -60,6 +61,7 @@ UserParameters::UserParameters(int argc, char **argv) {
     includeHexPrefix = variables["include-prefix"].as<bool>();
     hexStreamSeparator = variables["separator"].as<char>();
     shouldAppendStopFrame = variables["include-stop-frame"].as<bool>();
+    gainShift = variables["gain"].as<int>();
     maxVoicedGainDb = variables["max-voiced-gain"].as<float>();
     maxUnvoicedGainDb = variables["max-unvoiced-gain"].as<float>();
     minFrqHz = variables["max-frq"].as<int>();
@@ -97,6 +99,10 @@ char UserParameters::getHexStreamSeparator() const {
 
 bool UserParameters::getShouldAppendStopFrame() const {
     return shouldAppendStopFrame;
+}
+
+int UserParameters::getGainShift() const {
+    return gainShift;
 }
 
 float UserParameters::getMaxVoicedGainDb() const {

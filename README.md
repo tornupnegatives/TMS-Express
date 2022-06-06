@@ -21,8 +21,9 @@ $ TMS_Express --input <path/to/input/audio> --output <path/to/output/bistream>
 - `highpass` and `lowpass`: Speech data occupies a relatively small frequency band compared to what digital audio files are capable of representing. Filtering out unnecessary frequencies may lead to more accurated LPC analysis
 - `alpha`: While the pitch of speech is characterized by the lower frequency band, LPC algorithms which characterize the upper vocal tract benefit from an exaggeration of high frequency data. A pre-emphasis filter will exaggerate this part of the spectrum and lead to crisper, more accurate synthesis
 - `include-prefix`: Prefixes each hex byte of the bitstream with `0x`
-- `separator`: Specifies the character for delimiting hex bytes in the bistream
+- `separator`: Specifies the character for delimiting hex bytes in the bitstream
+- `gain`: Increases the gain of the synthesized signal by adjusting the index of the coding table element. Gain offsets greater than the max size of the coding table will hit the ceiling
 - `max-voiced-gain`: Specifies the maximum gain (dB) of the output signal for voiced frames (vowels)
 - `max-unvoiced-gain`: Specifies the maximum gain (dB) of the output signal for unvoiced frames (consonants)
 - `max-frq`: Specifies the maximum representable pitch frequency of the output signal
-- `min-frq`: Specifices the minimum representable pitch frequency of the output signal
+- `min-frq`: Specifies the minimum representable pitch frequency of the output signal

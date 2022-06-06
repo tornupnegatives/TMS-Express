@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     // Apply post-processing and serialize Frame data
     auto postProcessor = FramePostprocessor(&frames, params.getMaxVoicedGainDb(), params.getMaxUnvoicedGainDb());
     postProcessor.normalizeGain();
-    postProcessor.shiftGain(1);
+    postProcessor.shiftGain(params.getGainShift());
 
     auto encoder = FrameEncoder(frames, params.getIncludeHexPrefix(), params.getHexStreamSeparator());
     auto frameBin = encoder.toHex(params.getShouldAppendStopFrame());

@@ -17,6 +17,7 @@ public:
     bool getIncludeHexPrefix() const;
     char getHexStreamSeparator() const;
     bool getShouldAppendStopFrame() const;
+    int getGainShift() const;
     float getMaxVoicedGainDb() const;
     float getMaxUnvoicedGainDb() const;
     int getMinFrqHz() const;
@@ -39,6 +40,7 @@ private:
     bool shouldAppendStopFrame;
 
     // FramePostprocessor
+    int gainShift;
     float maxVoicedGainDb;
     float maxUnvoicedGainDb;
 

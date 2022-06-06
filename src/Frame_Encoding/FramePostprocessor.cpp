@@ -48,10 +48,14 @@ void FramePostprocessor::normalizeGain(bool voiced) {
 }
 
 void FramePostprocessor::shiftGain(int offset) {
+    if (!offset) {
+        return;
+    }
+
     for (Frame &frame : *frameData) {
         int quantizedGain = frame.getQuantizedGainIdx();
 
-        // Do not attempt to amplify silent frames
+        // Only modify non-silent frames
         if (quantizedGain > 0) {
             frame.setQuantizedGain(quantizedGain + offset);
         }
