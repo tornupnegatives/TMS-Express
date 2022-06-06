@@ -79,7 +79,7 @@ void AudioBuffer::setSamples(const std::vector<float> &newSamples) {
 }
 
 std::vector<float> AudioBuffer::getSegment(int i) {
-    if (i >= samplesPerSegment) {
+    if (i >= nSegments) {
         throw std::range_error("Segment index out of bounds");
     }
 
