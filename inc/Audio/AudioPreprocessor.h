@@ -2,6 +2,7 @@
 #define TMS_EXPRESS_AUDIOPREPROCESSOR_H
 
 #include "AudioBuffer.h"
+#include <string>
 #include <vector>
 
 class AudioPreprocessor {

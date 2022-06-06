@@ -3,6 +3,7 @@
 //
 
 #include "LPC_Analysis/Autocorrelator.h"
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <vector>

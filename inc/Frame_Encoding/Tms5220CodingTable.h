@@ -2,6 +2,7 @@
 #define TMS_EXPRESS_TMS5220CODINGTABLE_H
 
 #include <array>
+#include <stdexcept>
 #include <vector>
 
 using std::vector;

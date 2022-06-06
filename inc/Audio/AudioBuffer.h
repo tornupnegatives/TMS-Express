@@ -1,6 +1,7 @@
 #ifndef TMS_EXPRESS_AUDIOBUFFER_H
 #define TMS_EXPRESS_AUDIOBUFFER_H
 
+#include <string>
 #include <vector>
 
 class AudioBuffer {
