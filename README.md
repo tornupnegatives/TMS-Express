@@ -2,8 +2,20 @@
 TMS Express performs linear predictive coding (LPC) analysis on speech data and generates bitstreams compatible with the TMS5220 Voice Synthesis Processor
 
 # Dependencies
-TMS Express relies on `libsndfile` and `libsamplerate` for importing and resampling audio input. The command-line interface is provided by `Boost`, and `googletest` is used for unit testing. Please ensure these libraries are present on the system before invoking the following build commands:
+TMS Express is built with `cmake` and relies on `libsndfile` and `libsamplerate` for importing and resampling audio input. The command-line interface is provided by `Boost`, and `googletest` is used for unit testing. Please ensure these libraries are present on the system (`googletest` will be installed locally via `cmake`, and `libsndfile` will be installed as a dependency of `libsamplerate`).
 
+
+## On macOS
+```shell
+$ brew install cmake libsamplerate boost
+```
+
+## On Debian/Ubuntu
+```shell
+$ sudo apt install cmake libsamplerate libboost-all-dev
+```
+
+## Compiling
 ```shell
 $ cmake -S . -b build
 $ cd build && make -j
