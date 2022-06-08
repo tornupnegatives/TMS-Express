@@ -72,7 +72,7 @@ namespace Tms5220CodingTable {
     const int voicingWidth = 1;
     const array<int, 10> coeffWidths = {5, 5, 4, 4, 4, 4, 4, 3, 3, 3};
 
-    vector<float> kCoeffsSlice(int i) {
+    static vector<float> kCoeffsSlice(int i) {
         switch (i) {
             case 0:
                 return {k1.begin(), k1.end()};

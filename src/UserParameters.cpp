@@ -18,7 +18,7 @@ using po::bool_switch;
 
 UserParameters::UserParameters(int argc, char **argv) {
     // Build Boost options
-    auto desc = po::options_description("TMS Express options:");
+    auto desc = po::options_description("TMS Express options");
     desc.add_options()
         ("help,h", "display summary of allowed options")
         ("input,i", value<std::string>()->required(),"path to audio file for processing")
@@ -29,9 +29,9 @@ UserParameters::UserParameters(int argc, char **argv) {
         ("include-prefix,p", bool_switch()->default_value(false), "prefix hex output with \"0x\"")
         ("separator,s", value<char>()->default_value(','), "bitstream separator")
         ("no-stop-frame,n", bool_switch()->default_value(true), "end the bitstream with a stop frame")
-        ("gain,g", value<int>()->default_value(1), "increase the prediction gain by offsetting the coding table index")
+        ("gain,g", value<int>()->default_value(2), "increase the prediction gain by offsetting the coding table index")
         ("max-voiced-gain,v", value<float>()->default_value(37.5), "max gain (dB) for voiced frames")
-        ("max-unvoiced-gain,u", value<float>()->default_value(37.5), "max gain (dB) for unvoiced frames")
+        ("max-unvoiced-gain,u", value<float>()->default_value(30), "max gain (dB) for unvoiced frames")
         ("max-frq,c", value<int>()->default_value(50), "max pitch frequency (Hz)")
         ("min-frq,d", value<int>()->default_value(500), "min pitch frequency (Hz)")
         ("output,o", value<std::string>()->required(), "path to output bitstream")
@@ -135,4 +135,3 @@ int UserParameters::getMaxFrqHz() const {
 const std::string &UserParameters::getOutputLpcPath() const {
     return outputLpcPath;
 }
-

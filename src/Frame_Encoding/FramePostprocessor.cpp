@@ -9,6 +9,7 @@
 
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FramePostprocessor.h"
+#include "Frame_Encoding/Tms5220CodingTable.h"
 #include <vector>
 
 FramePostprocessor::FramePostprocessor(std::vector<Frame> *frames, float maxVoicedGainDB, float maxUnvoicedGainDB) {
@@ -48,6 +49,7 @@ void FramePostprocessor::normalizeGain(bool voiced) {
 }
 
 void FramePostprocessor::shiftGain(int offset) {
+    // If zero offset, do nothing
     if (!offset) {
         return;
     }
@@ -55,8 +57,18 @@ void FramePostprocessor::shiftGain(int offset) {
     for (Frame &frame : *frameData) {
         int quantizedGain = frame.getQuantizedGainIdx();
 
-        // Only modify non-silent frames
-        if (quantizedGain > 0) {
+        // If the Frame is silent, do nothing
+        if (quantizedGain == 0) {
+            continue;
+        }
+
+        // If the shifted gain would exceed the maximum representable gain of the coding table, let it "hit the
+        // ceiling." However, because overuse of the largest gain parameter may destabilize the synthesized signal,
+        // the shifted gain is ceiling-ed to the penultimate coding table index
+        if (quantizedGain + offset >= Tms5220CodingTable::rms.size()) {
+            frame.setQuantizedGain(Tms5220CodingTable::rms.size() - 2);
+
+        } else if (quantizedGain > 0) {
             frame.setQuantizedGain(quantizedGain + offset);
         }
     }
