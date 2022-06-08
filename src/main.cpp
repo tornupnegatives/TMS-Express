@@ -15,8 +15,18 @@ int main(int argc, char **argv) {
     // Parse arguments
     auto params = UserParameters(argc, argv);
 
-    // Import audio file and mix to 8kHz mono
+    // Check if file exists
     const std::string &inPath = params.getInputPath();
+    FILE *file = fopen(inPath.c_str(), "r");
+
+    if (file == nullptr) {
+        std::cerr << "Error: could not open audio file" << std::endl;
+        exit(EXIT_FAILURE);
+    } else {
+        fclose(file);
+    }
+
+    // Import audio samples and mix to 8kHz mono
     AudioBuffer buffer = AudioBuffer(inPath, 8000, params.getWindowWidthMs());
 
     // Prepare separate analysis buffer for pitch estimation
