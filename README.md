@@ -12,7 +12,7 @@ $ brew install cmake libsamplerate boost
 
 ## On Debian/Ubuntu
 ```shell
-$ sudo apt install cmake libsamplerate libboost-all-dev
+$ sudo apt install cmake libsamplerate-dev libboost-all-dev
 ```
 
 ## Compiling
@@ -25,7 +25,7 @@ $ cd build && make -j
 At minimum, TMS Express requires an input audio file (any format supported by `libsndfile`) and an output path for the bitstream.
 
 ```shell
-$ TMS_Express --input <path/to/input/audio> --output <path/to/output/bistream>
+$ tmsexpress --input <path/to/input/audio> --output <path/to/output/bistream>
 ```
 
 ### Additional Options
