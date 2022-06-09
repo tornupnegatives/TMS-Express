@@ -85,6 +85,10 @@ int main(int argc, char **argv) {
     postProcessor.normalizeGain();
     postProcessor.shiftGain(params.getGainShift());
 
+    if (params.getDetectRepeats()) {
+        postProcessor.detectRepeatFrames();
+    }
+
     auto encoder = FrameEncoder(frames, params.getIncludeHexPrefix(), params.getHexStreamSeparator());
     auto frameBin = encoder.toHex(params.getShouldAppendStopFrame());
 

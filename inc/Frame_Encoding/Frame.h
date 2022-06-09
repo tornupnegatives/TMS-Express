@@ -14,6 +14,8 @@ public:
     bool getVoicing() const;
     void setVoicing(bool isVoiced);
 
+    void setRepeat(bool isRepeat);
+
     float getGain() const;
     void setGain(float gainDb);
 
@@ -37,6 +39,7 @@ public:
 private:
     int pitch;
     bool voicedFrame;
+    bool repeatFrame;
     float gain;
     std::vector<float> reflectorCoeffs;
 

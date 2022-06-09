@@ -73,3 +73,28 @@ void FramePostprocessor::shiftGain(int offset) {
         }
     }
 }
+
+// Detect and mark "repeat" Frames
+//
+// Because the human vocal tract changes rather slowly, consecutive encoded Frames may not always vary significantly.
+// In this case, the size of the bitstream can be reduced by marking certain Frames a repeats of preceding ones and
+// allowing the LPC synthesizer to reuse parameters
+void FramePostprocessor::detectRepeatFrames() {
+    for (int i = 1; i < frameData->size(); i++) {
+        Frame previousFrame = frameData->at(i - 1);
+        Frame &frame = frameData->at(i);
+
+        if (frame.isSilent() || previousFrame.isSilent()) {
+            continue;
+        }
+
+        // The first reflector coefficient is useful in characterizing a Frame, and experimentally is a good indicator
+        // of similarity between consecutive Frames
+        int prevCoeff = previousFrame.getQuantizedCoeffsIdx()[0];
+        auto coeff = frame.getQuantizedCoeffsIdx()[0];
+
+        if (abs(coeff - prevCoeff) == 1) {
+            frame.setRepeat(true);
+        }
+    }
+}

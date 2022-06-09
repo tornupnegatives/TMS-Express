@@ -32,6 +32,7 @@ UserParameters::UserParameters(int argc, char **argv) {
         ("gain,g", value<int>()->default_value(2), "increase the prediction gain by offsetting the coding table index")
         ("max-voiced-gain,v", value<float>()->default_value(37.5), "max gain (dB) for voiced frames")
         ("max-unvoiced-gain,u", value<float>()->default_value(30), "max gain (dB) for unvoiced frames")
+        ("repeat,r", bool_switch()->default_value(false), "compress bitstream by removing redundant frames")
         ("max-frq,c", value<int>()->default_value(50), "max pitch frequency (Hz)")
         ("min-frq,d", value<int>()->default_value(500), "min pitch frequency (Hz)")
         ("output,o", value<std::string>()->required(), "path to output bitstream")
@@ -55,6 +56,13 @@ UserParameters::UserParameters(int argc, char **argv) {
         exit(EXIT_SUCCESS);
     }
 
+    // TODO: Input validation
+    // repeat-schema <= 2
+    // gain <= ?
+    // max-unvoiced-gain
+    // max-voiced-gain
+    // hpf & lpf
+
     // Try to store arguments. Show help message and crash on failure
     try {
         inputPath = variables["input"].as<std::string>();
@@ -68,6 +76,7 @@ UserParameters::UserParameters(int argc, char **argv) {
         gainShift = variables["gain"].as<int>();
         maxVoicedGainDb = variables["max-voiced-gain"].as<float>();
         maxUnvoicedGainDb = variables["max-unvoiced-gain"].as<float>();
+        detectRepeats = variables["repeat"].as<bool>();
         minFrqHz = variables["max-frq"].as<int>();
         maxFrqHz = variables["min-frq"].as<int>();
         outputLpcPath = variables["output"].as<std::string>();
@@ -122,6 +131,10 @@ float UserParameters::getMaxVoicedGainDb() const {
 
 float UserParameters::getMaxUnvoicedGainDb() const {
     return maxUnvoicedGainDb;
+}
+
+bool UserParameters::getDetectRepeats() const {
+    return detectRepeats;
 }
 
 int UserParameters::getMinFrqHz() const {

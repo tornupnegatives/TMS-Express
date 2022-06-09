@@ -20,6 +20,7 @@ public:
     int getGainShift() const;
     float getMaxVoicedGainDb() const;
     float getMaxUnvoicedGainDb() const;
+    bool getDetectRepeats() const;
     int getMinFrqHz() const;
     int getMaxFrqHz() const;
     const std::string &getOutputLpcPath() const;
@@ -43,6 +44,7 @@ private:
     int gainShift;
     float maxVoicedGainDb;
     float maxUnvoicedGainDb;
+    bool detectRepeats;
 
     // PitchEstimator
     int minFrqHz;

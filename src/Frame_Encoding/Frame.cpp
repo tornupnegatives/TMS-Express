@@ -22,6 +22,7 @@ using std::endl;
 Frame::Frame(int pitchPeriod, bool isVoiced, float gainDB, std::vector<float> coeffs) {
     pitch = pitchPeriod;
     voicedFrame = isVoiced;
+    repeatFrame = false;
     gain = gainDB;
     reflectorCoeffs = std::move(coeffs);
 }
@@ -44,6 +45,10 @@ bool Frame::getVoicing() const {
 
 void Frame::setVoicing(bool isVoiced) {
     voicedFrame = isVoiced;
+}
+
+void Frame::setRepeat(bool isRepeat) {
+    repeatFrame = isRepeat;
 }
 
 float Frame::getGain() const {
@@ -127,7 +132,7 @@ bool Frame::isSilent() const {
 
 // TODO: Implement repeat frames
 bool Frame::isRepeat() {
-    return false;
+    return repeatFrame;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
