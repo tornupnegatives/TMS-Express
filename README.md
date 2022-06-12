@@ -35,11 +35,14 @@ $ tmsexpress --input <path/to/input/audio> --output <path/to/output/bistream>
   - Lowering the highpass filter cutoff will improve the bass response of the audio
   - Adjusting the lowpass cutoff may have minor effects of pitch estimation
 - `alpha`: While the pitch of speech is characterized by the lower frequency band, LPC algorithms which characterize the upper vocal tract benefit from an exaggeration of high frequency data. A pre-emphasis filter will exaggerate this part of the spectrum and lead to crisper, more accurate synthesis
-- `include-prefix`: Prefixes each hex byte of the bitstream with `0x`
+- `hex-prefix`: Prefixes each hex byte of the bitstream with `0x`
 - `separator`: Specifies the character for delimiting hex bytes in the bitstream
+- `stop-frame`: Include an explicit stop frame to signal to the TMS5220 that the Speak External command has finished executing
 - `gain`: Increases the gain of the synthesized signal by adjusting the index of the coding table element. Gain offsets greater than the max size of the coding table will hit the ceiling
 - `max-voiced-gain`: Specifies the maximum gain (dB) of the output signal for voiced frames (vowels)
 - `max-unvoiced-gain`: Specifies the maximum gain (dB) of the output signal for unvoiced frames (consonants)
   - Ensuring that this value hovers around `0.8 * max-voiced-gain` will result in the most accurate synthesis of consonant sounds
+- `repeat`: Detect repeat frames to reduce the size of the bitstream
 - `max-frq`: Specifies the maximum representable pitch frequency of the output signal
 - `min-frq`: Specifies the minimum representable pitch frequency of the output signal
+- `verbose`: Output frame data to the console

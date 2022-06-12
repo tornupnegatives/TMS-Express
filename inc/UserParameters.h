@@ -24,6 +24,7 @@ public:
     int getMinFrqHz() const;
     int getMaxFrqHz() const;
     const std::string &getOutputLpcPath() const;
+    const bool getVerbose() const;
 
 private:
     // AudioBuffer
@@ -52,6 +53,7 @@ private:
 
     // Program output
     std::string outputLpcPath;
+    bool verbose;
 };
 
 #endif //TMS_EXPRESS_USERPARAMETERS_H

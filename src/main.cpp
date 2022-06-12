@@ -77,7 +77,6 @@ int main(int argc, char **argv) {
         // Store parameters in frame
         Frame frame = Frame(pitchPeriod, isVoiced, gain, coeffs);
         frames.push_back(frame);
-        frame.print(i + 1);
     }
 
     // Apply post-processing and serialize Frame data
@@ -89,6 +88,14 @@ int main(int argc, char **argv) {
         postProcessor.detectRepeatFrames();
     }
 
+    // Print Frames
+    if (params.getVerbose()) {
+        for (int i = 0; i < frames.size(); i++) {
+            frames[i].print(i);
+        }
+    }
+
+    // Encode Frames
     auto encoder = FrameEncoder(frames, params.getIncludeHexPrefix(), params.getHexStreamSeparator());
     auto frameBin = encoder.toHex(params.getShouldAppendStopFrame());
 

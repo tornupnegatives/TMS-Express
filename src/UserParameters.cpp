@@ -23,19 +23,20 @@ UserParameters::UserParameters(int argc, char **argv) {
         ("help,h", "display summary of allowed options")
         ("input,i", value<std::string>()->required(),"path to audio file for processing")
         ("width,w", value<float>()->default_value(25.0), "width of segmentation window (ms)")
-        ("highpass,j", value<int>()->default_value(600), "highpass filter cutoff (Hz)")
+        ("highpass,H", value<int>()->default_value(600), "highpass filter cutoff (Hz)")
         ("lowpass,l", value<int>()->default_value(400), "lowpass filter cutoff (Hz)")
         ("alpha,a", value<float>()->default_value(-0.9375), "pre-emphasis alpha")
-        ("include-prefix,p", bool_switch()->default_value(false), "prefix hex output with \"0x\"")
-        ("separator,s", value<char>()->default_value(','), "bitstream separator")
-        ("no-stop-frame,n", bool_switch()->default_value(true), "end the bitstream with a stop frame")
+        ("hex-prefix,p", bool_switch()->default_value(false), "prefix hex output with \"0x\"")
+        ("separator,c", value<char>()->default_value(','), "bitstream separator")
+        ("stop-frame,s", bool_switch()->default_value(true), "end the bitstream with a stop frame")
         ("gain,g", value<int>()->default_value(2), "increase the prediction gain by offsetting the coding table index")
         ("max-voiced-gain,v", value<float>()->default_value(37.5), "max gain (dB) for voiced frames")
         ("max-unvoiced-gain,u", value<float>()->default_value(30), "max gain (dB) for unvoiced frames")
         ("repeat,r", bool_switch()->default_value(false), "compress bitstream by removing redundant frames")
-        ("max-frq,c", value<int>()->default_value(50), "max pitch frequency (Hz)")
-        ("min-frq,d", value<int>()->default_value(500), "min pitch frequency (Hz)")
+        ("max-frq,M", value<int>()->default_value(50), "max pitch frequency (Hz)")
+        ("min-frq,m", value<int>()->default_value(500), "min pitch frequency (Hz)")
         ("output,o", value<std::string>()->required(), "path to output bitstream")
+        ("verbose,V", bool_switch()->default_value(false), "print frames")
         ;
 
     // Try parsing arguments. Show help message and crash on failure
@@ -70,9 +71,9 @@ UserParameters::UserParameters(int argc, char **argv) {
         highpassFilterCutoffHz = variables["highpass"].as<int>();
         lowpassFilterCutoffHz = variables["lowpass"].as<int>();
         preemphasisAlpha = variables["alpha"].as<float>();
-        includeHexPrefix = variables["include-prefix"].as<bool>();
+        includeHexPrefix = variables["hex-prefix"].as<bool>();
         hexStreamSeparator = variables["separator"].as<char>();
-        shouldAppendStopFrame = variables["no-stop-frame"].as<bool>();
+        shouldAppendStopFrame = variables["stop-frame"].as<bool>();
         gainShift = variables["gain"].as<int>();
         maxVoicedGainDb = variables["max-voiced-gain"].as<float>();
         maxUnvoicedGainDb = variables["max-unvoiced-gain"].as<float>();
@@ -80,6 +81,7 @@ UserParameters::UserParameters(int argc, char **argv) {
         minFrqHz = variables["max-frq"].as<int>();
         maxFrqHz = variables["min-frq"].as<int>();
         outputLpcPath = variables["output"].as<std::string>();
+        verbose = variables["verbose"].as<bool>();
 
     } catch (const std::exception& e) {
         std::cerr << "Error: could not parse arguments (" << e.what() << ")" << std::endl;
@@ -147,4 +149,8 @@ int UserParameters::getMaxFrqHz() const {
 
 const std::string &UserParameters::getOutputLpcPath() const {
     return outputLpcPath;
+}
+
+const bool UserParameters::getVerbose() const {
+    return verbose;
 }
