@@ -2,16 +2,22 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 14)
 project(TMS-Express)
 
-# Dependency: libsndfile and libsamplerate
-include_directories(/usr/local/include)
-link_directories(/usr/local/lib)
+# Dependency: libsndfile
+find_library(Sndfile sndfile REQUIRED)
+include_directories(${Sndfile_INCLUDE_DIR})
+
+# Dependency: libsamplerate
+find_library(Samplerate samplerate REQUIRED)
+include_directories(${Samplerate_INCLUDE_DIR})
 
 # Dependency: Boost::program_options
 find_package(Boost COMPONENTS program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
 # Unit tests
-include(test/TmsTest.cmake)
+if (DEFINED ENV{TMS_TEST})
+    include(test/TmsTest.cmake)
+endif()
 
 # Project files
 include_directories(inc/)
@@ -35,6 +41,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
 
 target_link_libraries(${PROJECT_NAME}
         ${Boost_LIBRARIES}
-        sndfile
-        samplerate
+        ${Sndfile}
+        ${Samplerate}
         )
