@@ -69,7 +69,7 @@ std::vector<float> LinearPredictor::reflectorCoefficients(const std::vector<floa
 // Source: http://www.sengpielaudio.com/calculator-soundlevel.htm
 float LinearPredictor::gain() const {
     // 10 * log10(x) == 20 * log10(sqrt(x))
-    float gain = 10.0f * log10f(abs(error) / 1e-12f);
-
-    return gain;
+    float gain = 10.0f * log10f(error / 1e-12f);
+    return abs(gain);
 }
+
