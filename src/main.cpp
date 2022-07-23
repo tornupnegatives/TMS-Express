@@ -1,5 +1,5 @@
 
-#include "Interfaces/Encoder.h"
+#include "Interfaces/BitstreamGenerator.h"
 
 #include "CLI/CLI.hpp"
 
@@ -9,8 +9,7 @@
 
 int main(int argc, char **argv) {
     CLI::App appMain;
-    CLI::App* appEncode = appMain.add_subcommand("encode", "Convert audio file to TMS5220 bitstream");
-    //CLI::App* appBatch = appMain.add_subcommand("batch", "Generate Arduino Talkie header or TMS6100 bin from multiple audio files");
+    CLI::App* appEncode = appMain.add_subcommand("encode", "Convert single audio file to TMS5220 bitstream");
 
     appMain.require_subcommand(1);
 
@@ -20,7 +19,7 @@ int main(int argc, char **argv) {
     int highpassCutoff = 600;
     int lowpassCutoff = 400;
     float preEmphasisAlpha = -0.9375f;
-    bool useCStyle = false;
+    EncoderStyle bitstreamFormat = ENCODERSTYLE_ASCII;
     char lpcSeparator = ',';
     bool noStopFrame = false;
     int gainShift = 2;
@@ -37,7 +36,7 @@ int main(int argc, char **argv) {
     appEncode->add_option("-b,--highpass", highpassCutoff, "Highpass filter cutoff (Hz)");
     appEncode->add_option("-l,--lowpass", lowpassCutoff, "Lowpass filter cutoff (Hz)");
     appEncode->add_option("-a,--alpha", preEmphasisAlpha, "Pre-emphasis filter coefficient");
-    appEncode->add_flag("-c,--c-style", useCStyle, "Generate bitstream as a C header");
+    appEncode->add_option("-f,--format", bitstreamFormat, "Bitstream format: ascii (0), c (1), arduino (2)")->check(CLI::Range(0, 2));
     appEncode->add_option("-s,--separator", lpcSeparator, "Separator for hex bitstreams");
     appEncode->add_flag("-n,--no-stop-frame", noStopFrame, "Do not end bitstream with stop frame");
     appEncode->add_option("-g,--gain-shift", gainShift, "Quantized gain shift");
@@ -51,13 +50,13 @@ int main(int argc, char **argv) {
     CLI11_PARSE(appMain, argc, argv);
 
     if (appMain.got_subcommand(appEncode)) {
-        auto encoder = Encoder(windowWidthMs, highpassCutoff, lowpassCutoff,
-                               preEmphasisAlpha, useCStyle, lpcSeparator,
-                               !noStopFrame, gainShift, maxVoicedGain,
-                               maxUnvoicedGain, useRepeatFrames, maxPitchFrq,
-                               minPitchFrq);
+        auto encoder = BitstreamGenerator(windowWidthMs, highpassCutoff, lowpassCutoff,
+                                          preEmphasisAlpha, bitstreamFormat, lpcSeparator,
+                                          !noStopFrame, gainShift, maxVoicedGain,
+                                          maxUnvoicedGain, useRepeatFrames, maxPitchFrq,
+                                          minPitchFrq);
 
-        encoder.encodeHex(inputPath, outputPath);
+        encoder.encode(inputPath, outputPath);
     }
 
     exit(EXIT_SUCCESS);

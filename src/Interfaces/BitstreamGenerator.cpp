@@ -1,14 +1,19 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class: BitstreamGenerator
 //
-// Created by Joseph Bellahcen on 7/16/22.
-// TODO: Documentation
+// Description: The BitstreamGenerator encapsulates the core functionality of TMS Express in a user-accessible
+//              interface. Given an audio file or directory thereof, it will perform LPC analysis and create a bitstream
+//              file in the desired format
 //
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Audio/AudioBuffer.h"
 #include "Audio/AudioPreprocessor.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostprocessor.h"
-#include "Interfaces/Encoder.h"
+#include "Interfaces/BitstreamGenerator.h"
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
@@ -16,23 +21,18 @@
 #include <iostream>
 #include <vector>
 
-
-Encoder::Encoder(float windowMs, int highpassHz, int lowpassHz, float preemphasis, bool cStyle, char separator,
-                 bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
-                 int maxHz, int minHz) : windowMs(windowMs), highpassHz(highpassHz), lowpassHz(lowpassHz),
-                                         preemphasisAlpha(preemphasis), cStyle(cStyle), separator(separator),
+BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style, char separator,
+                                       bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
+                                       int maxHz, int minHz) : windowMs(windowMs), highpassHz(highpassHz), lowpassHz(lowpassHz),
+                                         preemphasisAlpha(preemphasis), style(style), separator(separator),
                                          includeStopFrame(includeStopFrame), gainShift(gainShift),
                                          maxVoicedDB(maxVoicedDb), maxUnvoicedDB(maxUnvoicedDb),
                                          detectRepeats(detectRepeats), maxHz(maxHz), minHz(minHz) {}
 
-void Encoder::encode(const std::string &inputPath, const std::string &outputPath) {
+void BitstreamGenerator::encode(const std::string &inputPath, const std::string &outputPath) {
     // Perform LPC analysis and convert audio data to a bitstream
-    auto bitstream = analyzeAudio(inputPath);
-
-    // Either export the bitstream as a string for testing or as a C array for embedded development
-    if (cStyle) {
-        ;
-    }
+    auto bitstream = generateBitstream(inputPath);
+    bitstream = formatBitstream(bitstream, "TEMP");
 
     // Write bitstream to disk
     std::ofstream lpcOut;
@@ -41,7 +41,7 @@ void Encoder::encode(const std::string &inputPath, const std::string &outputPath
     lpcOut.close();
 }
 
-bool Encoder::inputFileExists(const std::string &inputPath) {
+bool BitstreamGenerator::inputFileExists(const std::string &inputPath) {
     FILE *file = fopen(inputPath.c_str(), "r");
     bool fileExists = (file != nullptr);
 
@@ -49,7 +49,7 @@ bool Encoder::inputFileExists(const std::string &inputPath) {
     return fileExists;
 }
 
-std::string Encoder::analyzeAudio(const std::string &inputPath) const {
+std::string BitstreamGenerator::generateBitstream(const std::string &inputPath) const {
     // Check if file exists
     if (!inputFileExists(inputPath)) {
         std::cerr << "Error: could not open audio file" << std::endl;
@@ -124,8 +124,29 @@ std::string Encoder::analyzeAudio(const std::string &inputPath) const {
     }
 
     // Encode frames to hex bitstreams
-    auto encoder = FrameEncoder(frames, cStyle, separator);
+    auto encoder = FrameEncoder(frames, style != ENCODERSTYLE_ASCII, separator);
     auto bitstream = encoder.toHex(includeStopFrame);
+
+    return bitstream;
+}
+
+std::string BitstreamGenerator::formatBitstream(std::string bitstream, const std::string &filename) {
+    // Either export the bitstream as a string for testing or as a C array for embedded development
+    switch(style) {
+        case ENCODERSTYLE_ASCII:
+            // ASCII-style bitstreams are the default format, and require no post-processing
+            break;
+        case ENCODERSTYLE_C:
+            // C-style bitstreams are headers which contain an integer array of bitstream values
+            // Format: const int bitstream_name [] = {<values>};
+            bitstream = "const int " + filename + "[] = {"  + bitstream + "};\n";
+            break;
+        case ENCODERSTYLE_ARDUINO:
+            // Arduino-style bitstreams are C-style bitstreams which include the Arduino header and PROGMEM keyword
+            // Format: extern const uint8_t bitstream_name [] PROGMEM = {<values>};
+            bitstream = "extern const uint8_t " + filename + "[] PROGMEM = {"  + bitstream + "};\n";
+            break;
+    }
 
     return bitstream;
 }

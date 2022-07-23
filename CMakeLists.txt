@@ -68,7 +68,7 @@ add_executable(${PROJECT_NAME}
         src/Frame_Encoding/FrameEncoder.cpp
         src/Frame_Encoding/FramePostprocessor.cpp
 
-        src/Interfaces/Encoder.cpp
+        src/Interfaces/BitstreamGenerator.cpp
 
         src/main.cpp
         )
