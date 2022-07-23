@@ -7,9 +7,9 @@ typedef enum {ENCODERSTYLE_ASCII, ENCODERSTYLE_C, ENCODERSTYLE_ARDUINO} EncoderS
 
 class BitstreamGenerator {
 public:
-    BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style, char separator,
-                       bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats, int maxHz,
-                       int minHz);
+    BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style,
+                       bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
+                       int maxHz, int minHz);
 
     void encode(const std::string &inputPath, const std::string &outputPath);
     //encodeBatch
@@ -20,7 +20,6 @@ private:
     int lowpassHz;
     float preemphasisAlpha;
     EncoderStyle style;
-    char separator;
     bool includeStopFrame;
     int gainShift;
     float maxVoicedDB;

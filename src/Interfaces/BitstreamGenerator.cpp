@@ -21,10 +21,10 @@
 #include <iostream>
 #include <vector>
 
-BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style, char separator,
+BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style,
                                        bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
                                        int maxHz, int minHz) : windowMs(windowMs), highpassHz(highpassHz), lowpassHz(lowpassHz),
-                                         preemphasisAlpha(preemphasis), style(style), separator(separator),
+                                         preemphasisAlpha(preemphasis), style(style),
                                          includeStopFrame(includeStopFrame), gainShift(gainShift),
                                          maxVoicedDB(maxVoicedDb), maxUnvoicedDB(maxUnvoicedDb),
                                          detectRepeats(detectRepeats), maxHz(maxHz), minHz(minHz) {}
@@ -124,7 +124,7 @@ std::string BitstreamGenerator::generateBitstream(const std::string &inputPath) 
     }
 
     // Encode frames to hex bitstreams
-    auto encoder = FrameEncoder(frames, style != ENCODERSTYLE_ASCII, separator);
+    auto encoder = FrameEncoder(frames, style != ENCODERSTYLE_ASCII, ',');
     auto bitstream = encoder.toHex(includeStopFrame);
 
     return bitstream;

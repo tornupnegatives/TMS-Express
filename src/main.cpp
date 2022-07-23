@@ -51,10 +51,9 @@ int main(int argc, char **argv) {
 
     if (appMain.got_subcommand(appEncode)) {
         auto encoder = BitstreamGenerator(windowWidthMs, highpassCutoff, lowpassCutoff,
-                                          preEmphasisAlpha, bitstreamFormat, lpcSeparator,
-                                          !noStopFrame, gainShift, maxVoicedGain,
-                                          maxUnvoicedGain, useRepeatFrames, maxPitchFrq,
-                                          minPitchFrq);
+                                          preEmphasisAlpha, bitstreamFormat, !noStopFrame,
+                                          gainShift, maxVoicedGain,maxUnvoicedGain,
+                                          useRepeatFrames, maxPitchFrq,minPitchFrq);
 
         encoder.encode(inputPath, outputPath);
     }
