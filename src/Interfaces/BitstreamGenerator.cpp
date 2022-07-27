@@ -14,6 +14,7 @@
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostprocessor.h"
 #include "Interfaces/BitstreamGenerator.h"
+#include "Interfaces/FileUtils.h"
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
@@ -30,9 +31,18 @@ BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpa
                                          detectRepeats(detectRepeats), maxHz(maxHz), minHz(minHz) {}
 
 void BitstreamGenerator::encode(const std::string &inputPath, const std::string &outputPath) {
+    // Check if file exists
+    auto file = FileUtils(inputPath);
+
+    if (!file.fileExists()) {
+        std::cerr << "Error: could not open audio file" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     // Perform LPC analysis and convert audio data to a bitstream
     auto bitstream = generateBitstream(inputPath);
-    bitstream = formatBitstream(bitstream, "TEMP");
+    auto filename = file.getFilename();
+    bitstream = formatBitstream(bitstream, filename);
 
     // Write bitstream to disk
     std::ofstream lpcOut;
@@ -41,21 +51,7 @@ void BitstreamGenerator::encode(const std::string &inputPath, const std::string 
     lpcOut.close();
 }
 
-bool BitstreamGenerator::inputFileExists(const std::string &inputPath) {
-    FILE *file = fopen(inputPath.c_str(), "r");
-    bool fileExists = (file != nullptr);
-
-    fclose(file);
-    return fileExists;
-}
-
 std::string BitstreamGenerator::generateBitstream(const std::string &inputPath) const {
-    // Check if file exists
-    if (!inputFileExists(inputPath)) {
-        std::cerr << "Error: could not open audio file" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
     // Mix audio to 8kHz mono and store in a segmented buffer
     auto lpcBuffer = AudioBuffer(inputPath, 8000, windowMs);
 

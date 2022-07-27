@@ -60,15 +60,17 @@ include_directories(inc/)
 add_executable(${PROJECT_NAME}
         src/Audio/AudioBuffer.cpp
         src/Audio/AudioPreprocessor.cpp
-        src/LPC_Analysis/Autocorrelator.cpp
 
+        src/LPC_Analysis/Autocorrelator.cpp
         src/LPC_Analysis/PitchEstimator.cpp
         src/LPC_Analysis/LinearPredictor.cpp
+
         src/Frame_Encoding/Frame.cpp
         src/Frame_Encoding/FrameEncoder.cpp
         src/Frame_Encoding/FramePostprocessor.cpp
 
         src/Interfaces/BitstreamGenerator.cpp
+        src/Interfaces/FileUtils.cpp
 
         src/main.cpp
         )

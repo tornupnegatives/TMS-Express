@@ -28,7 +28,6 @@ private:
     int maxHz;
     int minHz;
 
-    static bool inputFileExists(const std::string &inputPath);
     //FILE *outputFile(std::string outputPath);
     std::string generateBitstream(const std::string &inputPath) const;
     std::string formatBitstream(std::string bitstream, const std::string &filename);
