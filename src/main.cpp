@@ -20,7 +20,6 @@ int main(int argc, char **argv) {
     int lowpassCutoff = 400;
     float preEmphasisAlpha = -0.9375f;
     EncoderStyle bitstreamFormat = ENCODERSTYLE_ASCII;
-    char lpcSeparator = ',';
     bool noStopFrame = false;
     int gainShift = 2;
     float maxVoicedGain = 37.5f;
@@ -37,7 +36,6 @@ int main(int argc, char **argv) {
     appEncode->add_option("-l,--lowpass", lowpassCutoff, "Lowpass filter cutoff (Hz)");
     appEncode->add_option("-a,--alpha", preEmphasisAlpha, "Pre-emphasis filter coefficient");
     appEncode->add_option("-f,--format", bitstreamFormat, "Bitstream format: ascii (0), c (1), arduino (2)")->check(CLI::Range(0, 2));
-    appEncode->add_option("-s,--separator", lpcSeparator, "Separator for hex bitstreams");
     appEncode->add_flag("-n,--no-stop-frame", noStopFrame, "Do not end bitstream with stop frame");
     appEncode->add_option("-g,--gain-shift", gainShift, "Quantized gain shift");
     appEncode->add_option("-v,--max-voiced-gain", maxVoicedGain, "Max voiced/vowel gain (dB)");
