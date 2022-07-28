@@ -1,107 +1,60 @@
-#include "Audio/AudioBuffer.h"
-#include "Audio/AudioPreprocessor.h"
-#include "Frame_Encoding/Frame.h"
-#include "Frame_Encoding/FrameEncoder.h"
-#include "Frame_Encoding/FramePostprocessor.h"
-#include "LPC_Analysis/Autocorrelator.h"
-#include "LPC_Analysis/PitchEstimator.h"
-#include "LPC_Analysis/LinearPredictor.h"
-#include "UserParameters.h"
+
+#include "Interfaces/BitstreamGenerator.h"
+
+#include "CLI/CLI.hpp"
 
 #include <iostream>
 #include <fstream>
+#include <string>
 
 int main(int argc, char **argv) {
-    // Parse arguments
-    auto params = UserParameters(argc, argv);
+    CLI::App appMain;
+    CLI::App* appEncode = appMain.add_subcommand("encode", "Convert single audio file to TMS5220 bitstream");
 
-    // Check if file exists
-    const std::string &inPath = params.getInputPath();
-    FILE *file = fopen(inPath.c_str(), "r");
+    appMain.require_subcommand(1);
 
-    if (file == nullptr) {
-        std::cerr << "Error: could not open audio file" << std::endl;
-        exit(EXIT_FAILURE);
-    } else {
-        fclose(file);
+    // Encoder parameters
+    std::string inputPath;
+    float windowWidthMs = 25.0f;
+    int highpassCutoff = 600;
+    int lowpassCutoff = 400;
+    float preEmphasisAlpha = -0.9375f;
+    EncoderStyle bitstreamFormat = ENCODERSTYLE_ASCII;
+    bool noStopFrame = false;
+    int gainShift = 2;
+    float maxVoicedGain = 37.5f;
+    float maxUnvoicedGain = 30.0f;
+    bool useRepeatFrames = false;
+    int maxPitchFrq = 500;
+    int minPitchFrq = 50;
+    std::string outputPath;
+
+    // Parse command-line options and flags
+    appEncode->add_option("-i,--input,input", inputPath, "Path to audio file")->required();
+    appEncode->add_option("-w,--window", windowWidthMs, "Window width/speed (ms)");
+    appEncode->add_option("-b,--highpass", highpassCutoff, "Highpass filter cutoff (Hz)");
+    appEncode->add_option("-l,--lowpass", lowpassCutoff, "Lowpass filter cutoff (Hz)");
+    appEncode->add_option("-a,--alpha", preEmphasisAlpha, "Pre-emphasis filter coefficient");
+    appEncode->add_option("-f,--format", bitstreamFormat, "Bitstream format: ascii (0), c (1), arduino (2)")->check(CLI::Range(0, 2));
+    appEncode->add_flag("-n,--no-stop-frame", noStopFrame, "Do not end bitstream with stop frame");
+    appEncode->add_option("-g,--gain-shift", gainShift, "Quantized gain shift");
+    appEncode->add_option("-v,--max-voiced-gain", maxVoicedGain, "Max voiced/vowel gain (dB)");
+    appEncode->add_option("-u,--max-unvoiced-gain", maxUnvoicedGain, "Max unvoiced/consonant gain (dB)");
+    appEncode->add_flag("-r,--use-repeat-frames", useRepeatFrames, "Compress bitstream by detecting and repeating similar frames");
+    appEncode->add_option("-M,--max-pitch", maxPitchFrq, "Max pitch frequency (Hz)");
+    appEncode->add_option("-m,--min-pitch", minPitchFrq, "Min pitch frequency (Hz)");
+    appEncode->add_option("-o,--output,output", outputPath, "Path to output file")->required();
+
+    CLI11_PARSE(appMain, argc, argv);
+
+    if (appMain.got_subcommand(appEncode)) {
+        auto encoder = BitstreamGenerator(windowWidthMs, highpassCutoff, lowpassCutoff,
+                                          preEmphasisAlpha, bitstreamFormat, !noStopFrame,
+                                          gainShift, maxVoicedGain,maxUnvoicedGain,
+                                          useRepeatFrames, maxPitchFrq,minPitchFrq);
+
+        encoder.encode(inputPath, outputPath);
     }
 
-    // Import audio samples and mix to 8kHz mono
-    AudioBuffer buffer = AudioBuffer(inPath, 8000, params.getWindowWidthMs());
-
-    // Prepare separate analysis buffer for pitch estimation
-    auto lpcBuffer = buffer;
-    auto pitchBuffer = AudioBuffer(buffer);
-
-    // Perform preprocessing on each buffer
-    //
-    // Because pitch is a low-frequency component of the signal, the pitch buffer will undergo lowpass filtering.
-    // Conversely, a preemphasis filter will be applied to the LPC buffer to bring out the high-frequency components
-    AudioPreprocessor preprocessor = AudioPreprocessor();
-    preprocessor.applyBiquad(pitchBuffer, params.getLowpassFilterCutoffHz(), AudioPreprocessor::FILTER_LOWPASS);
-    preprocessor.applyBiquad(lpcBuffer, params.getHighpassFilterCutoffHz(), AudioPreprocessor::FILTER_HIGHPASS);
-    preprocessor.applyPreemphasis(lpcBuffer, params.getPreemphasisAlpha());
-
-    // Extract buffer metadata
-    unsigned int nSegments = lpcBuffer.getNSegments();
-    unsigned int sampleRate = lpcBuffer.getSampleRate();
-
-    // Analysis structures
-    PitchEstimator pitchEstimator = PitchEstimator(sampleRate, params.getMinFrqHz(), params.getMaxFrqHz());
-    LinearPredictor linearPredictor = LinearPredictor();
-
-    std::vector<Frame> frames = std::vector<Frame>();
-
-    for (int i = 0; i < nSegments; i++) {
-        // Get segment for frame
-        auto pitchSegment = pitchBuffer.getSegment(i);
-        auto lpcSegment = lpcBuffer.getSegment(i);
-
-        // Apply a window to the segment to smoothen boundaries, since information about the transition between
-        // segments is lost during the slicing process. This windowed signal will be used to compute the biased
-        // autocorrelation function, which is the basis of LPC analysis
-        preprocessor.applyHammingWindow(lpcSegment);
-        auto lpcAcf = Autocorrelator::process(lpcSegment);
-        auto pitchAcf = Autocorrelator::process(pitchSegment);
-
-        // Estimate pitch
-        unsigned int pitchPeriod = pitchEstimator.estimatePeriod(pitchAcf);
-
-        // Extract LPC coefficients and prediction gain
-        auto coeffs = linearPredictor.reflectorCoefficients(lpcAcf);
-        auto gain = linearPredictor.gain();
-
-        // Detect voicing
-        auto isVoiced = coeffs[0] < 0;
-
-        // Store parameters in frame
-        Frame frame = Frame(pitchPeriod, isVoiced, gain, coeffs);
-        frames.push_back(frame);
-    }
-
-    // Apply post-processing and serialize Frame data
-    auto postProcessor = FramePostprocessor(&frames, params.getMaxVoicedGainDb(), params.getMaxUnvoicedGainDb());
-    postProcessor.normalizeGain();
-    postProcessor.shiftGain(params.getGainShift());
-
-    if (params.getDetectRepeats()) {
-        postProcessor.detectRepeatFrames();
-    }
-
-    // Print Frames
-    if (params.getVerbose()) {
-        for (int i = 0; i < frames.size(); i++) {
-            frames[i].print(i);
-        }
-    }
-
-    // Encode Frames
-    auto encoder = FrameEncoder(frames, params.getIncludeHexPrefix(), params.getHexStreamSeparator());
-    auto frameBin = encoder.toHex(params.getShouldAppendStopFrame());
-
-    // Save output to file
-    std::ofstream lpcOut;
-    lpcOut.open(params.getOutputLpcPath());
-    lpcOut << frameBin;
-    lpcOut.close();
+    exit(EXIT_SUCCESS);
 }
