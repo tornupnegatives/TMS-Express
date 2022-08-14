@@ -130,7 +130,6 @@ bool Frame::isSilent() const {
     return getQuantizedGainIdx() == 0;
 }
 
-// TODO: Implement repeat frames
 bool Frame::isRepeat() {
     return repeatFrame;
 }

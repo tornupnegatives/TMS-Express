@@ -10,6 +10,7 @@ public:
     ~FileUtils();
 
     bool fileExists();
+    bool isDirectory();
     std::string getFilename();
 
 private:
