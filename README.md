@@ -13,7 +13,11 @@ Compared to existing encoders, TMS Express has the following advantages:
 
 # Installation
 ## Install via Homebrew 🍺
-Coming soon.
+Homebrew is the preferred installation method on macOS and Linux.
+
+```shell
+$ brew tap tornupnegatives/tmsexpress && brew install tms-express
+```
 
 ## Compile from Source
 ### Dependencies
