@@ -1,3 +1,5 @@
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+
 #ifndef TMS_EXPRESS_FRAMEPOSTPROCESSOR_H
 #define TMS_EXPRESS_FRAMEPOSTPROCESSOR_H
 
@@ -12,7 +14,7 @@ public:
     void shiftGain(int offset);
     void detectRepeatFrames();
 
-    // TODO: implement
+    // TODO: Implement in v2.0.0
     void fixPitch(int freqHz);
 
 private:

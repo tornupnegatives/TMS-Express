@@ -1,3 +1,5 @@
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+
 #ifndef TMS_EXPRESS_FRAME_H
 #define TMS_EXPRESS_FRAME_H
 
@@ -33,7 +35,8 @@ public:
     bool isSilent() const;
     bool isRepeat();
 
-    void print(int index = -1);
+    // The print() function remains implemented for debugging purposes
+    __attribute__((unused)) void print(int index = -1);
     std::string toBinary();
 
 private:

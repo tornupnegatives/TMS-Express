@@ -1,3 +1,5 @@
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+
 #ifndef TMS_EXPRESS_AUTOCORRELATOR_H
 #define TMS_EXPRESS_AUTOCORRELATOR_H
 
