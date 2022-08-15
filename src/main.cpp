@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     int highpassCutoff = 600;
     int lowpassCutoff = 400;
     float preEmphasisAlpha = -0.9375f;
-    EncoderStyle bitstreamFormat = ENCODERSTYLE_ASCII;
+    BitstreamGenerator::EncoderStyle bitstreamFormat = BitstreamGenerator::EncoderStyle::ENCODERSTYLE_ASCII;
     bool noStopFrame = false;
     int gainShift = 2;
     float maxVoicedGain = 37.5f;
