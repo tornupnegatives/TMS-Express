@@ -13,14 +13,18 @@ Compared to existing encoders, TMS Express has the following advantages:
 
 # Installation
 ## Install via Homebrew 🍺
-Coming soon.
+Homebrew is the preferred installation method on macOS and Linux.
+
+```shell
+$ brew tap tornupnegatives/tmsexpress && brew install tms-express
+```
 
 ## Compile from Source
 ### Dependencies
 TMS Express is built using CMake and dynamically links against `libsndfile` and `libsamplerate`. These libraries must
 be present not only on the build system, but also on the target machine.
 
-The program also takes advantage of the `CLI` library to provide a command-line interface, and the `googletest` 
+The program also takes advantage of the `CLI11` library to provide a command-line interface, and the `googletest` 
 framework for unit testing. However, CMake will automatically install local copies of both during the build sequence.
 
 ### Compilation
