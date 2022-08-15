@@ -1,3 +1,5 @@
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+
 #ifndef TMS_EXPRESS_AUDIOPREPROCESSOR_H
 #define TMS_EXPRESS_AUDIOPREPROCESSOR_H
 
@@ -10,7 +12,6 @@ public:
     explicit AudioPreprocessor();
 
     enum FilterBiquadMode {FILTER_LOWPASS, FILTER_HIGHPASS, FILTER_NONE};
-
     void applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, FilterBiquadMode mode);
     void applyPreemphasis(AudioBuffer &buffer, float alpha = -0.9375);
     void applyHammingWindow(std::vector<float> &segment);

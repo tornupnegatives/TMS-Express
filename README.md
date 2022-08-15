@@ -9,7 +9,7 @@ Compared to existing encoders, TMS Express has the following advantages:
 - Implements the original Levinson-Durbin recursion to determine LPC coefficients
 - Supports repeat frames for enhanced audio compression
 - Automatically downsamples and mixes audio files of any format
-- Performs batch encoding of multiple files into a single C header (Coming soon)
+- Performs batch encoding of multiple files
 
 # Installation
 ## Install via Homebrew 🍺
@@ -17,9 +17,11 @@ Coming soon.
 
 ## Compile from Source
 ### Dependencies
-TMS Express is build using CMake and relies on `libsndfile` and `libsamplerate` for audio I/O and must be
-installed by the user. The program also takes advantage of the `CLI11` library to provide a command-line interface and 
-the `googletest` framework for unit testing, however CMake will automatically install local copies of these two packages.
+TMS Express is built using CMake and dynamically links against `libsndfile` and `libsamplerate`. These libraries must
+be present not only on the build system, but also on the target machine.
+
+The program also takes advantage of the `CLI` library to provide a command-line interface, and the `googletest` 
+framework for unit testing. However, CMake will automatically install local copies of both during the build sequence.
 
 ### Compilation
 ```shell
@@ -29,8 +31,8 @@ $ cd build && make -j
 
 ## Usage
 ## The Encode Command
-The `encode` command accepts a single audio file and a variety of parameters which affect how it is processed, analyzed,
-and formatted for output.
+The `encode` command accepts audio file(s) and a variety of parameters which affect how they are processed, analyzed,
+and formatted for output. TMS Express automatically detects when the input path is a directory and performs a batch job.
 
 ```shell
 $ tmsexpress encode [OPTIONS] input output

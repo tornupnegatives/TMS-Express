@@ -23,7 +23,6 @@ std::vector<float> Autocorrelator::process(const std::vector<float> &segment) {
             sum += segment[j] * segment[j + i];
         }
 
-        // TODO: Try unbiased acf[i] = sum / (size - i)
         acf[i] = (sum / float(size));
     }
 

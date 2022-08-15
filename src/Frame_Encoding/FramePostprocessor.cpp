@@ -18,11 +18,16 @@ FramePostprocessor::FramePostprocessor(std::vector<Frame> *frames, float maxVoic
     maxUnvoicedGain = maxUnvoicedGainDB;
 }
 
+// Normalize Frame gain
 void FramePostprocessor::normalizeGain() {
     normalizeGain(true);
     normalizeGain(false);
 }
 
+// Normalize Frame gain
+//
+// Without normalization, predicted gain will remain proportional to the original audio, however it will have lost its
+// point of reference. Normalization can mitigate DC offsets in the waveform and improve perceived volume
 void FramePostprocessor::normalizeGain(bool voiced) {
     // Compute the max gain value for a Frame category
     float maxGain = 0.0f;
@@ -48,6 +53,10 @@ void FramePostprocessor::normalizeGain(bool voiced) {
     }
 }
 
+// Shift gain by an integer offset in the coding table
+//
+// Following LPC analysis, changing the gain of audio is as simple as selecting a new index of the energy table.
+// A ceiling is applied to the offset to prevent unstable bitstreams
 void FramePostprocessor::shiftGain(int offset) {
     // If zero offset, do nothing
     if (!offset) {

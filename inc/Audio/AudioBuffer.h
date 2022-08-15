@@ -1,3 +1,5 @@
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+
 #ifndef TMS_EXPRESS_AUDIOBUFFER_H
 #define TMS_EXPRESS_AUDIOBUFFER_H
 
@@ -17,8 +19,8 @@ public:
 
     std::vector<float> getSegment(int i);
 
+    // Unused attributes remain implemented, as this class will likely reappear in other projects ;-)
     __attribute__((unused)) std::vector<std::vector<float>> getSegments();
-
     __attribute__((unused)) void exportAudio(const std::string &path);
 
 private:

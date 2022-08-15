@@ -130,8 +130,7 @@ bool Frame::isSilent() const {
     return getQuantizedGainIdx() == 0;
 }
 
-// TODO: Implement repeat frames
-bool Frame::isRepeat() {
+bool Frame::isRepeat() const {
     return repeatFrame;
 }
 
@@ -139,7 +138,7 @@ bool Frame::isRepeat() {
 //                              Frame Serialization
 ///////////////////////////////////////////////////////////////////////////////
 
-void Frame::print(int index) {
+__attribute__((unused)) void Frame::print(int index) {
     // Frame header
     cout << "Frame " << index << ":" << endl;
 

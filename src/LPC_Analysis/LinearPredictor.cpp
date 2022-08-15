@@ -72,4 +72,3 @@ float LinearPredictor::gain() const {
     float gain = 10.0f * log10f(error / 1e-12f);
     return abs(gain);
 }
-
