@@ -1,25 +1,29 @@
-#ifndef TMS_EXPRESS_FILEUTILS_H
-#define TMS_EXPRESS_FILEUTILS_H
+#ifndef TMS_EXPRESS_PATHUTILS_H
+#define TMS_EXPRESS_PATHUTILS_H
 
 #include <string>
 #include <vector>
 
-class FileUtils {
+class PathUtils {
 public:
-    FileUtils(std::string filepath);
-    ~FileUtils();
+    explicit PathUtils(std::string filepath);
 
-    bool fileExists();
-    bool isDirectory();
-    std::string getFilename();
+    bool fileExists() const;
+    bool isDirectory() const;
+    std::vector<std::string> getPaths();
+    std::vector<std::string> getFilenames();
 
 private:
-    FILE *file;
-    std::string path;
+    std::string srcPath;
     std::string fileExtension;
+    bool _exists;
+    bool _isDirectory;
+    std::vector<std::string> paths;
+    std::vector<std::string> filenames;
 
-    std::vector<std::string> splitString(std::string str, std::string delim);
+    static std::string extractFilenameFromPath(const std::string &path);
+    static std::vector<std::string> splitString(const std::string& str, const std::string& delim);
 };
 
 
-#endif //TMS_EXPRESS_FILEUTILS_H
+#endif //TMS_EXPRESS_PATHUTILS_H

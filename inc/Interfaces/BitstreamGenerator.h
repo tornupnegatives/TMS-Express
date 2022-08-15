@@ -11,8 +11,9 @@ public:
                        bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
                        int maxHz, int minHz);
 
-    void encode(const std::string &inputPath, const std::string &outputPath);
-    //encodeBatch
+    void encode(const std::string &inputPath, const std::string &inputFilename, const std::string &outputPath);
+    void encodeBatch(const std::vector<std::string> &inputPaths, const std::vector<std::string> &inputFilenames,
+                     const std::string &outputPath);
 
 private:
     float windowMs;

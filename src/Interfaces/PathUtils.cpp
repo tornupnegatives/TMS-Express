@@ -2,25 +2,53 @@
 // Created by Joseph Bellahcen on 7/23/22.
 //
 
-#include "Interfaces/FileUtils.h"
+#include "Interfaces/PathUtils.h"
+#include <experimental/filesystem>
 #include <string>
+#include <utility>
 #include <vector>
 
-FileUtils::FileUtils(std::string filepath) {
-    file = fopen(filepath.c_str(), "r");
-    path = filepath;
+PathUtils::PathUtils(std::string filepath) {
+    // Gather file metadata
+    srcPath = std::move(filepath);
+    _exists = std::experimental::filesystem::exists(srcPath);
+    _isDirectory = std::experimental::filesystem::is_directory(srcPath);
+
+    // Traverse directory (if applicable)
+    paths = std::vector<std::string>();
+    if (!_isDirectory) {
+        paths.push_back(srcPath);
+    } else {
+        for (const auto& dirEntry : std::experimental::filesystem::directory_iterator(srcPath)) {
+            paths.push_back(dirEntry.path());
+        }
+    }
+
+    // Extract filenames
+    filenames = std::vector<std::string>();
+    for (const auto& path : paths) {
+        auto filename = extractFilenameFromPath(path);
+        filenames.push_back(filename);
+    }
 }
 
-FileUtils::~FileUtils() {
-    fclose(file);
+bool PathUtils::fileExists() const {
+    return _exists;
 }
 
-bool FileUtils::fileExists() {
-    bool exists = (file != nullptr);
-    return exists;
+bool PathUtils::isDirectory() const {
+    return _isDirectory;
 }
 
-std::string FileUtils::getFilename() {
+std::vector<std::string> PathUtils::getPaths() {
+    return paths;
+}
+
+std::vector<std::string> PathUtils::getFilenames() {
+    return filenames;
+}
+
+std::string PathUtils::extractFilenameFromPath(const std::string &path) {
     // Get the lowest element in the path hierarchy
     auto fullFilename = splitString(path, "/").back();
 
@@ -30,20 +58,20 @@ std::string FileUtils::getFilename() {
     return filename;
 }
 
-std::vector<std::string> FileUtils::splitString(std::string str, std::string delim) {
+std::vector<std::string> PathUtils::splitString(const std::string& str, const std::string& delim) {
     auto result = std::vector<std::string>();
 
-    int delimSize = delim.length();
+    int delimSize = int(delim.length());
 
     int start = 0;
-    int end = str.find(delim);
+    int end = int(str.find(delim));
 
     while (end != std::string::npos) {
         auto substr = str.substr(start, end - start);
         result.push_back(substr);
 
         start = end + delimSize;
-        end = str.find(delim, start);
+        end = int(str.find(delim, start));
     }
 
     result.push_back(str.substr(start, end - start));

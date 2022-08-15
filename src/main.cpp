@@ -1,15 +1,13 @@
 
-#include "Interfaces/BitstreamGenerator.h"
-
 #include "CLI/CLI.hpp"
-
-#include <iostream>
-#include <fstream>
+#include "Interfaces/BitstreamGenerator.h"
+#include "Interfaces/PathUtils.h"
+#include <experimental/filesystem>
 #include <string>
 
 int main(int argc, char **argv) {
     CLI::App appMain;
-    CLI::App* appEncode = appMain.add_subcommand("encode", "Convert single audio file to TMS5220 bitstream");
+    CLI::App* appEncode = appMain.add_subcommand("encode", "Convert audio file(s) to TMS5220 bitstream(s)");
 
     appMain.require_subcommand(1);
 
@@ -29,7 +27,6 @@ int main(int argc, char **argv) {
     int minPitchFrq = 50;
     std::string outputPath;
 
-    // Parse command-line options and flags
     appEncode->add_option("-i,--input,input", inputPath, "Path to audio file")->required();
     appEncode->add_option("-w,--window", windowWidthMs, "Window width/speed (ms)");
     appEncode->add_option("-b,--highpass", highpassCutoff, "Highpass filter cutoff (Hz)");
@@ -48,12 +45,39 @@ int main(int argc, char **argv) {
     CLI11_PARSE(appMain, argc, argv);
 
     if (appMain.got_subcommand(appEncode)) {
+        // Open input and output files for inspection
+        auto input = PathUtils(inputPath);
+        auto output = PathUtils(outputPath);
+
+        if (!input.fileExists()) {
+            std::cerr << "Input file does not exist or is empty" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        if (input.isDirectory() && !bitstreamFormat && (!output.isDirectory() && output.fileExists())) {
+            std::cerr << "Batch mode requires a directory for ASCII bitstreams" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        if (!input.isDirectory() && output.isDirectory()) {
+            std::cerr << "Single-file encode requires a single-file output" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        // Extract IO paths and encode
         auto encoder = BitstreamGenerator(windowWidthMs, highpassCutoff, lowpassCutoff,
                                           preEmphasisAlpha, bitstreamFormat, !noStopFrame,
                                           gainShift, maxVoicedGain,maxUnvoicedGain,
                                           useRepeatFrames, maxPitchFrq,minPitchFrq);
+        auto inputPaths = input.getPaths();
+        auto inputFilenames = input.getFilenames();
+        auto outputPathOrDirectory = output.getPaths().at(0);
 
-        encoder.encode(inputPath, outputPath);
+        if (input.isDirectory()) {
+            encoder.encodeBatch(inputPaths, inputFilenames, outputPathOrDirectory);
+        } else {
+            encoder.encode(inputPaths.at(0), inputFilenames.at(0), outputPathOrDirectory);
+        }
     }
 
     exit(EXIT_SUCCESS);

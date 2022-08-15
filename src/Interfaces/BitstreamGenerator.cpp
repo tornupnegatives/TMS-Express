@@ -14,10 +14,10 @@
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostprocessor.h"
 #include "Interfaces/BitstreamGenerator.h"
-#include "Interfaces/FileUtils.h"
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
+#include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -30,25 +30,50 @@ BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpa
                                          maxVoicedDB(maxVoicedDb), maxUnvoicedDB(maxUnvoicedDb),
                                          detectRepeats(detectRepeats), maxHz(maxHz), minHz(minHz) {}
 
-void BitstreamGenerator::encode(const std::string &inputPath, const std::string &outputPath) {
-    // Check if file exists
-    auto file = FileUtils(inputPath);
-
-    if (!file.fileExists()) {
-        std::cerr << "Error: could not open audio file" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
+void BitstreamGenerator::encode(const std::string &inputPath, const std::string &inputFilename,
+                                const std::string &outputPath) {
     // Perform LPC analysis and convert audio data to a bitstream
     auto bitstream = generateBitstream(inputPath);
-    auto filename = file.getFilename();
-    bitstream = formatBitstream(bitstream, filename);
+    bitstream = formatBitstream(bitstream, inputFilename);
 
     // Write bitstream to disk
     std::ofstream lpcOut;
     lpcOut.open(outputPath);
     lpcOut << bitstream;
     lpcOut.close();
+}
+
+void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
+                                     const std::vector<std::string> &inputFilenames, const std::string &outputPath) {
+    if (style == ENCODERSTYLE_ASCII) {
+        // Create directory to populate with encoded files
+        std::experimental::filesystem::create_directory(outputPath);
+
+        for (int i = 0; i < inputPaths.size(); i++) {
+            const auto& inPath = inputPaths[i];
+            const auto& filename = inputFilenames[i];
+
+            std::experimental::filesystem::path outPath = outputPath;
+            outPath /= (filename + ".lpc");
+
+            encode(inPath, filename, outPath.string());
+        }
+    } else {
+        std::ofstream lpcOut;
+        lpcOut.open(outputPath);
+
+        for (int i = 0; i < inputPaths.size(); i++) {
+            const auto& inPath = inputPaths[i];
+            const auto& filename = inputFilenames[i];
+
+            auto bitstream = generateBitstream(inPath);
+            bitstream = formatBitstream(bitstream, filename);
+
+            lpcOut << bitstream << std::endl;
+        }
+
+        lpcOut.close();
+    }
 }
 
 std::string BitstreamGenerator::generateBitstream(const std::string &inputPath) const {
