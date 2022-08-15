@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 project(TMS-Express)
 
 # Dependency: libsndfile
@@ -78,8 +78,11 @@ add_executable(${PROJECT_NAME}
 # Rename executable
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
 
-# Suppress depreciation warning for std::experimental::filesystem
-target_compile_definitions(${PROJECT_NAME} PRIVATE _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM)
+# Suppress depreciation warning for std::experimental::filesystem on macOS
+if (APPLE)
+    message(STATUS "Using experimental version of std::filesystem")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM)
+endif(APPLE)
 
 # Link dependencies
 target_link_libraries(${PROJECT_NAME}

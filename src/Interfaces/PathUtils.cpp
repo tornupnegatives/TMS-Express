@@ -3,23 +3,30 @@
 //
 
 #include "Interfaces/PathUtils.h"
-#include <experimental/filesystem>
 #include <string>
 #include <utility>
 #include <vector>
 
+#if __APPLE__
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
+
 PathUtils::PathUtils(std::string filepath) {
     // Gather file metadata
     srcPath = std::move(filepath);
-    _exists = std::experimental::filesystem::exists(srcPath);
-    _isDirectory = std::experimental::filesystem::is_directory(srcPath);
+    _exists = fs::exists(srcPath);
+    _isDirectory = fs::is_directory(srcPath);
 
     // Traverse directory (if applicable)
     paths = std::vector<std::string>();
     if (!_isDirectory) {
         paths.push_back(srcPath);
     } else {
-        for (const auto& dirEntry : std::experimental::filesystem::directory_iterator(srcPath)) {
+        for (const auto& dirEntry : fs::directory_iterator(srcPath)) {
             paths.push_back(dirEntry.path());
         }
     }
