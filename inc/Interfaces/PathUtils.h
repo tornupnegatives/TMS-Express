@@ -18,8 +18,8 @@ public:
 private:
     std::string srcPath;
     std::string fileExtension;
-    bool _exists;
-    bool _isDirectory;
+    bool exists;
+    bool fileIsDirectory;
     std::vector<std::string> paths;
     std::vector<std::string> filenames;
 

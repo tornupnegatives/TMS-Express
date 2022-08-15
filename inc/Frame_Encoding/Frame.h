@@ -33,7 +33,7 @@ public:
 
     bool isVoiced() const;
     bool isSilent() const;
-    bool isRepeat();
+    bool isRepeat() const;
 
     // The print() function remains implemented for debugging purposes
     __attribute__((unused)) void print(int index = -1);

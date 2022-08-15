@@ -1,3 +1,4 @@
+// Author: Joseph Bellahcen <joeclb@icloud.com>
 
 #include "CLI/CLI.hpp"
 #include "Interfaces/BitstreamGenerator.h"

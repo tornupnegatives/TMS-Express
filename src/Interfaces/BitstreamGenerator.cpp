@@ -37,6 +37,7 @@ BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpa
                                          maxVoicedDB(maxVoicedDb), maxUnvoicedDB(maxUnvoicedDb),
                                          detectRepeats(detectRepeats), maxHz(maxHz), minHz(minHz) {}
 
+// Encode a single audio file
 void BitstreamGenerator::encode(const std::string &inputPath, const std::string &inputFilename,
                                 const std::string &outputPath) {
     // Perform LPC analysis and convert audio data to a bitstream
@@ -50,6 +51,7 @@ void BitstreamGenerator::encode(const std::string &inputPath, const std::string 
     lpcOut.close();
 }
 
+// Encode a batch job into either a single file or a collection of files
 void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
                                      const std::vector<std::string> &inputFilenames, const std::string &outputPath) {
     if (style == ENCODERSTYLE_ASCII) {
@@ -83,6 +85,7 @@ void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
     }
 }
 
+// Generate a bitstream from a single audio file
 std::string BitstreamGenerator::generateBitstream(const std::string &inputPath) const {
     // Mix audio to 8kHz mono and store in a segmented buffer
     auto lpcBuffer = AudioBuffer(inputPath, 8000, windowMs);
@@ -158,6 +161,7 @@ std::string BitstreamGenerator::generateBitstream(const std::string &inputPath) 
     return bitstream;
 }
 
+// Format raw bitstream for use in various contexts such as C headers
 std::string BitstreamGenerator::formatBitstream(std::string bitstream, const std::string &filename) {
     // Either export the bitstream as a string for testing or as a C array for embedded development
     switch(style) {

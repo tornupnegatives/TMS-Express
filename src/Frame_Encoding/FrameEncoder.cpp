@@ -106,6 +106,7 @@ void FrameEncoder::appendStopFrame() {
     }
 }
 
+// Convert binary string to its hexadecimal representation
 std::string FrameEncoder::byteToHex(const std::string &byte) const {
     int value = std::stoi(byte, nullptr, 2);
 

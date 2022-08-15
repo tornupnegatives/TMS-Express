@@ -1,6 +1,11 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class: PathUtils
 //
-// Created by Joseph Bellahcen on 7/23/22.
+// Description: The PathUtils class provides basic file metadata. It can crawl directories for files as well as isolate
+//              filenames from other path components
 //
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Interfaces/PathUtils.h"
 #include <string>
@@ -18,12 +23,12 @@ namespace fs = std::filesystem;
 PathUtils::PathUtils(std::string filepath) {
     // Gather file metadata
     srcPath = std::move(filepath);
-    _exists = fs::exists(srcPath);
-    _isDirectory = fs::is_directory(srcPath);
+    exists = fs::exists(srcPath);
+    fileIsDirectory = fs::is_directory(srcPath);
 
     // Traverse directory (if applicable)
     paths = std::vector<std::string>();
-    if (!_isDirectory) {
+    if (!fileIsDirectory) {
         paths.push_back(srcPath);
     } else {
         for (const auto& dirEntry : fs::directory_iterator(srcPath)) {
@@ -39,22 +44,31 @@ PathUtils::PathUtils(std::string filepath) {
     }
 }
 
+// Check if file exists
 bool PathUtils::fileExists() const {
-    return _exists;
+    return exists;
 }
 
+// Check if file is directory
 bool PathUtils::isDirectory() const {
-    return _isDirectory;
+    return fileIsDirectory;
 }
 
+// Get vector of paths pointed to by file
+//
+// Returns vector with a single element if the file is not a directory
 std::vector<std::string> PathUtils::getPaths() {
     return paths;
 }
 
+// Return vector of filenames residing at path
+//
+//Returns vector with a single element if the file is not a directory
 std::vector<std::string> PathUtils::getFilenames() {
     return filenames;
 }
 
+// Isolate filename from other path components, including extensions
 std::string PathUtils::extractFilenameFromPath(const std::string &path) {
     // Get the lowest element in the path hierarchy
     auto fullFilename = splitString(path, "/").back();
@@ -65,6 +79,9 @@ std::string PathUtils::extractFilenameFromPath(const std::string &path) {
     return filename;
 }
 
+// Split string at delimiter into vector of substrings
+//
+// Does not include delimiter in substrings
 std::vector<std::string> PathUtils::splitString(const std::string& str, const std::string& delim) {
     auto result = std::vector<std::string>();
 

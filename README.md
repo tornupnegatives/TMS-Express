@@ -32,7 +32,7 @@ $ cd build && make -j
 ## Usage
 ## The Encode Command
 The `encode` command accepts audio file(s) and a variety of parameters which affect how they are processed, analyzed,
-and formatted for output.
+and formatted for output. TMS Express automatically detects when the input path is a directory and performs a batch job.
 
 ```shell
 $ tmsexpress encode [OPTIONS] input output
