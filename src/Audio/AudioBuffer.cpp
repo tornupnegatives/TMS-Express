@@ -17,6 +17,11 @@
 AudioBuffer::AudioBuffer(const std::string &path, int targetSampleRateHz, float windowWidthMs) {
     // Import audio file and get metadata
     auto sndfile = SndfileHandle(path);
+
+    if (sndfile.error()) {
+        throw std::runtime_error("Unsupported audio format");
+    }
+
     sampleRate = sndfile.samplerate();
     sf_count_t nFrames = sndfile.frames();
     int nChannels = sndfile.channels();

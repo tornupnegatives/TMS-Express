@@ -73,10 +73,15 @@ int main(int argc, char **argv) {
         auto inputFilenames = input.getFilenames();
         auto outputPathOrDirectory = output.getPaths().at(0);
 
-        if (input.isDirectory()) {
-            encoder.encodeBatch(inputPaths, inputFilenames, outputPathOrDirectory);
-        } else {
-            encoder.encode(inputPaths.at(0), inputFilenames.at(0), outputPathOrDirectory);
+        try {
+            if (input.isDirectory()) {
+                encoder.encodeBatch(inputPaths, inputFilenames, outputPathOrDirectory);
+            } else {
+                encoder.encode(inputPaths.at(0), inputFilenames.at(0), outputPathOrDirectory);
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            exit(EXIT_FAILURE);
         }
     }
 
