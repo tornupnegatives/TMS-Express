@@ -35,6 +35,9 @@
 cmake-build-debug/
 build/
 
+# Test data
+example/
+
 # macOS
 .DS_Store
 
