@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 17)
 project(TMS-Express)
 
+find_package(PkgConfig REQUIRED)
+
 # Dependency: libsndfile
 # Desc: Audio IO
 # Sets: LIBSNDFILE_INCLUDE_DIR, LIBSNDFILE_LIBRARY
