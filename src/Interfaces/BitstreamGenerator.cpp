@@ -17,17 +17,12 @@
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
+#include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
-#if __APPLE__
-#include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
-#else
-#include <filesystem>
-namespace fs = std::filesystem;
-#endif
 
 BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style,
                                        bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
@@ -182,3 +177,4 @@ std::string BitstreamGenerator::formatBitstream(std::string bitstream, const std
 
     return bitstream;
 }
+
