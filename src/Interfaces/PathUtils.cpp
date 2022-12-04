@@ -8,17 +8,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Interfaces/PathUtils.h"
+#include <filesystem>
 #include <string>
 #include <utility>
 #include <vector>
 
-#if __APPLE__
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#include <filesystem>
 namespace fs = std::filesystem;
-#endif
 
 PathUtils::PathUtils(std::string filepath) {
     // Gather file metadata
