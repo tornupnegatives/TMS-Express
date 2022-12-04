@@ -11,6 +11,7 @@
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/Frame.h"
 #include <algorithm>
+#include <cstdio>
 
 FrameEncoder::FrameEncoder(bool hexPrefix, char separator) {
     includeHexPrefix = hexPrefix;
@@ -113,9 +114,9 @@ std::string FrameEncoder::byteToHex(const std::string &byte) const {
     char hexByte[6];
 
     if (includeHexPrefix) {
-        sprintf(hexByte, "0x%02x", value);
+        snprintf(hexByte, 5, "0x%02x", value);
     } else {
-        sprintf(hexByte, "%02x", value);
+        snprintf(hexByte, 5, "%02x", value);
     }
 
     return {hexByte};
