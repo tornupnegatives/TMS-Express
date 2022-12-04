@@ -8,17 +8,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Interfaces/PathUtils.h"
+#include <experimental/filesystem>
 #include <string>
 #include <utility>
 #include <vector>
 
-#if __APPLE__
-#include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
-#else
-#include <filesystem>
-namespace fs = std::filesystem;
-#endif
 
 PathUtils::PathUtils(std::string filepath) {
     // Gather file metadata
@@ -102,3 +97,4 @@ std::vector<std::string> PathUtils::splitString(const std::string& str, const st
 
     return result;
 }
+
