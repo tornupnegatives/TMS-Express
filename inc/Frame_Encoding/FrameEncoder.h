@@ -9,15 +9,17 @@
 class FrameEncoder {
 public:
     explicit FrameEncoder(bool hexPrefix = false, char separator = ',');
-    explicit FrameEncoder(const std::vector<Frame> &frames, bool hexPrefix = false, char separator = ',');
+    explicit FrameEncoder(const std::vector<Frame> &initFrames, bool hexPrefix = false, char separator = ',');
 
     void appendFrame(Frame frame);
-    void appendFrames(const std::vector<Frame> &frames);
+    void appendFrames(const std::vector<Frame> &initFrames);
     std::string toHex(bool shouldAppendStopFrame = true);
+    std::string toJSON();
 
 private:
     bool includeHexPrefix;
     char byteSeparator;
+    std::vector<Frame> frames;
     std::vector<std::string> bytes;
 
     void appendStopFrame();

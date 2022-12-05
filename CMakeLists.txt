@@ -5,6 +5,7 @@ project(TMS-Express)
 # Import libsndfile and libsamplerate
 include(cmake/FindSamplerate.cmake)
 include(cmake/FindCLI11.cmake)
+include(cmake/FindJSON.cmake)
 include(test/TmsTest.cmake)
 
 # Project files
@@ -38,11 +39,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
 # Link dependencies
 target_link_libraries(${PROJECT_NAME}
         CLI11
+        nlohmann_json::nlohmann_json
         ${LIBSNDFILE_LIBRARY}
         ${LIBSAMPLERATE_LIBRARY}
         )
 
-# On macOS, supress warnings regarding <experimental/filesystem
+# On macOS, suppress warnings regarding <experimental/filesystem
 # On other systems, link the filesystem library
 if (APPLE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM)
@@ -51,4 +53,3 @@ else()
         stdc++fs
         )
 endif(APPLE)
-

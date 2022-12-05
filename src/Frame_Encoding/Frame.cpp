@@ -12,12 +12,10 @@
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/Tms5220CodingTable.h"
 #include <algorithm>
-#include <iostream>
+#include <nlohmann/json.hpp>
 #include <vector>
 
 using namespace Tms5220CodingTable;
-using std::cout;
-using std::endl;
 
 Frame::Frame(int pitchPeriod, bool isVoiced, float gainDB, std::vector<float> coeffs) {
     pitch = pitchPeriod;
@@ -138,24 +136,6 @@ bool Frame::isRepeat() const {
 //                              Frame Serialization
 ///////////////////////////////////////////////////////////////////////////////
 
-__attribute__((unused)) void Frame::print(int index) {
-    // Frame header
-    cout << "Frame " << index << ":" << endl;
-
-    // Frame metadata
-    cout << "Pitch period (samples): " << pitch << endl;
-    cout << "Voicing: " << (voicedFrame ? "voiced" : "unvoiced") << endl;
-    cout << "Gain (dB): " << gain << endl;
-
-    cout << "Coeffs: [";
-    for (float coeff : reflectorCoeffs) {
-        cout << coeff << " ";
-    }
-
-    // Remove trailing space and "close" array
-    cout << "\b\b]" << endl << endl;
-}
-
 std::string Frame::toBinary() {
     std::string bin;
 
@@ -191,6 +171,24 @@ std::string Frame::toBinary() {
     }
 
     return bin;
+}
+
+nlohmann::json Frame::toJSON() {
+    nlohmann::json jFrame;
+
+    // Raw values
+    jFrame["pitch"] = pitch;
+    jFrame["isVoiced"] = voicedFrame;
+    jFrame["isRepeat"] = repeatFrame;
+    jFrame["gain"] = gain;
+    jFrame["coeffs"] = nlohmann::json(reflectorCoeffs);
+
+    // Quantized values
+    jFrame["tms_pitch"] = getQuantizedPitchIdx();
+    jFrame["tms_gain"] = getQuantizedGainIdx();
+    jFrame["tms_coeffs"] = nlohmann::json(getQuantizedCoeffsIdx());
+
+    return jFrame;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

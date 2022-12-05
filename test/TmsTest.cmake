@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 14)
 
+include(cmake/FindJSON.cmake)
+
 include(FetchContent)
 FetchContent_Declare(googletest
         GIT_REPOSITORY "https://github.com/google/googletest.git"
@@ -24,6 +26,7 @@ add_executable(TMS-Test
 
 target_link_libraries(
         TMS-Test
+        nlohmann_json::nlohmann_json
         gtest_main
 )
 

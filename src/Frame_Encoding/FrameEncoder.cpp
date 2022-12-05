@@ -12,19 +12,22 @@
 #include "Frame_Encoding/Frame.h"
 #include <algorithm>
 #include <cstdio>
+#include <nlohmann/json.hpp>
 
 FrameEncoder::FrameEncoder(bool hexPrefix, char separator) {
     includeHexPrefix = hexPrefix;
     byteSeparator = separator;
+    frames = std::vector<Frame>();
     bytes = std::vector<std::string>(1, "");
 }
 
-FrameEncoder::FrameEncoder(const std::vector<Frame> &frames, bool hexPrefix, char separator) {
+FrameEncoder::FrameEncoder(const std::vector<Frame> &initFrames, bool hexPrefix, char separator) {
     includeHexPrefix = hexPrefix;
     byteSeparator = separator;
+    frames = std::vector<Frame>();
     bytes = std::vector<std::string>(1, "");
 
-    appendFrames(frames);
+    appendFrames(initFrames);
 }
 
 // Extract the binary representation of a Frame, segment it into bytes, and store the data
@@ -33,6 +36,7 @@ FrameEncoder::FrameEncoder(const std::vector<Frame> &frames, bool hexPrefix, cha
 // may be packed into the empty space of an existing vector element, or the last few bits may partially occupy a new
 // vector element
 void FrameEncoder::appendFrame(Frame frame) {
+    frames.push_back(frame);
     auto bin = frame.toBinary();
 
     // Check to see if the previous byte is incomplete (contains less than 8 characters), and fill it if so
@@ -53,8 +57,8 @@ void FrameEncoder::appendFrame(Frame frame) {
 }
 
 // Extract the binary representation of an entire vector of Frames, and slice it into bytes
-void FrameEncoder::appendFrames(const std::vector<Frame> &frames) {
-    for (const auto &frame: frames) {
+void FrameEncoder::appendFrames(const std::vector<Frame> &initFrames) {
+    for (const auto &frame: initFrames) {
         appendFrame(frame);
     }
 }
@@ -83,6 +87,17 @@ std::string FrameEncoder::toHex(bool shouldAppendStopFrame) {
     hexStream.erase(hexStream.end() - 1);
 
     return hexStream;
+}
+
+// Serialize the Frame data to a JSON object
+std::string FrameEncoder::toJSON() {
+    nlohmann::json json;
+
+    for (auto frame : frames) {
+        json.push_back(frame.toJSON());
+    }
+
+    return json.dump(4);
 }
 
 // End the hex stream with a stop frame, which signifies to the TMS5220 that the Speak External command has completed

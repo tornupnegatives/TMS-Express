@@ -3,6 +3,7 @@
 #ifndef TMS_EXPRESS_FRAME_H
 #define TMS_EXPRESS_FRAME_H
 
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -35,9 +36,8 @@ public:
     bool isSilent() const;
     bool isRepeat() const;
 
-    // The print() function remains implemented for debugging purposes
-    __attribute__((unused)) void print(int index = -1);
     std::string toBinary();
+    nlohmann::json toJSON();
 
 private:
     int pitch;

@@ -20,9 +20,9 @@
 #include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <string>
 #include <vector>
-
-namespace fs = std::experimental::filesystem;
 
 BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style,
                                        bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
@@ -36,8 +36,8 @@ BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpa
 void BitstreamGenerator::encode(const std::string &inputPath, const std::string &inputFilename,
                                 const std::string &outputPath) {
     // Perform LPC analysis and convert audio data to a bitstream
-    auto bitstream = generateBitstream(inputPath);
-    bitstream = formatBitstream(bitstream, inputFilename);
+    auto frames = generateFrames(inputPath);
+    auto bitstream = formatBitstream(frames, inputFilename);
 
     // Write bitstream to disk
     std::ofstream lpcOut;
@@ -51,13 +51,13 @@ void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
                                      const std::vector<std::string> &inputFilenames, const std::string &outputPath) {
     if (style == ENCODERSTYLE_ASCII) {
         // Create directory to populate with encoded files
-        fs::create_directory(outputPath);
+        std::experimental::filesystem::create_directory(outputPath);
 
         for (int i = 0; i < inputPaths.size(); i++) {
             const auto& inPath = inputPaths[i];
             const auto& filename = inputFilenames[i];
 
-            fs::path outPath = outputPath;
+            std::experimental::filesystem::path outPath = outputPath;
             outPath /= (filename + ".lpc");
 
             encode(inPath, filename, outPath.string());
@@ -70,8 +70,8 @@ void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
             const auto& inPath = inputPaths[i];
             const auto& filename = inputFilenames[i];
 
-            auto bitstream = generateBitstream(inPath);
-            bitstream = formatBitstream(bitstream, filename);
+            auto frames = generateFrames(inPath);
+            auto bitstream = formatBitstream(frames, filename);
 
             lpcOut << bitstream << std::endl;
         }
@@ -81,7 +81,7 @@ void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
 }
 
 // Generate a bitstream from a single audio file
-std::string BitstreamGenerator::generateBitstream(const std::string &inputPath) const {
+std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPath) const {
     // Mix audio to 8kHz mono and store in a segmented buffer
     auto lpcBuffer = AudioBuffer(inputPath, 8000, windowMs);
 
@@ -149,32 +149,36 @@ std::string BitstreamGenerator::generateBitstream(const std::string &inputPath) 
         postProcessor.detectRepeatFrames();
     }
 
-    // Encode frames to hex bitstreams
-    auto encoder = FrameEncoder(frames, style != ENCODERSTYLE_ASCII, ',');
-    auto bitstream = encoder.toHex(includeStopFrame);
-
-    return bitstream;
+    return frames;
 }
 
 // Format raw bitstream for use in various contexts such as C headers
-std::string BitstreamGenerator::formatBitstream(std::string bitstream, const std::string &filename) {
+std::string BitstreamGenerator::formatBitstream(const std::vector<Frame>& frames, const std::string &filename) {
+    // Encode frames to hex bitstreams
+    auto encoder = FrameEncoder(frames, style != ENCODERSTYLE_ASCII, ',');
+    std::string bitstream;
+
     // Either export the bitstream as a string for testing or as a C array for embedded development
     switch(style) {
         case ENCODERSTYLE_ASCII:
-            // ASCII-style bitstreams are the default format, and require no post-processing
+            bitstream = encoder.toHex(includeStopFrame);
             break;
         case ENCODERSTYLE_C:
             // C-style bitstreams are headers which contain an integer array of bitstream values
             // Format: const int bitstream_name [] = {<values>};
-            bitstream = "const int " + filename + "[] = {"  + bitstream + "};\n";
+            bitstream = encoder.toHex(includeStopFrame);
+            bitstream = "const int " + filename + "[] = {" + bitstream + "};\n";
             break;
         case ENCODERSTYLE_ARDUINO:
             // Arduino-style bitstreams are C-style bitstreams which include the Arduino header and PROGMEM keyword
             // Format: extern const uint8_t bitstream_name [] PROGMEM = {<values>};
-            bitstream = "extern const uint8_t " + filename + "[] PROGMEM = {"  + bitstream + "};\n";
+            bitstream = encoder.toHex(includeStopFrame);
+            bitstream = "extern const uint8_t " + filename + "[] PROGMEM = {" + bitstream + "};\n";
+            break;
+        case ENCODERSTYLE_JSON:
+            bitstream = encoder.toJSON();
             break;
     }
 
     return bitstream;
 }
-

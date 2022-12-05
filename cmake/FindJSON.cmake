@@ -1,18 +1,17 @@
 ###############################################################################
 # Project: TMS-Express
 #
-# File: FindCLI11.cmake
+# File: FindJSON.cmake
 #
-# Description: Imports CLI11 via GitHub
+# Description: Imports nlohmann_json via GitHub
 #
 # Author: Joseph Bellahcen <joeclb@icloud.com>
 ###############################################################################
 
 include(FetchContent)
 
-FetchContent_Declare(CLI11
-        GIT_REPOSITORY "https://github.com/CLIUtils/CLI11.git"
-        GIT_TAG "v2.2.0"
+FetchContent_Declare(json
+        URL "https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz"
         )
 
-FetchContent_MakeAvailable(CLI11)
+FetchContent_MakeAvailable(json)

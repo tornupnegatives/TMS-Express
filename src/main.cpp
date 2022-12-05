@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     appEncode->add_option("-b,--highpass", highpassCutoff, "Highpass filter cutoff (Hz)");
     appEncode->add_option("-l,--lowpass", lowpassCutoff, "Lowpass filter cutoff (Hz)");
     appEncode->add_option("-a,--alpha", preEmphasisAlpha, "Pre-emphasis filter coefficient");
-    appEncode->add_option("-f,--format", bitstreamFormat, "Bitstream format: ascii (0), c (1), arduino (2)")->check(CLI::Range(0, 2));
+    appEncode->add_option("-f,--format", bitstreamFormat, "Bitstream format: ascii (0), c (1), arduino (2), JSON (3)")->check(CLI::Range(0, 3));
     appEncode->add_flag("-n,--no-stop-frame", noStopFrame, "Do not end bitstream with stop frame");
     appEncode->add_option("-g,--gain-shift", gainShift, "Quantized gain shift");
     appEncode->add_option("-v,--max-voiced-gain", maxVoicedGain, "Max voiced/vowel gain (dB)");

@@ -3,11 +3,12 @@
 #ifndef TMS_EXPRESS_BITSTREAMGENERATOR_H
 #define TMS_EXPRESS_BITSTREAMGENERATOR_H
 
+#include "Frame_Encoding/Frame.h"
 #include <string>
 
 class BitstreamGenerator {
 public:
-    typedef enum {ENCODERSTYLE_ASCII, ENCODERSTYLE_C, ENCODERSTYLE_ARDUINO} EncoderStyle;
+    typedef enum {ENCODERSTYLE_ASCII, ENCODERSTYLE_C, ENCODERSTYLE_ARDUINO, ENCODERSTYLE_JSON} EncoderStyle;
     BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style,
                        bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
                        int maxHz, int minHz);
@@ -30,8 +31,8 @@ private:
     int maxHz;
     int minHz;
 
-    std::string generateBitstream(const std::string &inputPath) const;
-    std::string formatBitstream(std::string bitstream, const std::string &filename);
+    std::vector<Frame> generateFrames(const std::string &inputPath) const;
+    std::string formatBitstream(const std::vector<Frame>& frames, const std::string &filename);
 };
 
 #endif //TMS_EXPRESS_BITSTREAMGENERATOR_H
