@@ -12,6 +12,7 @@
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/Tms5220CodingTable.h"
 #include <algorithm>
+#include <cmath>
 #include <nlohmann/json.hpp>
 #include <vector>
 
@@ -23,6 +24,14 @@ Frame::Frame(int pitchPeriod, bool isVoiced, float gainDB, std::vector<float> co
     repeatFrame = false;
     gain = gainDB;
     reflectorCoeffs = std::move(coeffs);
+
+    // The gain may be NaN if the autocorrelation is zero, which has been observed in the following scenarios:
+    // 1. The Frame is completely silent (source audio is noise-isolated)
+    // 2. The highpass filter cutoff is too low
+    if (isnan(gainDB)) {
+        gain = 0.0f;
+        reflectorCoeffs.assign(reflectorCoeffs.size(), 0.0f);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
