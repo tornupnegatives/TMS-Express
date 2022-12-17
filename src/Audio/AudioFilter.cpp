@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: Filter
+// Class: AudioFilter
 //
 // Description: The Filterer applies filters to audio data to reduce the impact of unnecessary frequency components
 //              on speech signal analysis. The class implements biquadratic highpass and lowpass filters, as well as
@@ -12,21 +12,22 @@
 //                  https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Audio/AudioPreprocessor.h"
+#include "Audio/AudioFilter.h"
 #include <cmath>
 #include <vector>
 
-AudioPreprocessor::AudioPreprocessor() {
+AudioFilter::AudioFilter() {
     lastFilterMode = FILTER_NONE;
     lastCutoffHz = 0;
     coeffs = {0, 0, 0, 0, 0};
+    normalizationCoeff = 0;
 }
 
 // Apply a time-domain biquad highpass/lowpass filter to the samples
 //
 // As pitch is a low-frequency property of speech, applying a lowpass filter before pitch detection will lead to more
 // accurate predictions
-void AudioPreprocessor::applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, FilterBiquadMode mode) {
+void AudioFilter::applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, FilterBiquadMode mode) {
     // Get coefficients and store them individually for convenience
     setCoefficients(mode, cutoffHz);
     float k0 = coeffs[0];
@@ -43,6 +44,7 @@ void AudioPreprocessor::applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, 
     // Filter buffer
     for (float &sample : samples) {
         float result = (k0 * sample) + (k1 * x1) + (k2 * x2) - (k3 * y1) - (k4 * y2);
+        result /= normalizationCoeff;
 
         x2 = x1;
         x1 = sample;
@@ -60,7 +62,7 @@ void AudioPreprocessor::applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, 
 //
 // During LPC analysis, a pre-emphasis filter balances the signal spectrum by augmenting high-frequencies. This is
 // undesirable for pitch estimation, but greatly improves the accuracy of linear prediction
-void AudioPreprocessor::applyPreemphasis(AudioBuffer &buffer, float alpha) {
+void AudioFilter::applyPreemphasis(AudioBuffer &buffer, float alpha) {
     // Initialize filtered buffer
     std::vector<float> samples = buffer.getSamples();
     std::vector<float> filteredSamples = std::vector<float>();
@@ -84,7 +86,7 @@ void AudioPreprocessor::applyPreemphasis(AudioBuffer &buffer, float alpha) {
 // Because speech segments in isolation cannot convey information about the transition between each other, a windowing
 // function is necessary to smooth their boundaries. This is accomplished by "smearing" the spectrum of the segments
 // by a known alpha value. For the Hamming Window, which is preferred for speech signal analysis, a=0.54
-void AudioPreprocessor::applyHammingWindow(std::vector<float> &segment) {
+void AudioFilter::applyHammingWindow(std::vector<float> &segment) {
     auto size = segment.size();
 
     for (int i = 0; i < size; i++) {
@@ -98,18 +100,17 @@ void AudioPreprocessor::applyHammingWindow(std::vector<float> &segment) {
 }
 
 // Determine the biquadratic filter coefficients
-void AudioPreprocessor::setCoefficients(FilterBiquadMode mode, unsigned int cutoffHz) {
+void AudioFilter::setCoefficients(FilterBiquadMode mode, unsigned int cutoffHz) {
     // Do not recompute coefficients if the cutoff frequency and mode are unchanged
     if (mode == lastFilterMode && cutoffHz == lastCutoffHz) {
         return;
     }
 
     // Filter-agnostic parameters
-    // Bandwidth: 3dB (in definition of alpha)
     float omega = 2.0f * float(M_PI) * float(cutoffHz) / 8000.0f;
     float cs = cosf(omega);
     float sn = sinf(omega);
-    float alpha = sn * sinhf(M_LN2 /2 * 3 * omega /sn);
+    float alpha = sn / (2.0f * 0.707f);
 
     // Intermediate coefficients
     float aCoeff[3];
@@ -144,12 +145,13 @@ void AudioPreprocessor::setCoefficients(FilterBiquadMode mode, unsigned int cuto
             break;
     }
 
-    // Store normalized coefficients
-    coeffs[0] = bCoeff[0] / aCoeff[0];
-    coeffs[1] = bCoeff[1] / aCoeff[0];
-    coeffs[2] = bCoeff[2] / aCoeff[0];
-    coeffs[3] = aCoeff[1] / aCoeff[0];
-    coeffs[4] = aCoeff[2] / aCoeff[0];
+    // Store coefficients
+    normalizationCoeff = aCoeff[0];
+    coeffs[0] = bCoeff[0];
+    coeffs[1] = bCoeff[1];
+    coeffs[2] = bCoeff[2];
+    coeffs[3] = aCoeff[1];
+    coeffs[4] = aCoeff[2];
 
     // Record mode and cutoff
     lastFilterMode = mode;

@@ -1,15 +1,15 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 
-#ifndef TMS_EXPRESS_AUDIOPREPROCESSOR_H
-#define TMS_EXPRESS_AUDIOPREPROCESSOR_H
+#ifndef TMS_EXPRESS_AUDIOFILTER_H
+#define TMS_EXPRESS_AUDIOFILTER_H
 
 #include "AudioBuffer.h"
 #include <string>
 #include <vector>
 
-class AudioPreprocessor {
+class AudioFilter {
 public:
-    explicit AudioPreprocessor();
+    explicit AudioFilter();
 
     enum FilterBiquadMode {FILTER_LOWPASS, FILTER_HIGHPASS, FILTER_NONE};
     void applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, FilterBiquadMode mode);
@@ -20,8 +20,9 @@ private:
     FilterBiquadMode lastFilterMode;
     unsigned int lastCutoffHz;
     std::vector<float> coeffs;
+    float normalizationCoeff;
 
     void setCoefficients(FilterBiquadMode mode, unsigned int cutoff);
 };
 
-#endif //TMS_EXPRESS_AUDIOPREPROCESSOR_H
+#endif //TMS_EXPRESS_AUDIOFILTER_H

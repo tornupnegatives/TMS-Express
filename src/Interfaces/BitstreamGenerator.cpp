@@ -9,7 +9,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Audio/AudioBuffer.h"
-#include "Audio/AudioPreprocessor.h"
+#include "Audio/AudioFilter.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostprocessor.h"
@@ -92,10 +92,10 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
     //
     // The pitch buffer will ONLY be lowpass-filtered, as pitch is a low-frequency component of the signal. Neither
     // highpass filtering nor preemphasis, which exaggerate high-frequency components, will improve pitch estimation
-    auto preprocessor = AudioPreprocessor();
-    preprocessor.applyBiquad(pitchBuffer, lowpassHz, AudioPreprocessor::FILTER_LOWPASS);
-    preprocessor.applyBiquad(lpcBuffer, highpassHz, AudioPreprocessor::FILTER_HIGHPASS);
+    auto preprocessor = AudioFilter();
     preprocessor.applyPreemphasis(lpcBuffer, preemphasisAlpha);
+    preprocessor.applyBiquad(lpcBuffer, highpassHz, AudioFilter::FILTER_HIGHPASS);
+    preprocessor.applyBiquad(pitchBuffer, lowpassHz, AudioFilter::FILTER_LOWPASS);
 
     // Extract buffer metadata
     //

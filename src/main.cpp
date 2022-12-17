@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
     // Encoder parameters
     std::string inputPath;
     float windowWidthMs = 25.0f;
-    int highpassCutoff = 600;
-    int lowpassCutoff = 400;
+    int highpassCutoff = 1000;
+    int lowpassCutoff = 800;
     float preEmphasisAlpha = -0.9375f;
     BitstreamGenerator::EncoderStyle bitstreamFormat = BitstreamGenerator::EncoderStyle::ENCODERSTYLE_ASCII;
     bool noStopFrame = false;
@@ -30,9 +30,9 @@ int main(int argc, char **argv) {
 
     appEncode->add_option("-i,--input,input", inputPath, "Path to audio file")->required();
     appEncode->add_option("-w,--window", windowWidthMs, "Window width/speed (ms)");
-    appEncode->add_option("-b,--highpass", highpassCutoff, "Highpass filter cutoff (Hz)");
-    appEncode->add_option("-l,--lowpass", lowpassCutoff, "Lowpass filter cutoff (Hz)");
-    appEncode->add_option("-a,--alpha", preEmphasisAlpha, "Pre-emphasis filter coefficient");
+    appEncode->add_option("-b,--highpass", highpassCutoff, "Highpass filter cutoff for upper tract analysis (Hz)");
+    appEncode->add_option("-l,--lowpass", lowpassCutoff, "Lowpass filter cutoff for lower tract analysis (Hz)");
+    appEncode->add_option("-a,--alpha", preEmphasisAlpha, "Pre-emphasis filter coefficient for upper tract analysis");
     appEncode->add_option("-f,--format", bitstreamFormat, "Bitstream format: ascii (0), c (1), arduino (2), JSON (3)")->check(CLI::Range(0, 3));
     appEncode->add_flag("-n,--no-stop-frame", noStopFrame, "Do not end bitstream with stop frame");
     appEncode->add_option("-g,--gain-shift", gainShift, "Quantized gain shift");

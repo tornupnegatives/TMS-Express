@@ -45,7 +45,7 @@ $ tmsexpress encode [OPTIONS] input output
 ### Explanation of Options
 - `window`: Speech data is separated into small windows/segments, each of which are analyzed individually. This is because small enough segments of speech data are roughly periodic and their behavior may be generalized. An ideal window width is between 22.5-25 ms
   - Values above and below the recommendation will artificially speed up and slow down speech, respectively
-- `highpass` and `lowpass`: Speech data occupies a relatively small frequency band compared to what digital audio files are capable of representing. Filtering out unnecessary frequencies may lead to more accurated LPC analysis
+- `highpass` and `lowpass`: Speech data occupies a relatively small frequency band compared to what digital audio files are capable of representing. Filtering out unnecessary frequencies may lead to more accurate LPC analysis
   - Lowering the highpass filter cutoff will improve the bass response of the audio
   - Adjusting the lowpass cutoff may have minor effects of pitch estimation
 - `alpha`: While the pitch of speech is characterized by the lower frequency band, LPC algorithms which characterize the upper vocal tract benefit from an exaggeration of high frequency data. A pre-emphasis filter will exaggerate this part of the spectrum and lead to crisper, more accurate synthesis

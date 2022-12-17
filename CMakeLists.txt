@@ -17,7 +17,7 @@ include_directories(
         
 add_executable(${PROJECT_NAME}
         src/Audio/AudioBuffer.cpp
-        src/Audio/AudioPreprocessor.cpp
+        src/Audio/AudioFilter.cpp
 
         src/LPC_Analysis/Autocorrelator.cpp
         src/LPC_Analysis/PitchEstimator.cpp
