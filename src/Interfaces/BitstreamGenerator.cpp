@@ -88,10 +88,8 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
 
     // Apply a lowpass filter to establish the effective bandwidth of the signal
     // A LPF of around 4kHz-5kHz will result in brighter-sounding speech
-    auto preprocessor = AudioFilter();
-    buffer.setSamples(preprocessor.applyBiquad(buffer.getSamples(),
-                                               lowpassHz,
-                                               AudioFilter::FILTER_LOWPASS));
+    auto preprocessor = AudioFilter(8000, highpassHz, lowpassHz, preemphasisAlpha);
+    buffer.setSamples(preprocessor.applyLowpass(buffer.getSamples()));
 
     // Initialize analysis objects and data structures
     auto linearPredictor = LinearPredictor();
@@ -100,7 +98,7 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
     auto nSegments = buffer.nSegments();
 
     auto test = preprocessor.applyPreemphasis(buffer.getSamples());
-    test = preprocessor.applyBiquad(buffer.getSamples(), highpassHz, AudioFilter::FILTER_HIGHPASS);
+    test = preprocessor.applyHighpass(buffer.getSamples());
     auto newAudio = AudioBuffer(buffer);
     newAudio.setSamples(test);
     newAudio.exportAudio("processed.wav");
@@ -114,7 +112,7 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
 
         // Apply pre-emphasis filter, highpass filter, and Hamming window to buffer for LPC analysis
         segment = preprocessor.applyPreemphasis(segment);
-        segment = preprocessor.applyBiquad(segment, highpassHz, AudioFilter::FILTER_HIGHPASS);
+        segment = preprocessor.applyHighpass(segment);
         segment = preprocessor.applyHammingWindow(segment);
 
         // Extract LPC reflector coefficients and predictor gain from the autocorrelation of the preprocessed segment

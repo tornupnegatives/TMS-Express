@@ -4,25 +4,27 @@
 #define TMS_EXPRESS_AUDIOFILTER_H
 
 #include "AudioBuffer.h"
+#include "Iir.h"
 #include <string>
 #include <vector>
 
 class AudioFilter {
 public:
-    explicit AudioFilter();
+    explicit AudioFilter(int sampleRateHz, int highpassCutoffHz, int lowpassCutoffHz, float preemphasisAlpha);
 
-    enum FilterBiquadMode {FILTER_LOWPASS, FILTER_HIGHPASS, FILTER_NONE};
-    std::vector<float> applyBiquad(std::vector<float> segment, unsigned int cutoffHz, FilterBiquadMode mode);
-    std::vector<float> applyPreemphasis(std::vector<float> segment, float alpha = -0.9375);
-    std::vector<float> applyHammingWindow(std::vector<float> segment);
+    std::vector<float> applyHighpass(std::vector<float> segment);
+    std::vector<float> applyLowpass(std::vector<float> segment);
+    std::vector<float> applyPreemphasis(std::vector<float> segment) const;
+    std::vector<float> applyHammingWindow(std::vector<float> segment) const;
 
 private:
-    FilterBiquadMode lastFilterMode;
-    unsigned int lastCutoffHz;
-    std::vector<float> coeffs;
-    float normalizationCoeff;
-
-    void setCoefficients(FilterBiquadMode mode, unsigned int cutoff);
+    int sampleRate;
+    int highpassCutoff;
+    int lowpassCutoff;
+    float alpha;
+    const float pi = M_PI;
+    Iir::Butterworth::HighPass<4> hpf;
+    Iir::Butterworth::LowPass<4> lpf;
 };
 
 #endif //TMS_EXPRESS_AUDIOFILTER_H

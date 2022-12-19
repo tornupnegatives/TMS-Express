@@ -3,10 +3,10 @@ set(CMAKE_CXX_STANDARD 17)
 project(TMS-Express)
 
 # Import libsndfile and libsamplerate
-include(cmake/FindSamplerate.cmake)
 include(cmake/FindCLI11.cmake)
+include(cmake/FindIir1.cmake)
 include(cmake/FindJSON.cmake)
-include(test/TmsTest.cmake)
+include(cmake/FindSamplerate.cmake)
 
 # Project files
 include_directories(
@@ -39,6 +39,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
 # Link dependencies
 target_link_libraries(${PROJECT_NAME}
         CLI11
+        iir::iir_static
         nlohmann_json::nlohmann_json
         ${LIBSNDFILE_LIBRARY}
         ${LIBSAMPLERATE_LIBRARY}

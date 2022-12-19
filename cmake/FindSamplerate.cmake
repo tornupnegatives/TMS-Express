@@ -1,7 +1,7 @@
 ###############################################################################
 # Project: TMS-Express
 #
-# File: FindCLI11.cmake
+# File: FindSamplerate.cmake
 #
 # Description:   Imports libsndfile and libsamplerate via pkg-config
 #                Sets LIBSNDFILE_INCLUDE_DIR, LIBSNDFILE_LIBRARY,
@@ -34,4 +34,3 @@ find_library(LIBSAMPLERATE_LIBRARY
         NAMES samplerate libsamplerate-0
         PATHS ${LIBSAMPLERATE_PKGCONF_LIBRARY_DIRS}
         )
-
