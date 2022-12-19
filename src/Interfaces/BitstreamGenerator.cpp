@@ -82,57 +82,48 @@ void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
 
 // Generate a bitstream from a single audio file
 std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPath) const {
-    // Mix audio to 8kHz mono and store in a segmented buffer
-    auto lpcBuffer = AudioBuffer(inputPath, 8000, windowMs);
+    // Import 8kHz mono audio
+    auto buffer = AudioBuffer(inputPath, windowMs);
+    buffer.resample(8000);
 
-    // Copy the buffer so that upper and lower vocal tract analysis may occur separately
-    auto pitchBuffer = AudioBuffer(lpcBuffer);
-
-    // Preprocess the buffers
-    //
-    // The pitch buffer will ONLY be lowpass-filtered, as pitch is a low-frequency component of the signal. Neither
-    // highpass filtering nor preemphasis, which exaggerate high-frequency components, will improve pitch estimation
+    // Apply a lowpass filter to establish the effective bandwidth of the signal
+    // A LPF of around 4kHz-5kHz will result in brighter-sounding speech
     auto preprocessor = AudioFilter();
-    preprocessor.applyPreemphasis(lpcBuffer, preemphasisAlpha);
-    preprocessor.applyBiquad(lpcBuffer, highpassHz, AudioFilter::FILTER_HIGHPASS);
-    preprocessor.applyBiquad(pitchBuffer, lowpassHz, AudioFilter::FILTER_LOWPASS);
-
-    // Extract buffer metadata
-    //
-    // Only the LPC buffer is queried for metadata, since it will have the same number of samples as the pitch buffer.
-    // The sample rate of the buffer is extracted despite being known, as future iterations of TMS Express may support
-    // encoding 10kHz/variable sample rate audio for the TMS5200C
-    auto nSegments = lpcBuffer.getNSegments();
-    auto sampleRate = lpcBuffer.getSampleRate();
+    buffer.setSamples(preprocessor.applyBiquad(buffer.getSamples(),
+                                               lowpassHz,
+                                               AudioFilter::FILTER_LOWPASS));
 
     // Initialize analysis objects and data structures
     auto linearPredictor = LinearPredictor();
-    auto pitchEstimator = PitchEstimator(int(sampleRate), minHz, maxHz);
+    auto pitchEstimator = PitchEstimator(8000, minHz, maxHz);
     auto frames = std::vector<Frame>();
+    auto nSegments = buffer.nSegments();
+
+    auto test = preprocessor.applyPreemphasis(buffer.getSamples());
+    test = preprocessor.applyBiquad(buffer.getSamples(), highpassHz, AudioFilter::FILTER_HIGHPASS);
+    auto newAudio = AudioBuffer(buffer);
+    newAudio.setSamples(test);
+    newAudio.exportAudio("processed.wav");
 
     for (int i = 0; i < nSegments; i++) {
         // Get segment for frame
-        auto pitchSegment = pitchBuffer.getSegment(i);
-        auto lpcSegment = lpcBuffer.getSegment(i);
+        auto segment = buffer.getSegment(i);
 
-        // Apply a window function to the segment to smoothen its boundaries
-        //
-        // Because information about the transition between adjacent frames is lost during segmentation, a window will
-        // help produce smoother results
-        preprocessor.applyHammingWindow(lpcSegment);
+        // Compute autocorrelation of unmodified buffer for pitch estimation
+        auto pitchAcf = Autocorrelator::process(segment);
 
-        // Compute the autocorrelation of each segment, which serves as the basis of all analysis
-        auto lpcAcf = Autocorrelator::process(lpcSegment);
-        auto pitchAcf = Autocorrelator::process(pitchSegment);
+        // Apply pre-emphasis filter, highpass filter, and Hamming window to buffer for LPC analysis
+        segment = preprocessor.applyPreemphasis(segment);
+        segment = preprocessor.applyBiquad(segment, highpassHz, AudioFilter::FILTER_HIGHPASS);
+        segment = preprocessor.applyHammingWindow(segment);
 
-        // Extract LPC reflector coefficients and compute the predictor gain
+        // Extract LPC reflector coefficients and predictor gain from the autocorrelation of the preprocessed segment
+        auto lpcAcf = Autocorrelator::process(segment);
         auto coeffs = linearPredictor.reflectorCoefficients(lpcAcf);
         auto gain = linearPredictor.gain();
 
-        // Estimate pitch
+        // Estimate pitch and voicing
         auto pitchPeriod = pitchEstimator.estimatePeriod(pitchAcf);
-
-        // Decide whether the segment is voiced or unvoiced
         auto segmentIsVoiced = coeffs[0] < 0;
 
         // Store parameters in a Frame object

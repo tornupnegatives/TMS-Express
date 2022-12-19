@@ -12,9 +12,9 @@ public:
     explicit AudioFilter();
 
     enum FilterBiquadMode {FILTER_LOWPASS, FILTER_HIGHPASS, FILTER_NONE};
-    void applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, FilterBiquadMode mode);
-    void applyPreemphasis(AudioBuffer &buffer, float alpha = -0.9375);
-    void applyHammingWindow(std::vector<float> &segment);
+    std::vector<float> applyBiquad(std::vector<float> segment, unsigned int cutoffHz, FilterBiquadMode mode);
+    std::vector<float> applyPreemphasis(std::vector<float> segment, float alpha = -0.9375);
+    std::vector<float> applyHammingWindow(std::vector<float> segment);
 
 private:
     FilterBiquadMode lastFilterMode;

@@ -14,6 +14,9 @@
 #include <cmath>
 #include <vector>
 
+// Initialize a new LinearPredictor for upper vocal tract analysis
+//
+// An ideal LPC model will have 10 poles for every 5kHz of effective bandwidth of the synthesized signal
 LinearPredictor::LinearPredictor(int modelOrder) {
     order = modelOrder;
     error = 0.0f;

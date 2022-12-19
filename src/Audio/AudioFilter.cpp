@@ -27,7 +27,7 @@ AudioFilter::AudioFilter() {
 //
 // As pitch is a low-frequency property of speech, applying a lowpass filter before pitch detection will lead to more
 // accurate predictions
-void AudioFilter::applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, FilterBiquadMode mode) {
+std::vector<float> AudioFilter::applyBiquad(std::vector<float> segment, unsigned int cutoffHz, FilterBiquadMode mode) {
     // Get coefficients and store them individually for convenience
     setCoefficients(mode, cutoffHz);
     float k0 = coeffs[0];
@@ -37,12 +37,14 @@ void AudioFilter::applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, Filter
     float k4 = coeffs[4];
 
     // Initialize filtered buffer
-    std::vector<float> samples = buffer.getSamples();
+    auto size = segment.size();
+    auto filtered = std::vector<float>(size);
     float x1 = 0, x2 = 0;
     float y1 = 0, y2 = 0;
 
     // Filter buffer
-    for (float &sample : samples) {
+    for (int i = 0; i < size; i++) {
+        auto sample = segment[i];
         float result = (k0 * sample) + (k1 * x1) + (k2 * x2) - (k3 * y1) - (k4 * y2);
         result /= normalizationCoeff;
 
@@ -51,34 +53,30 @@ void AudioFilter::applyBiquad(AudioBuffer &buffer, unsigned int cutoffHz, Filter
         y2 = y1;
         y1 = result;
 
-        sample = result;
+        filtered[i] = result;
     }
 
-    // Store filtered samples
-    buffer.setSamples(samples);
+    return filtered;
 }
 
 // Apply a time-domain pre-emphasis filter to the samples
 //
 // During LPC analysis, a pre-emphasis filter balances the signal spectrum by augmenting high-frequencies. This is
 // undesirable for pitch estimation, but greatly improves the accuracy of linear prediction
-void AudioFilter::applyPreemphasis(AudioBuffer &buffer, float alpha) {
+std::vector<float> AudioFilter::applyPreemphasis(std::vector<float> segment, float alpha) {
     // Initialize filtered buffer
-    std::vector<float> samples = buffer.getSamples();
-    std::vector<float> filteredSamples = std::vector<float>();
-
-    float previous = samples[0];
-    filteredSamples.push_back(previous);
+    auto size = segment.size();
+    std::vector<float> filtered = std::vector<float>(size);
 
     // y(t) = x(t) - a * x(t-1)
     // A typical value for |a| = 15/16 = 0.9375
-    for (int i = 1; i < samples.size(); i++) {
-        float preEmphasized = samples[i] - alpha * samples[i - 1];
-        filteredSamples.push_back(preEmphasized);
+    for (int i = 1; i < size; i++) {
+        float preEmphasized = segment[i] - alpha * segment[i - 1];
+        filtered[i] = preEmphasized;
     }
 
     lastFilterMode = FILTER_NONE;
-    buffer.setSamples(filteredSamples);
+    return filtered;
 }
 
 // Apply Hamming window to audio segment
@@ -86,17 +84,23 @@ void AudioFilter::applyPreemphasis(AudioBuffer &buffer, float alpha) {
 // Because speech segments in isolation cannot convey information about the transition between each other, a windowing
 // function is necessary to smooth their boundaries. This is accomplished by "smearing" the spectrum of the segments
 // by a known alpha value. For the Hamming Window, which is preferred for speech signal analysis, a=0.54
-void AudioFilter::applyHammingWindow(std::vector<float> &segment) {
-    auto size = segment.size();
+std::vector<float> AudioFilter::applyHammingWindow(std::vector<float> segment) {
+    auto segmentSize = segment.size();
+    auto filtered = std::vector<float>(segmentSize);
 
-    for (int i = 0; i < size; i++) {
-        float theta = 2.0f * float(M_PI) * float(i) / float(size);
+    // The Hamming window is 1.5x larger than the source signal, such that adjacent segments overlap slightly
+    auto windowSize = (float(segmentSize) * 1.5f) - 1;
+    float pi = M_PI;
+
+    for (int i = 0; i < segmentSize; i++) {
+        float theta = 2.0f * pi * float(i) / windowSize;
         float window = 0.54f - 0.46f * cosf(theta);
 
-        segment[i] *= window;
+        filtered[i] = segment[i] * window;
     }
 
     lastFilterMode = FILTER_NONE;
+    return filtered;
 }
 
 // Determine the biquadratic filter coefficients

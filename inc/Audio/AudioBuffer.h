@@ -8,15 +8,19 @@
 
 class AudioBuffer {
 public:
-    explicit AudioBuffer(const std::string &path, int targetSampleRateHz = 8000, float windowWidthMs = 25.0f);
+    explicit AudioBuffer(const std::string &path, float segmentDurationMs = 20.0f);
     AudioBuffer(const AudioBuffer &buffer);
 
-    unsigned int getSampleRate() const;
-    unsigned int getNSegments() const;
+    void resample(int targetSampleRateHz);
 
+    // Properties
+    unsigned int sampleRate() const;
+    unsigned int nSegments() const;
+    unsigned int samplesPerSegment() const;
+
+    // Getters/Setters
     std::vector<float> getSamples();
     void setSamples(const std::vector<float> &newSamples);
-
     std::vector<float> getSegment(int i);
 
     // Unused attributes remain implemented, as this class will likely reappear in other projects ;-)
@@ -24,13 +28,13 @@ public:
     __attribute__((unused)) void exportAudio(const std::string &path);
 
 private:
-    unsigned int sampleRate;
-    unsigned int samplesPerSegment;
-    unsigned int nSegments;
+    const int normalizationFactor = 1<<15;
+    unsigned int sampleRateHz;
+    float segmentDuration;
     std::vector<float> samples;
 
     void mixToMono(int nChannels);
-    void resample(int targetSampleRateHz);
+    void pad();
 };
 
 #endif //TMS_EXPRESS_AUDIOBUFFER_H

@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     std::string inputPath;
     float windowWidthMs = 25.0f;
     int highpassCutoff = 1000;
-    int lowpassCutoff = 800;
+    int lowpassCutoff = 4000;
     float preEmphasisAlpha = -0.9375f;
     BitstreamGenerator::EncoderStyle bitstreamFormat = BitstreamGenerator::EncoderStyle::ENCODERSTYLE_ASCII;
     bool noStopFrame = false;
