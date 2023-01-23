@@ -28,7 +28,7 @@ Frame::Frame(int pitchPeriod, bool isVoiced, float gainDB, std::vector<float> co
     // The gain may be NaN if the autocorrelation is zero, which has been observed in the following scenarios:
     // 1. The Frame is completely silent (source audio is noise-isolated)
     // 2. The highpass filter cutoff is too low
-    if (isnan(gainDB)) {
+    if (std::isnan(gainDB)) {
         gain = 0.0f;
         reflectorCoeffs.assign(reflectorCoeffs.size(), 0.0f);
     }
