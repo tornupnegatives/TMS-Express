@@ -27,7 +27,8 @@ PathUtils::PathUtils(std::string filepath) {
         paths.push_back(srcPath);
     } else {
         for (const auto& dirEntry : fs::directory_iterator(srcPath)) {
-            paths.push_back(dirEntry.path());
+            auto path = dirEntry.path().string();
+            paths.push_back(path);
         }
     }
 
