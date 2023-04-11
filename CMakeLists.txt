@@ -78,18 +78,5 @@ target_link_libraries(${PROJECT_NAME}
         samplerate
         )
 
-#  ====================================
-#                  HACKS
-#  ====================================
-if (APPLE)
-    # On macOS, suppress warnings regarding <experimental/filesystem>
-    target_compile_definitions(${PROJECT_NAME} PRIVATE _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM)
-else()
-    # On other systems, link the filesystem library
-    target_link_libraries(${PROJECT_NAME}
-            stdc++fs
-            )
-endif(APPLE)
-
 # Rename executable
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
