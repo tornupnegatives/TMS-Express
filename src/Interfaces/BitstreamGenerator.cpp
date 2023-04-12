@@ -17,7 +17,7 @@
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
-#include <experimental/filesystem>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -51,13 +51,13 @@ void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
                                      const std::vector<std::string> &inputFilenames, const std::string &outputPath) {
     if (style == ENCODERSTYLE_ASCII) {
         // Create directory to populate with encoded files
-        std::experimental::filesystem::create_directory(outputPath);
+        std::filesystem::create_directory(outputPath);
 
         for (int i = 0; i < inputPaths.size(); i++) {
             const auto& inPath = inputPaths[i];
             const auto& filename = inputFilenames[i];
 
-            std::experimental::filesystem::path outPath = outputPath;
+            std::filesystem::path outPath = outputPath;
             outPath /= (filename + ".lpc");
 
             encode(inPath, filename, outPath.string());

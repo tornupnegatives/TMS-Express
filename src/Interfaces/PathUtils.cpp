@@ -8,12 +8,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Interfaces/PathUtils.h"
-#include <experimental/filesystem>
+#include <filesystem>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 PathUtils::PathUtils(std::string filepath) {
     // Gather file metadata
@@ -98,4 +98,3 @@ std::vector<std::string> PathUtils::splitString(const std::string& str, const st
 
     return result;
 }
-
