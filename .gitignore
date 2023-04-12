@@ -40,3 +40,6 @@ build/
 
 # IDEs
 .idea/
+
+# VCPKG
+vcpkg.json

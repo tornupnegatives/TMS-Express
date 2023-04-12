@@ -29,53 +29,18 @@ add_executable(${PROJECT_NAME}
 #  ====================================
 #              DEPENDENCIES
 #  ====================================
-include(cmake/CPM.cmake)
+include(vcpkg/scripts/buildsystems/vcpkg.cmake)
 
-# Generate libsndfile DLL on Windows
-if (WIN32)
-    set(ENABLE_STATIC_RUNTIME ON)
-endif()
+find_package(SndFile CONFIG REQUIRED)
+find_package(SampleRate CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(CLI11 CONFIG REQUIRED)
 
-CPMAddPackage(
-        NAME nlohmann_json
-        GITHUB_REPOSITORY nlohmann/json
-        VERSION 3.11.2
-        OPTIONS "JSON_BuildTests OFF"
-)
-
-CPMAddPackage(
-        NAME CLI11
-        GITHUB_REPOSITORY CLIUtils/CLI11
-        VERSION 2.3.2
-)
-
-CPMAddPackage(
-        NAME libsndfile
-        GITHUB_REPOSITORY libsndfile/libsndfile
-        GIT_TAG 1.2.0
-        OPTIONS
-        "BUILD_PROGRAMS OFF"
-        "BUILD_EXAMPLES OFF"
-        "BUILD_TESTING OFF"
-        "ENABLE_EXTERNAL_LIBS OFF"
-        "ENABLE_PACKAGE_CONFIG OFF"
-        "INSTALL_PKGCONFIG_MODULE OFF"
-        "INSTALL_MANPAGES OFF"
-)
-
-CPMAddPackage(
-        NAME libsamplerate
-        GITHUB_REPOSITORY libsndfile/libsamplerate
-        GIT_TAG 0.2.2
-        OPTIONS
-        "BUILD_TESTING OFF"
-)
-
-target_link_libraries(${PROJECT_NAME}
-        CLI11
+target_link_libraries(${PROJECT_NAME} PRIVATE
+        SndFile::sndfile
+        SampleRate::samplerate
         nlohmann_json::nlohmann_json
-        sndfile
-        samplerate
+        CLI11::CLI11
         )
 
 # Rename executable
