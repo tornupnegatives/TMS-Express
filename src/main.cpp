@@ -1,9 +1,9 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 
-#include "CLI/CLI.hpp"
 #include "Interfaces/BitstreamGenerator.h"
 #include "Interfaces/PathUtils.h"
-#include <experimental/filesystem>
+#include <CLI11.hpp>
+#include <filesystem>
 #include <string>
 
 int main(int argc, char **argv) {

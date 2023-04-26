@@ -11,9 +11,9 @@
 
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/Tms5220CodingTable.h"
+#include <json.hpp>
 #include <algorithm>
 #include <cmath>
-#include <nlohmann/json.hpp>
 #include <vector>
 
 using namespace Tms5220CodingTable;

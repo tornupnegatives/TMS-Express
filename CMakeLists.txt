@@ -7,7 +7,11 @@ project(TMS-Express)
 #  ====================================
 #             PROGRAM FILES
 #  ====================================
-include_directories(inc/)
+include_directories(
+    inc
+    lib
+    )
+
 add_executable(${PROJECT_NAME}
         src/Audio/AudioBuffer.cpp
         src/Audio/AudioFilter.cpp
@@ -27,55 +31,17 @@ add_executable(${PROJECT_NAME}
         )
 
 #  ====================================
-#              DEPENDENCIES
+#              DYNAMIC LIBS
 #  ====================================
-include(cmake/CPM.cmake)
-
-# Generate libsndfile DLL on Windows
-if (WIN32)
-    set(ENABLE_STATIC_RUNTIME ON)
-endif()
-
-CPMAddPackage(
-        NAME nlohmann_json
-        GITHUB_REPOSITORY nlohmann/json
-        VERSION 3.11.2
-        OPTIONS "JSON_BuildTests OFF"
-)
-
-CPMAddPackage(
-        NAME CLI11
-        GITHUB_REPOSITORY CLIUtils/CLI11
-        VERSION 2.3.2
-)
-
-CPMAddPackage(
-        NAME libsndfile
-        GITHUB_REPOSITORY libsndfile/libsndfile
-        GIT_TAG 1.2.0
-        OPTIONS
-        "BUILD_PROGRAMS OFF"
-        "BUILD_EXAMPLES OFF"
-        "BUILD_TESTING OFF"
-        "ENABLE_EXTERNAL_LIBS OFF"
-        "ENABLE_PACKAGE_CONFIG OFF"
-        "INSTALL_PKGCONFIG_MODULE OFF"
-        "INSTALL_MANPAGES OFF"
-)
-
-CPMAddPackage(
-        NAME libsamplerate
-        GITHUB_REPOSITORY libsndfile/libsamplerate
-        GIT_TAG 0.2.2
-        OPTIONS
-        "BUILD_TESTING OFF"
-)
+#set(CMAKE_AUTOMOC ON)
+#find_package(Qt6 REQUIRED)
+find_package(Qt6Widgets REQUIRED)
+find_package(sndfile REQUIRED)
+find_package(samplerate REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
-        CLI11
-        nlohmann_json::nlohmann_json
-        sndfile
-        samplerate
+        SndFile::sndfile
+        SampleRate::samplerate
         )
 
 # Rename executable

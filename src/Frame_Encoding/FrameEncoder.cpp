@@ -10,9 +10,9 @@
 
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/Frame.h"
+#include <json.hpp>
 #include <algorithm>
 #include <cstdio>
-#include <nlohmann/json.hpp>
 
 FrameEncoder::FrameEncoder(bool hexPrefix, char separator) {
     includeHexPrefix = hexPrefix;

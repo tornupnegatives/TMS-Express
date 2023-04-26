@@ -21,7 +21,10 @@ $ brew tap tornupnegatives/tmsexpress && brew install tms-express
 
 ## Compile from Source
 ### Dependencies
-TMS Express is built using CMake, and all depedencies are managed automatically via the [CPM plugin](https://github.com/cpm-cmake/CPM.cmake). The program has been tested on macOS Ventura (13.1), Ubuntu 22.04 LTS, and Windows 11 Home Edition.
+```shell
+# macOS
+$ brew install cmake libsamplerate libsndfile pkg-config qt
+```
 
 ### Compilation
 ```shell
