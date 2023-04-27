@@ -1,7 +1,7 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 
-#include "Interfaces/BitstreamGenerator.h"
-#include "Interfaces/PathUtils.h"
+#include "Bitstream_Generation/BitstreamGenerator.h"
+#include "Bitstream_Generation/PathUtils.h"
 #include <CLI11.hpp>
 #include <filesystem>
 #include <string>

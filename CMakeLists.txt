@@ -27,8 +27,8 @@ add_executable(${PROJECT_NAME}
         src/Frame_Encoding/FrameEncoder.cpp
         src/Frame_Encoding/FramePostprocessor.cpp
 
-        src/Interfaces/BitstreamGenerator.cpp
-        src/Interfaces/PathUtils.cpp
+        src/Bitstream_Generation/BitstreamGenerator.cpp
+        src/Bitstream_Generation/PathUtils.cpp
 
         src/main.cpp
         )

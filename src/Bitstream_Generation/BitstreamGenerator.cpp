@@ -13,7 +13,7 @@
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostprocessor.h"
-#include "Interfaces/BitstreamGenerator.h"
+#include "Bitstream_Generation/BitstreamGenerator.h"
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
