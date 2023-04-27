@@ -2,7 +2,10 @@
 
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_AUTOMOC ON)
+
 project(TMS-Express)
+option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
 
 #  ====================================
 #             PROGRAM FILES
@@ -33,8 +36,7 @@ add_executable(${PROJECT_NAME}
 #  ====================================
 #              DYNAMIC LIBS
 #  ====================================
-#set(CMAKE_AUTOMOC ON)
-#find_package(Qt6 REQUIRED)
+find_package(Qt6Gui REQUIRED)
 find_package(Qt6Widgets REQUIRED)
 find_package(sndfile REQUIRED)
 find_package(samplerate REQUIRED)
@@ -42,7 +44,14 @@ find_package(samplerate REQUIRED)
 target_link_libraries(${PROJECT_NAME}
         SndFile::sndfile
         SampleRate::samplerate
+        Qt::Gui
+        Qt::Widgets
         )
 
 # Rename executable
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
+
+if (TMSEXPRESS_BUILD_TESTS)
+    message(STATUS "Building TMS Express test suite")
+    include(test/TmsTest.cmake)
+endif()
