@@ -38,12 +38,14 @@ add_executable(${PROJECT_NAME}
 #  ====================================
 find_package(Qt6Gui REQUIRED)
 find_package(Qt6Widgets REQUIRED)
-find_package(sndfile REQUIRED)
-find_package(samplerate REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SndFile REQUIRED IMPORTED_TARGET sndfile)
+pkg_check_modules(SampleRate REQUIRED IMPORTED_TARGET samplerate)
 
 target_link_libraries(${PROJECT_NAME}
-        SndFile::sndfile
-        SampleRate::samplerate
+        PkgConfig::SndFile
+        PkgConfig::SampleRate
         Qt::Gui
         Qt::Widgets
         )
