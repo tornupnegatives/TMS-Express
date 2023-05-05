@@ -19,6 +19,13 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+public slots:
+    void importAudioFile();
+    //void exportBitstream();
+
+    //void applyAudioPreprocessing();
+    //void applyBitstreamPostProcessing();
+
 private:
     Ui::MainWindow *ui;
 };
