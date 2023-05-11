@@ -29,6 +29,8 @@ public slots:
     void applyAudioPreprocessing();
     //void applyBitstreamPostProcessing();
 
+    void playAudio();
+
 private:
     Ui::MainWindow *ui;
     AudioWaveform *audioWaveform;

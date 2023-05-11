@@ -53,7 +53,7 @@ add_executable(${PROJECT_NAME}
 #  ====================================
 #              DYNAMIC LIBS
 #  ====================================
-find_package(Qt6 COMPONENTS Core Gui Widgets PrintSupport REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Multimedia Widgets PrintSupport REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SndFile REQUIRED IMPORTED_TARGET sndfile)
@@ -67,6 +67,7 @@ target_link_libraries(${PROJECT_NAME}
         Qt::Gui
         Qt::Widgets
         Qt::PrintSupport
+        Qt::Multimedia
         )
 
 # Rename executable

@@ -10,9 +10,19 @@
 #include "../../gui/ui_MainWindow.h"
 
 #include <QAction>
+#include <QtMultimedia/QAudio>
+#include <QtMultimedia/QAudioSink>
+#include <QtMultimedia/QAudioFormat>
+#include <QtMultimedia/QAudioOutput>
+#include <QtMultimedia/QMediaDevices>
+#include <QMediaPlayer>
 #include <QDir>
 #include <QFileDialog>
+#include <cstdio>
+#include <filesystem>
 #include <string.h>
+#include <QAudioSink>
+#include <unistd.h>
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
@@ -20,6 +30,9 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     // Menu bar signals
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::importAudioFile);
     //connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(exportBitstream()));
+
+    // Waveform controls
+    connect(ui->playAudioButton, &QPushButton::pressed, this, &MainWindow::playAudio);
 
     // Pre-processing signals
     connect(ui->windowWidthLine, &QLineEdit::textChanged, this, &MainWindow::applyAudioPreprocessing);
@@ -93,4 +106,30 @@ void MainWindow::applyAudioPreprocessing() {
 
     audioWaveform->clear();
     audioWaveform->addSamples(audioBuffer->getSamples());
+}
+
+void MainWindow::playAudio() {
+    if (audioBuffer == nullptr) {
+        qDebug() << "Triggered play but no audio file imported";
+        return;
+    }
+
+   // Generate random temporary filepath
+    char filename[29];
+    std::strcpy(filename, "tmsexpress_render_XXXXXX.wav");
+    mkstemps(filename, 4);
+
+    auto tempDir = std::filesystem::temp_directory_path();
+    tempDir.append(filename);
+
+    audioBuffer->exportAudio(tempDir);
+    qDebug() << "Rendered audio to path: " << tempDir.c_str();
+
+    auto player = new QMediaPlayer();
+    auto audioOutput = new QAudioOutput;
+    player->setAudioOutput(audioOutput);
+    player->setSource(QUrl::fromLocalFile(tempDir.c_str()));
+    audioOutput->setVolume(100);
+
+    player->play();
 }
