@@ -40,17 +40,11 @@ AudioBuffer::AudioBuffer(const std::string &path, int targetSampleRateHz, float 
         resample(targetSampleRateHz);
     }
 
-    // Compute samples per segment
-    samplesPerSegment = int(float(sampleRate) * windowWidthMs * 1e-3);
-    nSegments = samples.size() / samplesPerSegment;
+    samplesPerSegment = 0;
+    nSegments = 0;
+    originalSamples = samples;
 
-    // Pad with zeros
-    unsigned int paddedSize = samplesPerSegment * nSegments;
-    if (samples.size() < paddedSize) {
-        samples.resize(paddedSize, 0);
-    } else if (samples.size() > paddedSize) {
-        samples.resize(paddedSize + samplesPerSegment, 0);
-    }
+    setWindowWidth(windowWidthMs);
 }
 
 AudioBuffer::AudioBuffer(const AudioBuffer &buffer) {
@@ -63,6 +57,24 @@ AudioBuffer::AudioBuffer(const AudioBuffer &buffer) {
 ///////////////////////////////////////////////////////////////////////////////
 //                          Getters & Setters
 ///////////////////////////////////////////////////////////////////////////////
+
+float AudioBuffer::getWindowWidth() const {
+    return float(samplesPerSegment / (sampleRate * 1e-3));
+}
+
+void AudioBuffer::setWindowWidth(float windowWidthMs) {
+    // Compute samples per segment
+    samplesPerSegment = int(float(sampleRate) * windowWidthMs * 1e-3);
+    nSegments = samples.size() / samplesPerSegment;
+
+    // Pad with zeros
+    unsigned int paddedSize = samplesPerSegment * nSegments;
+    if (samples.size() < paddedSize) {
+        samples.resize(paddedSize, 0);
+    } else if (samples.size() > paddedSize) {
+        samples.resize(paddedSize + samplesPerSegment, 0);
+    }
+}
 
 unsigned int AudioBuffer::getSampleRate() const {
     return sampleRate;
@@ -164,4 +176,9 @@ void AudioBuffer::resample(int targetSampleRateHz) {
     src_simple(&resampler, SRC_SINC_BEST_QUALITY, 1);
     sampleRate = targetSampleRateHz;
     samples = resampledBuffer;
+}
+
+// Undo edits to buffer and restore original samples
+void AudioBuffer::reset() {
+    samples = originalSamples;
 }

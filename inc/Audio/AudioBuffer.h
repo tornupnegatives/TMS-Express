@@ -11,6 +11,9 @@ public:
     explicit AudioBuffer(const std::string &path, int targetSampleRateHz = 8000, float windowWidthMs = 25.0f);
     AudioBuffer(const AudioBuffer &buffer);
 
+    float getWindowWidth() const;
+    void setWindowWidth(float windowWidthMs);
+
     unsigned int getSampleRate() const;
     unsigned int getNSegments() const;
 
@@ -18,6 +21,8 @@ public:
     void setSamples(const std::vector<float> &newSamples);
 
     std::vector<float> getSegment(int i);
+
+    void reset();
 
     // Unused attributes remain implemented, as this class will likely reappear in other projects ;-)
     __attribute__((unused)) std::vector<std::vector<float>> getSegments();
@@ -28,6 +33,7 @@ private:
     unsigned int samplesPerSegment;
     unsigned int nSegments;
     std::vector<float> samples;
+    std::vector<float> originalSamples;
 
     void mixToMono(int nChannels);
     void resample(int targetSampleRateHz);

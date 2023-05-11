@@ -40,7 +40,12 @@ add_executable(${PROJECT_NAME}
         # QT requires includes to be explicitly added
         inc/User_Interfaces/MainWindow.h
         src/User_Interfaces/MainWindow.cpp
+
+        inc/User_Interfaces/AudioWaveform.h
+        src/User_Interfaces/AudioWaveform.cpp
+
         gui/MainWindow.ui
+        lib/qcustomplot/qcustomplot.cpp
 
         src/main.cpp
         )

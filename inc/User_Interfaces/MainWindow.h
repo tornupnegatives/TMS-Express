@@ -5,6 +5,9 @@
 #ifndef TMS_EXPRESS_MAINWINDOW_H
 #define TMS_EXPRESS_MAINWINDOW_H
 
+#include "Audio/AudioBuffer.h"
+#include "Audio/AudioFilter.h"
+#include "User_Interfaces/AudioWaveform.h"
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
@@ -23,11 +26,15 @@ public slots:
     void importAudioFile();
     //void exportBitstream();
 
-    //void applyAudioPreprocessing();
+    void applyAudioPreprocessing();
     //void applyBitstreamPostProcessing();
 
 private:
     Ui::MainWindow *ui;
+    AudioWaveform *audioWaveform;
+
+    AudioBuffer* audioBuffer;
+    AudioFilter audioFilter;
 };
 
 #endif //TMS_EXPRESS_MAINWINDOW_H
