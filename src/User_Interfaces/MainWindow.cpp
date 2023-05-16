@@ -1,27 +1,21 @@
 //
 // Created by Joseph Bellahcen on 5/1/23.
 //
+
 #include "Audio/AudioBuffer.h"
 #include "Audio/AudioFilter.h"
+#include "LPC_Analysis/Autocorrelator.h"
+#include "LPC_Analysis/PitchEstimator.h"
 
 #include "User_Interfaces/AudioWaveform.h"
 #include "User_Interfaces/MainWindow.h"
 
+#include "CRC.h"
+
 #include "../../gui/ui_MainWindow.h"
 
-#include <QAction>
-#include <QtMultimedia/QAudio>
-#include <QtMultimedia/QAudioSink>
-#include <QtMultimedia/QAudioFormat>
-#include <QtMultimedia/QAudioOutput>
-#include <QtMultimedia/QMediaDevices>
 #include <QMediaPlayer>
-#include <QDir>
-#include <QFileDialog>
-#include <cstdio>
-#include <filesystem>
-#include <string.h>
-#include <QAudioSink>
+#include <QtMultimedia/QAudioOutput>
 #include <unistd.h>
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -46,6 +40,8 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     connect(ui->preEmphEnable, &QCheckBox::stateChanged, this, &MainWindow::applyAudioPreprocessing);
     connect(ui->preEmphLine, &QLineEdit::textChanged, this, &MainWindow::applyAudioPreprocessing);
 
+    connect(ui->showPitchEnable, &QCheckBox::stateChanged, this, &MainWindow::applyAudioPreprocessing);
+
     // Attach audio waveform plot
     audioWaveform = new AudioWaveform(ui->audioWaveform);
     audioWaveform->setMinimumSize(750, 150);
@@ -54,6 +50,8 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     // TMS Express objects
     audioBuffer = nullptr;
     audioFilter = AudioFilter();
+
+    toggleGroupBoxes(true);
 }
 
 MainWindow::~MainWindow() {
@@ -71,7 +69,8 @@ void MainWindow::importAudioFile() {
 
     qDebug() << "Importing " << filePath;
     audioBuffer = new AudioBuffer(filePath.toStdString());
-    audioWaveform->addSamples(audioBuffer->getSamples());
+    applyAudioPreprocessing();
+    toggleGroupBoxes(false);
 }
 
 void MainWindow::applyAudioPreprocessing() {
@@ -104,8 +103,31 @@ void MainWindow::applyAudioPreprocessing() {
         qDebug() << "Pre-emphasis alpha: " << alpha;
     }
 
-    audioWaveform->clear();
-    audioWaveform->addSamples(audioBuffer->getSamples());
+    auto pitchEstimator = PitchEstimator(8000,
+                                         ui->minPitchLine->text().toInt(),
+                                         ui->maxPitchLine->text().toInt()
+                                         );
+
+    std::vector<float> pitchTable(audioBuffer->getNSegments());
+
+    if (ui->showPitchEnable->isChecked()) {
+        for (int i = 0; i < audioBuffer->getNSegments(); i++) {
+            auto segment = audioBuffer->getSegment(i);
+            auto acf = Autocorrelator::process(segment);
+
+            // Normalize samples by max period
+            pitchTable[i] = pitchEstimator.estimateFrequency(acf) / ui->maxPitchLine->text().toFloat();
+
+        }
+    }
+
+    updatePlot(pitchTable);
+
+}
+
+void MainWindow::updatePlot(std::vector<float> pitchTable) {
+    audioWaveform->plotSamples(audioBuffer->getSamples());
+    audioWaveform->plotPitch(pitchTable);
 }
 
 void MainWindow::playAudio() {
@@ -114,16 +136,21 @@ void MainWindow::playAudio() {
         return;
     }
 
-   // Generate random temporary filepath
-    char filename[29];
-    std::strcpy(filename, "tmsexpress_render_XXXXXX.wav");
-    mkstemps(filename, 4);
+   // Generate checksum of audio buffer for unique filename
+    char filename[31];
+    auto crc = CRC::Calculate(audioBuffer->getSamples().data(), sizeof(float), CRC::CRC_32());
+    snprintf(filename, 31, "tmsexpress_render_%x.wav", crc);
 
     auto tempDir = std::filesystem::temp_directory_path();
     tempDir.append(filename);
 
-    audioBuffer->exportAudio(tempDir);
-    qDebug() << "Rendered audio to path: " << tempDir.c_str();
+    // Only render audio if this version of buffer doesn't already exist
+    // Unfortunately, the pre-emphasis filter produces small changes that won't be picked up by this checksum,
+    // so it will override this check for the time being
+    if (!std::filesystem::exists(tempDir) || ui->preEmphEnable->isChecked()) {
+        audioBuffer->exportAudio(tempDir);
+        qDebug() << "Rendered audio to path: " << tempDir.c_str();
+    }
 
     auto player = new QMediaPlayer();
     auto audioOutput = new QAudioOutput;
@@ -132,4 +159,11 @@ void MainWindow::playAudio() {
     audioOutput->setVolume(100);
 
     player->play();
+}
+
+void MainWindow::toggleGroupBoxes(bool enabled) {
+    ui->showPitchEnable->setDisabled(enabled);
+    ui->playAudioButton->setDisabled(enabled);
+    ui->preProcGroupBox->setDisabled(enabled);
+    ui->bitstreamCtrlGroupBox->setDisabled(enabled);
 }

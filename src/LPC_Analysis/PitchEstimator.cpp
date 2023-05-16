@@ -13,8 +13,25 @@
 #include <vector>
 
 PitchEstimator::PitchEstimator(int sampleRateHz, int minFrqHz, int maxFrqHz) {
+    sampleRate = sampleRateHz;
     minPeriod = sampleRateHz / maxFrqHz;
     maxPeriod = sampleRateHz / minFrqHz;
+}
+
+int PitchEstimator::getMinPeriod() {
+    return minPeriod;
+}
+
+void PitchEstimator::setMinPeriod(int maxFrqHz) {
+    minPeriod = sampleRate / maxFrqHz;
+}
+
+int PitchEstimator::getMaxPeriod() {
+    return maxPeriod;
+}
+
+void PitchEstimator::setMaxPeriod(int minFrqHz) {
+    maxPeriod = sampleRate / minFrqHz;
 }
 
 // Estimate the pitch period of the segment from its autocorrelation
@@ -31,5 +48,16 @@ int PitchEstimator::estimatePeriod(const std::vector<float> &acf) const {
     auto firstLocalMin = std::min_element(acfStart, acfEnd);
     auto period = int(std::distance(acf.begin(), std::max_element(firstLocalMin, acfEnd)));
 
-    return period;
+    if (period > maxPeriod) {
+        return maxPeriod;
+    } else if (period < minPeriod) {
+        return minPeriod;
+    } else {
+        return period;
+    }
+}
+
+float PitchEstimator::estimateFrequency(const std::vector<float> &acf) const {
+    auto period = estimatePeriod(acf);
+    return float(sampleRate) / float(period);
 }

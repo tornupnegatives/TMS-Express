@@ -16,6 +16,7 @@ public:
 
     unsigned int getSampleRate() const;
     unsigned int getNSegments() const;
+    unsigned int getSamplesPerSegment() const;
 
     std::vector<float> getSamples();
     void setSamples(const std::vector<float> &newSamples);

@@ -117,6 +117,10 @@ __attribute__((unused)) std::vector<std::vector<float>> AudioBuffer::getSegments
     return segments;
 }
 
+unsigned int AudioBuffer::getSamplesPerSegment() const {
+    return samplesPerSegment;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //                          Utility Functions
 ///////////////////////////////////////////////////////////////////////////////

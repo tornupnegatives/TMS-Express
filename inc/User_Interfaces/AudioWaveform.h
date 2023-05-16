@@ -5,16 +5,22 @@
 #ifndef TMS_EXPRESS_AUDIOWAVEFORM_H
 #define TMS_EXPRESS_AUDIOWAVEFORM_H
 
-#include "qcustomplot/qcustomplot.h"
 #include <QtWidgets>
 #include <vector>
 
-class AudioWaveform : public QCustomPlot {
+class AudioWaveform : public QWidget {
 public:
     AudioWaveform(QWidget *parent = nullptr);
 
-    void addSamples(std::vector<float> samples);
-    void clear();
+    void plotSamples(const std::vector<float>& _samples);
+    void plotPitch(const std::vector<float>& _pitchTable);
+
+protected:
+    void paintEvent(QPaintEvent* event);
+
+private:
+    std::vector<float> samples;
+    std::vector<float> pitchTable;
 };
 
 

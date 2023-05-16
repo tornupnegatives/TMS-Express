@@ -7,8 +7,10 @@
 
 #include "Audio/AudioBuffer.h"
 #include "Audio/AudioFilter.h"
+#include "LPC_Analysis/PitchEstimator.h"
 #include "User_Interfaces/AudioWaveform.h"
 #include <QMainWindow>
+#include <vector>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -29,6 +31,8 @@ public slots:
     void applyAudioPreprocessing();
     //void applyBitstreamPostProcessing();
 
+    void updatePlot(std::vector<float> pitchTable);
+
     void playAudio();
 
 private:
@@ -37,6 +41,11 @@ private:
 
     AudioBuffer* audioBuffer;
     AudioFilter audioFilter;
+
+    //std::vector<float> pitchTable;
+
+
+    void toggleGroupBoxes(bool enabled);
 };
 
 #endif //TMS_EXPRESS_MAINWINDOW_H
