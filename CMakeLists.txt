@@ -2,13 +2,28 @@
 
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Run Qt's moc, rcc, and uic tools
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
 project(TMS-Express)
+option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
 
 #  ====================================
 #             PROGRAM FILES
 #  ====================================
-include_directories(inc/)
+include_directories(
+        inc
+        lib
+)
+
 add_executable(${PROJECT_NAME}
+        #  ====================================
+        #             BACKEND SOURCES
+        #  ====================================
         src/Audio/AudioBuffer.cpp
         src/Audio/AudioFilter.cpp
 
@@ -20,28 +35,48 @@ add_executable(${PROJECT_NAME}
         src/Frame_Encoding/FrameEncoder.cpp
         src/Frame_Encoding/FramePostprocessor.cpp
 
-        src/Interfaces/BitstreamGenerator.cpp
-        src/Interfaces/PathUtils.cpp
+        src/Bitstream_Generation/BitstreamGenerator.cpp
+        src/Bitstream_Generation/PathUtils.cpp
 
+        #  ====================================
+        #             FRONTEND SOURCES
+        #  ====================================
+        src/User_Interfaces/CommandLineApp.cpp
+
+        inc/User_Interfaces/MainWindow.h
+        src/User_Interfaces/MainWindow.cpp
+
+        inc/User_Interfaces/AudioWaveform.h
+        src/User_Interfaces/AudioWaveform.cpp
+
+        gui/mainwindow.ui
         src/main.cpp
         )
 
 #  ====================================
-#              DEPENDENCIES
+#              DYNAMIC LIBS
 #  ====================================
-include(vcpkg/scripts/buildsystems/vcpkg.cmake)
+find_package(Qt6 COMPONENTS Core Gui Multimedia Widgets PrintSupport REQUIRED)
 
-find_package(SndFile CONFIG REQUIRED)
-find_package(SampleRate CONFIG REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
-find_package(CLI11 CONFIG REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SndFile REQUIRED IMPORTED_TARGET sndfile)
+pkg_check_modules(SampleRate REQUIRED IMPORTED_TARGET samplerate)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-        SndFile::sndfile
-        SampleRate::samplerate
-        nlohmann_json::nlohmann_json
-        CLI11::CLI11
+target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        PkgConfig::SndFile
+        PkgConfig::SampleRate
+        Qt::Core
+        Qt::Gui
+        Qt::Widgets
+        Qt::PrintSupport
+        Qt::Multimedia
         )
 
 # Rename executable
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
+
+if (TMSEXPRESS_BUILD_TESTS)
+    message(STATUS "Building TMS Express test suite")
+    include(test/TmsTest.cmake)
+endif()

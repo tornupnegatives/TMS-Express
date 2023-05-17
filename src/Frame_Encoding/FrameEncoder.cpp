@@ -10,32 +10,43 @@
 
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/Frame.h"
+
+#include "json.hpp"
+
 #include <algorithm>
 #include <cstdio>
-#include <nlohmann/json.hpp>
 
-FrameEncoder::FrameEncoder(bool hexPrefix, char separator) {
-    includeHexPrefix = hexPrefix;
+/// Create a new Frame Encoder with an empty frame buffer
+///
+/// \param includeHexPrefix Whether or not to include '0x' before hex bytes
+/// \param separator Character with which to separate hex bytes
+FrameEncoder::FrameEncoder(bool includeHexPrefix, char separator) {
+    shouldIncludeHexPrefix = includeHexPrefix;
     byteSeparator = separator;
     frames = std::vector<Frame>();
     bytes = std::vector<std::string>(1, "");
 }
 
-FrameEncoder::FrameEncoder(const std::vector<Frame> &initFrames, bool hexPrefix, char separator) {
-    includeHexPrefix = hexPrefix;
+/// Create a new Frame Encoder and populate it with frames
+///
+/// \param initialFrames Frames with which to populate encoder
+/// \param includeHexPrefix Whether or not to include '0x' before hex bytes
+/// \param separator Character with which to separate hex bytes
+FrameEncoder::FrameEncoder(const std::vector<Frame> &initialFrames, bool includeHexPrefix, char separator) {
+    bytes = std::vector<std::string>(1, "");
     byteSeparator = separator;
     frames = std::vector<Frame>();
-    bytes = std::vector<std::string>(1, "");
+    shouldIncludeHexPrefix = includeHexPrefix;
 
-    appendFrames(initFrames);
+    append(initialFrames);
 }
 
-// Extract the binary representation of a Frame, segment it into bytes, and store the data
-//
-// The binary representation of a Frame is seldom cleanly divisible into bytes. As such, the first few bits of a Frame
-// may be packed into the empty space of an existing vector element, or the last few bits may partially occupy a new
-// vector element
-void FrameEncoder::appendFrame(Frame frame) {
+/// Append binary representation of a frame to the end of the encoder buffer
+///
+/// \note   The binary representation of a Frame is seldom cleanly divisible into bytes. As such, the first few bits of
+///         a Frame may be packed into the empty space of an existing vector element, or the last few bits may partially
+///         occupy a new vector element
+void FrameEncoder::append(Frame frame) {
     frames.push_back(frame);
     auto bin = frame.toBinary();
 
@@ -47,7 +58,7 @@ void FrameEncoder::appendFrame(Frame frame) {
     }
 
     // Segment the rest of the binary frame into bytes. The final byte will likely be incomplete, but that will be
-    // addressed either in a subsequent call to appendFrame() or during hex stream generation
+    // addressed either in a subsequent call to append() or during hex stream generation
     while (!bin.empty()) {
         auto byte = bin.substr(0, 8);
         bytes.push_back(byte);
@@ -56,14 +67,22 @@ void FrameEncoder::appendFrame(Frame frame) {
     }
 }
 
-// Extract the binary representation of an entire vector of Frames, and slice it into bytes
-void FrameEncoder::appendFrames(const std::vector<Frame> &initFrames) {
-    for (const auto &frame: initFrames) {
-        appendFrame(frame);
+/// Append binary representation of new frames to the end of the encoder buffer
+///
+/// \param newFrames Frames to be appended
+void FrameEncoder::append(const std::vector<Frame> &newFrames) {
+    for (const auto &frame: newFrames) {
+        append(frame);
     }
 }
 
-// Serialize the Frame data to a stream of hex bytes
+/// Serialize the Frame data to a stream of hex bytes
+///
+/// \note   Appending a stop frame tells the TMS5220 to exit Speak External mode. It is not necessary for
+///         software emulations of the TMS5220 or for bitstreams intended to be stored in the TMS6100 Voice Synthesis
+///         Memory IC
+//
+/// \param shouldAppendStopFrame Whether or not to include an explicit stop frame at the end of the bitstream
 std::string FrameEncoder::toHex(bool shouldAppendStopFrame) {
     std::string hexStream;
 
@@ -89,7 +108,7 @@ std::string FrameEncoder::toHex(bool shouldAppendStopFrame) {
     return hexStream;
 }
 
-// Serialize the Frame data to a JSON object
+/// Serialize the Frame data to a JSON object
 std::string FrameEncoder::toJSON() {
     nlohmann::json json;
 
@@ -100,8 +119,9 @@ std::string FrameEncoder::toJSON() {
     return json.dump(4);
 }
 
-// End the hex stream with a stop frame, which signifies to the TMS5220 that the Speak External command has completed
-// and the device should halt execution
+/// Append a stop frame to the end of the bitstream
+///
+/// \note See \code FrameEncoder::toHex() \endcode for more information on stop frames
 void FrameEncoder::appendStopFrame() {
     auto bin = std::string("1111");
 
@@ -113,7 +133,7 @@ void FrameEncoder::appendStopFrame() {
     }
 
     // Segment the rest of the binary frame into bytes. The final byte will likely be incomplete, but that will be
-    // addressed either in a subsequent call to appendFrame() or during hex stream generation
+    // addressed either in a subsequent call to append() or during hex stream generation
     while (!bin.empty()) {
         auto byte = bin.substr(0, 8);
         bytes.push_back(byte);
@@ -122,13 +142,13 @@ void FrameEncoder::appendStopFrame() {
     }
 }
 
-// Convert binary string to its hexadecimal representation
+/// Convert binary string to its ASCII hex bytes
 std::string FrameEncoder::byteToHex(const std::string &byte) const {
     int value = std::stoi(byte, nullptr, 2);
 
     char hexByte[6];
 
-    if (includeHexPrefix) {
+    if (shouldIncludeHexPrefix) {
         snprintf(hexByte, 5, "0x%02x", value);
     } else {
         snprintf(hexByte, 5, "%02x", value);

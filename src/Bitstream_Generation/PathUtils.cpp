@@ -7,7 +7,7 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Interfaces/PathUtils.h"
+#include "Bitstream_Generation/PathUtils.h"
 #include <filesystem>
 #include <string>
 #include <utility>

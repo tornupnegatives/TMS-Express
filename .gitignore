@@ -40,6 +40,9 @@ build/
 
 # IDEs
 .idea/
+.vscode/
+*.user
 
-# VCPKG
-vcpkg.json
+# Other
+*.bak
+*.swp

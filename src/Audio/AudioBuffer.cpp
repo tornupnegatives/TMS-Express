@@ -1,60 +1,68 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Class: AudioBuffer
 //
-// Description: The AudioBuffer stores 8kHz mono audio samples and provides and interface for segmentation. Audio data
+// Description: The AudioBuffer stores mono audio samples and provides and interface for segmentation. Audio data
 //              may be imported from any format supported by libsndfile and will be resampled during initialization
 //
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Audio/AudioBuffer.h"
+
 #include <samplerate.h>
 #include <sndfile.hh>
+
 #include <stdexcept>
 #include <vector>
 
-// Extract 8kHz mono audio samples from the provided file
+/// Import audio samples for segmentation
+///
+/// \param path Path to audio file
+/// \param targetSampleRateHz Rate at which to sample audio (in Hertz)
+/// \param windowWidthMs Segmentation window width (in milliseconds)
 AudioBuffer::AudioBuffer(const std::string &path, int targetSampleRateHz, float windowWidthMs) {
-    // Import audio file and get metadata
+    // Import audio file via libsndfile
     auto sndfile = SndfileHandle(path);
 
+    // TODO: Catch in GUI
     if (sndfile.error()) {
         throw std::runtime_error("Unsupported audio format");
     }
 
-    sampleRate = sndfile.samplerate();
-    sf_count_t nFrames = sndfile.frames();
-    int nChannels = sndfile.channels();
+    // Extract audio metadata
+    sampleRateHz = sndfile.samplerate();
+    auto nFrames = sndfile.frames();
+    auto nChannels = sndfile.channels();
 
-    // Store samples
-    sf_count_t bufferSize = nFrames * nChannels;
+    // Store floating-point samples
+    auto bufferSize = nFrames * nChannels;
     samples = std::vector<float>(bufferSize);
     sndfile.read(samples.data(), bufferSize);
 
-    // Mixdown and resample
+    // Mix to mono
     if (nChannels != 1) {
         mixToMono(nChannels);
     }
 
+    // Resample at target rate
+    // TODO: Implement upsampling safeguards
     if (sndfile.samplerate() != targetSampleRateHz) {
         resample(targetSampleRateHz);
     }
 
-    // Compute samples per segment
-    samplesPerSegment = int(float(sampleRate) * windowWidthMs * 1e-3);
-    nSegments = samples.size() / samplesPerSegment;
+    // Initialize parameters which depend on window width
+    nSegments = 0;
+    originalSamples = samples;
+    samplesPerSegment = 0;
 
-    // Pad with zeros
-    unsigned int paddedSize = samplesPerSegment * nSegments;
-    if (samples.size() < paddedSize) {
-        samples.resize(paddedSize, 0);
-    } else if (samples.size() > paddedSize) {
-        samples.resize(paddedSize + samplesPerSegment, 0);
-    }
+    setWindowWidth(windowWidthMs);
 }
 
+/// Create a deep copy of an existing audio buffer
+///
+/// \param buffer Original AudioBuffer to copy
 AudioBuffer::AudioBuffer(const AudioBuffer &buffer) {
-    sampleRate = buffer.sampleRate;
+    sampleRateHz = buffer.sampleRateHz;
     samplesPerSegment = buffer.samplesPerSegment;
     nSegments = buffer.nSegments;
     samples = std::vector<float>(buffer.samples);
@@ -64,18 +72,16 @@ AudioBuffer::AudioBuffer(const AudioBuffer &buffer) {
 //                          Getters & Setters
 ///////////////////////////////////////////////////////////////////////////////
 
-unsigned int AudioBuffer::getSampleRate() const {
-    return sampleRate;
-}
-
-unsigned int AudioBuffer::getNSegments() const {
-    return nSegments;
-}
-
+/// Return flat, unsegmented array of samples
 std::vector<float> AudioBuffer::getSamples() {
     return samples;
 }
 
+/// Replace samples in buffer
+///
+/// \note Size of newSamples must equal size of buffer
+///
+/// \param newSamples Samples to be copied into buffer
 void AudioBuffer::setSamples(const std::vector<float> &newSamples) {
     if (newSamples.size() != samples.size()) {
         throw std::length_error("Unsupported buffer write: new size must equal old size");
@@ -84,40 +90,85 @@ void AudioBuffer::setSamples(const std::vector<float> &newSamples) {
     samples = newSamples;
 }
 
-std::vector<float> AudioBuffer::getSegment(int i) {
+/// Return window width (in number of samples)
+float AudioBuffer::getWindowWidth() const {
+    return float(samplesPerSegment) / float(sampleRateHz * 1.0e-3);
+}
+
+/// Update the window width, modifying segment bounds
+///
+/// \param windowWidthMs Desired window width (in milliseconds)
+void AudioBuffer::setWindowWidth(float windowWidthMs) {
+    // Re-compute segment bounds
+    samplesPerSegment = int(float(sampleRateHz) * windowWidthMs * 1e-3);
+    nSegments = samples.size() / samplesPerSegment;
+
+    // Effectively pad final segment with zeros
+    unsigned int paddedSize = samplesPerSegment * nSegments;
+    if (samples.size() < paddedSize) {
+        samples.resize(paddedSize, 0);
+    } else if (samples.size() > paddedSize) {
+        samples.resize(paddedSize + samplesPerSegment, 0);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                             Const Getters
+///////////////////////////////////////////////////////////////////////////////
+
+/// Return sampling rate of audio
+int AudioBuffer::sampleRate() const {
+    return sampleRateHz;
+}
+
+/// Return ith audio segment
+std::vector<float> AudioBuffer::segment(int i) {
     if (i >= nSegments) {
         throw std::range_error("Segment index out of bounds");
     }
 
-    auto start = samples.begin() + (i * samplesPerSegment);
-    auto end = start + samplesPerSegment;
-    auto segment = std::vector<float>(start, end);
-    return segment;
+    auto offset = int(samplesPerSegment);
+    auto start = samples.begin() + (i * offset);
+    auto end = start + offset;
+
+    return {start, end};
 }
 
-__attribute__((unused)) std::vector<std::vector<float>> AudioBuffer::getSegments() {
-    auto segments = std::vector<std::vector<float>>();
+/// Return 2-dimensional array of all segments
+std::vector<std::vector<float>> AudioBuffer::segments() {
+    auto _segments = std::vector<std::vector<float>>();
     for (int i = 0; i < nSegments; i++) {
-        auto segment = getSegment(i);
-        segments.push_back(segment);
+        _segments.push_back(segment(i));
     }
 
-    return segments;
+    return _segments;
+}
+
+/// Return number of audio samples in each segment
+size_t AudioBuffer::segmentSize() const {
+    return samplesPerSegment;
+}
+
+/// Return number of total audio segments
+size_t AudioBuffer::size() const {
+    return nSegments;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                          Utility Functions
+//                       Public Utility Functions
 ///////////////////////////////////////////////////////////////////////////////
 
-// Export 8kHz mono audio from the buffer to a file
-__attribute__((unused)) void AudioBuffer::exportAudio(const std::string &path) {
+/// Export buffer contents to WAV audio file
+///
+/// \param path Path to new audio file
+void AudioBuffer::render(const std::string &path) {
     // Construct 8kHz mono audio file handle
     auto metadata = SF_INFO();
 
     metadata.channels = 1;
     metadata.frames = sf_count_t(samples.size());
     metadata.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-    metadata.samplerate = int(sampleRate);
+    metadata.samplerate = int(sampleRateHz);
 
     // Open file
     auto sndfile = sf_open(path.c_str(), SFM_WRITE, &metadata);
@@ -126,17 +177,24 @@ __attribute__((unused)) void AudioBuffer::exportAudio(const std::string &path) {
 
 }
 
+/// Restore buffer to its initialization state
+///
+/// \note This function will NOT reset the window width
+void AudioBuffer::reset() {
+    samples = originalSamples;
+}
+
 // Mix audio buffer to mono by summing each frame across channels and averaging the result
-void AudioBuffer::mixToMono(int nChannels) {
-    auto monoSize = samples.size() / nChannels;
+void AudioBuffer::mixToMono(int nOriginalChannels) {
+    auto monoSize = samples.size() / nOriginalChannels;
     auto monoSamples = std::vector<float>(monoSize, 0);
 
     for (int frame = 0; frame < monoSize; frame++) {
-        for (int channel = 0; channel < nChannels; channel++) {
-            monoSamples[frame] += samples[frame * nChannels + channel];
+        for (int channel = 0; channel < nOriginalChannels; channel++) {
+            monoSamples[frame] += samples[frame * nOriginalChannels + channel];
         }
 
-        monoSamples[frame] /= float(nChannels);
+        monoSamples[frame] /= float(nOriginalChannels);
     }
 
     samples = monoSamples;
@@ -145,23 +203,24 @@ void AudioBuffer::mixToMono(int nChannels) {
 // Resample the audio buffer to the target sample rate
 void AudioBuffer::resample(int targetSampleRateHz) {
     // Resampler parameters
-    double ratio = double(targetSampleRateHz) / double(sampleRate);
-    //int newFrames = (int) ((double) size / (double) channels * ratio);
-    unsigned int nFrames = int(double(samples.size()) * ratio);
-    // auto newSamples = (float *) malloc(sizeof(float) * frames() * channels);
+    // NOTE:    If a future version of this codebase requires
+    //          compatibility with stereo audio, compute the
+    //          number of frames as: size / (channels * ratio)
+    //          and the number of samples as: (frames * channels)
+    double ratio = double(targetSampleRateHz) / double(sampleRateHz);
+    int nFrames = int(double(samples.size()) * ratio);
     auto resampledBuffer = std::vector<float>(nFrames);
 
     // Initialize resampler
     auto resampler = SRC_DATA();
     resampler.data_in = samples.data();
-    // resampler->input_frames = frames();
     resampler.input_frames = long(samples.size());
     resampler.data_out = resampledBuffer.data();
     resampler.output_frames = nFrames;
     resampler.src_ratio = ratio;
 
-    // Resample and store result
+    // Store resampled audio
     src_simple(&resampler, SRC_SINC_BEST_QUALITY, 1);
-    sampleRate = targetSampleRateHz;
+    sampleRateHz = targetSampleRateHz;
     samples = resampledBuffer;
 }

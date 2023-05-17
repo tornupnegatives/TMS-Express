@@ -20,29 +20,19 @@ $ brew tap tornupnegatives/tmsexpress && brew install tms-express
 ```
 
 ## Compile from Source
-### Build Environment Setup
-TMS Express is built using CMake and [vcpkg](https://vcpkg.io/). While the project aims to require very little setup
-and configuration, a proper C++ compiler must be present on the system, along with a few other packages to ensure vcpkg
-runs smoothly. The prepare the build environment, invoke the appropriate commands from below.
-
+### Dependencies
 ```shell
 # Ubuntu
-$ sudo apt install build-essential autoconf automake cmake bison python3-distutils
+$ sudo apt install cmake libsndfile1-dev libsamplerate0-dev qt6-base-dev qt6-multimedia-dev
 
 # macOS
-$ xcode-select --install
-$ brew install autoconf automake cmake
+$ brew install cmake libsamplerate libsndfile pkg-config qt
 ```
 
-### Dependencies
-Next, install the project dependencies using the below invocations. They will be downloaded and compiled from source,
-which may take a long time on some systems. If an existing vcpkg installation is present on the build system, it may be
-used instead of the one included in this repository.
-
+### Compilation
 ```shell
-$ git submodule update --init --recursive
-$ ./vcpkg/bootstrap-vcpkg.sh
-$ ./vcpkg/vcpkg install libsndfile libsamplerate nlohmann-json cli11
+$ cmake -B build && cd build
+$ cmake --build . -j
 ```
 
 ## Usage

@@ -14,18 +14,21 @@
 #include <cmath>
 #include <vector>
 
+/// Create a new LPC solver of the given order
+///
+/// \param modelOrder Order of the LPC model for which to solve (typically 10)
 LinearPredictor::LinearPredictor(int modelOrder) {
     order = modelOrder;
     error = 0.0f;
 }
 
-// Compute the LPC reflector coefficients of the speech signal
-//
-// The behavior fo the oral cavity during a segment of speech may be approximated by an M-th order all-pole filter. The
-// reflector coefficients of the filter minimize the energy of the output signal
-//
-// There are many equivalent algorithms for solving the linear system, which consists of an MxM Toeplitz matrix A, the
-// coefficient vector b, and the autocorrelation coefficients c. The algorithm implemented below is the Levinson-Durbin
+/// Compute the LPC reflector coefficients of the speech signal
+///
+/// \note   The behavior fo the oral cavity during a segment of speech may be approximated by an M-th order all-pole
+///         filter. The reflector coefficients of the filter minimize the energy of the output signal. There are many
+///         equivalent algorithms for solving the linear system, which consists of an MxM Toeplitz matrix A, the
+///         coefficient vector b, and the autocorrelation coefficients c. The algorithm implemented below is the
+///         Levinson-Durbin recursion
 std::vector<float> LinearPredictor::reflectorCoefficients(const std::vector<float>& acf) {
     // Model parameters
     //
@@ -61,12 +64,13 @@ std::vector<float> LinearPredictor::reflectorCoefficients(const std::vector<floa
     return reflectors;
 }
 
-// Compute the prediction gain of the segment
-//
-// The gain of the signal may be expressed as the ratio of the original signal energy and the residual error, which is
-// the final error coefficient. This error is scaled by a reference intensity and then expressed on the decibel scale
-//
-// Source: http://www.sengpielaudio.com/calculator-soundlevel.htm
+/// Compute the prediction gain of the segment
+///
+/// \note   The gain of the signal may be expressed as the ratio of the original signal energy and the residual error,
+///         which is the final error coefficient. This error is scaled by a reference intensity and then expressed on
+///         the decibel scale
+///
+/// \source http://www.sengpielaudio.com/calculator-soundlevel.htm
 float LinearPredictor::gain() const {
     // 10 * log10(x) == 20 * log10(sqrt(x))
     float gain = 10.0f * log10f(error / 1e-12f);

@@ -8,22 +8,25 @@
 
 class FrameEncoder {
 public:
-    explicit FrameEncoder(bool hexPrefix = false, char separator = ',');
-    explicit FrameEncoder(const std::vector<Frame> &initFrames, bool hexPrefix = false, char separator = ',');
+    explicit FrameEncoder(bool includeHexPrefix = false, char separator = ',');
+    explicit FrameEncoder(const std::vector<Frame> &initialFrames, bool includeHexPrefix = false, char separator = ',');
 
-    void appendFrame(Frame frame);
-    void appendFrames(const std::vector<Frame> &initFrames);
+    // Append functions
+    void append(Frame frame);
+    void append(const std::vector<Frame> &newFrames);
+
+    // Serialization
     std::string toHex(bool shouldAppendStopFrame = true);
     std::string toJSON();
 
 private:
-    bool includeHexPrefix;
+    std::vector<std::string> bytes;
     char byteSeparator;
     std::vector<Frame> frames;
-    std::vector<std::string> bytes;
+    bool shouldIncludeHexPrefix;
 
     void appendStopFrame();
-    std::string byteToHex(const std::string& byte) const;
+    [[nodiscard]] std::string byteToHex(const std::string& byte) const;
 };
 
 #endif //TMS_EXPRESS_FRAMEENCODER_H
