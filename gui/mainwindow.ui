@@ -276,7 +276,7 @@
            <item row="3" column="1">
             <widget class="QLineEdit" name="preEmphLine">
              <property name="text">
-              <string>-0.9375</string>
+              <string>0.9375</string>
              </property>
             </widget>
            </item>
