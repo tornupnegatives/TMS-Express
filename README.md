@@ -23,7 +23,7 @@ $ brew tap tornupnegatives/tmsexpress && brew install tms-express
 ### Dependencies
 ```shell
 # Ubuntu
-$ sudo apt install cmake libsndfile1-dev libsamplerate0-dev qt6-base-dev
+$ sudo apt install cmake libsndfile1-dev libsamplerate0-dev qt6-base-dev qt6-multimedia-dev
 
 # macOS
 $ brew install cmake libsamplerate libsndfile pkg-config qt
