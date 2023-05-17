@@ -1,10 +1,18 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class: CommandLineApp
+//
+// Description: The CommandLineApp wraps a CLI11 application for executing TMS Express from the command line
+//
 // Author: Joseph Bellahcen <joeclb@icloud.com>
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Bitstream_Generation/BitstreamGenerator.h"
 #include "Bitstream_Generation/PathUtils.h"
 #include "User_Interfaces/CommandLineApp.h"
-#include <CLI11.hpp>
 
+#include "CLI11.hpp"
+
+/// Setup a CLI11 interface for accessing TMS Express from the command line
 CommandLineApp::CommandLineApp() {
     encoder = add_subcommand("encode", "Convert audio file(s) to TMS5220 bitstream(s)");
     require_subcommand(1);
@@ -12,6 +20,7 @@ CommandLineApp::CommandLineApp() {
     setupEncoder();
 }
 
+/// Run TMS Express from the command line
 int CommandLineApp::run(int argc, char** argv) {
     try {
         parse(argc, argv);
@@ -63,6 +72,7 @@ int CommandLineApp::run(int argc, char** argv) {
     return 0;
 }
 
+/// Attach CommandLineApp class members with command line arguments and flags
 void CommandLineApp::setupEncoder() {
     encoder->add_option("-i,--input,input", inputPath, "Path to audio file")->required();
     encoder->add_option("-w,--window", windowWidthMs, "Window width/speed (ms)");

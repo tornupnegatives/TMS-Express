@@ -22,7 +22,7 @@ TEST(FrameEncoderTests, SilentFrame) {
     auto frameEncoder = FrameEncoder();
     auto silentFrame = Frame(0, false, 0.0f, std::vector<float>());
 
-    frameEncoder.appendFrame(silentFrame);
+    frameEncoder.append(silentFrame);
     auto hex = frameEncoder.toHex();
 
     EXPECT_EQ(hex, "f0");
@@ -37,7 +37,7 @@ TEST(FrameEncoderTests, VoicedFrame) {
                                     -0.220355, 0.17028});
 
     auto frameEncoder = FrameEncoder();
-    frameEncoder.appendFrame(voicedFrame);
+    frameEncoder.append(voicedFrame);
 
     auto bin = frameEncoder.toHex();
     EXPECT_EQ(bin, "c8,88,4f,25,ce,ab,3c");
@@ -50,7 +50,7 @@ TEST(FrameEncoderTests, UnvoicedFrame) {
                               -0.220355, 0.17028});
 
     auto frameEncoder = FrameEncoder();
-    frameEncoder.appendFrame(voicedFrame);
+    frameEncoder.append(voicedFrame);
 
     auto bin = frameEncoder.toHex();
     EXPECT_EQ(bin, "c8,88,4f,25,ce,ab,3c");
@@ -63,7 +63,7 @@ TEST(FrameEncoderTests, MixtureOfFrames) {
     unvoicedFrame.setVoicing(false);
 
     auto frameEncoder = FrameEncoder();
-    frameEncoder.appendFrame(unvoicedFrame);
+    frameEncoder.append(unvoicedFrame);
 
     auto bin = frameEncoder.toHex();
     EXPECT_EQ(bin, "08,88,4f,e5,01");

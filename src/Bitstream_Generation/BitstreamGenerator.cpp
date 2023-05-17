@@ -10,17 +10,17 @@
 
 #include "Audio/AudioBuffer.h"
 #include "Audio/AudioFilter.h"
+#include "Bitstream_Generation/BitstreamGenerator.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostprocessor.h"
-#include "Bitstream_Generation/BitstreamGenerator.h"
 #include "LPC_Analysis/Autocorrelator.h"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <json.hpp>
 #include <string>
 #include <vector>
 
@@ -93,17 +93,17 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
     // The pitch buffer will ONLY be lowpass-filtered, as pitch is a low-frequency component of the signal. Neither
     // highpass filtering nor preemphasis, which exaggerate high-frequency components, will improve pitch estimation
     auto preprocessor = AudioFilter();
-    preprocessor.applyPreemphasis(lpcBuffer, preemphasisAlpha);
-    preprocessor.applyBiquad(lpcBuffer, highpassHz, AudioFilter::FILTER_HIGHPASS);
-    preprocessor.applyBiquad(pitchBuffer, lowpassHz, AudioFilter::FILTER_LOWPASS);
+    preprocessor.preEmphasis(lpcBuffer, preemphasisAlpha);
+    preprocessor.highpass(lpcBuffer, highpassHz);
+    preprocessor.lowpass(pitchBuffer, lowpassHz);
 
     // Extract buffer metadata
     //
     // Only the LPC buffer is queried for metadata, since it will have the same number of samples as the pitch buffer.
     // The sample rate of the buffer is extracted despite being known, as future iterations of TMS Express may support
     // encoding 10kHz/variable sample rate audio for the TMS5200C
-    auto nSegments = lpcBuffer.getNSegments();
-    auto sampleRate = lpcBuffer.getSampleRate();
+    auto nSegments = lpcBuffer.size();
+    auto sampleRate = lpcBuffer.sampleRate();
 
     // Initialize analysis objects and data structures
     auto linearPredictor = LinearPredictor();
@@ -112,14 +112,14 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
 
     for (int i = 0; i < nSegments; i++) {
         // Get segment for frame
-        auto pitchSegment = pitchBuffer.getSegment(i);
-        auto lpcSegment = lpcBuffer.getSegment(i);
+        auto pitchSegment = pitchBuffer.segment(i);
+        auto lpcSegment = lpcBuffer.segment(i);
 
         // Apply a window function to the segment to smoothen its boundaries
         //
         // Because information about the transition between adjacent frames is lost during segmentation, a window will
         // help produce smoother results
-        preprocessor.applyHammingWindow(lpcSegment);
+        preprocessor.hammingWindow(lpcSegment);
 
         // Compute the autocorrelation of each segment, which serves as the basis of all analysis
         auto lpcAcf = Autocorrelator::process(lpcSegment);

@@ -1,6 +1,4 @@
-//
-// Created by Joseph Bellahcen on 5/1/23.
-//
+// Author: Joseph Bellahcen <joeclb@icloud.com>
 
 #ifndef TMS_EXPRESS_MAINWINDOW_H
 #define TMS_EXPRESS_MAINWINDOW_H
@@ -9,7 +7,9 @@
 #include "Audio/AudioFilter.h"
 #include "LPC_Analysis/PitchEstimator.h"
 #include "User_Interfaces/AudioWaveform.h"
+
 #include <QMainWindow>
+
 #include <vector>
 
 QT_BEGIN_NAMESPACE
@@ -22,18 +22,16 @@ Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() override;
 
 public slots:
     void importAudioFile();
-    //void exportBitstream();
-
+    // TODO: exportBitstream();
     void applyAudioPreprocessing();
-    //void applyBitstreamPostProcessing();
-
-    void updatePlot(std::vector<float> pitchTable);
-
+    // TODO: applyBitstreamPostProcessing();
+    void updatePlot();
     void playAudio();
+
 
 private:
     Ui::MainWindow *ui;
@@ -41,11 +39,25 @@ private:
 
     AudioBuffer* audioBuffer;
     AudioFilter audioFilter;
+    PitchEstimator pitchEstimator = PitchEstimator(8000);
 
-    //std::vector<float> pitchTable;
+    std::vector<float> pitchTable;
 
+    // Analysis functions
+    void computePitchTable();
 
+    // UI state controls
     void toggleGroupBoxes(bool enabled);
+
+    // UI getters
+    float windowWidthMs();
+    int highpassFilterCutoffHz();
+    int lowpassFilterCutoffHz();
+    float preEmphasisAlpha();
+    float maxVoicedGainDb();
+    float maxUnvoicedGainDb();
+    int maxPitchHz();
+    int minPitchHz();
 };
 
 #endif //TMS_EXPRESS_MAINWINDOW_H

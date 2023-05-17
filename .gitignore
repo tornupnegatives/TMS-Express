@@ -40,7 +40,9 @@ build/
 
 # IDEs
 .idea/
+.vscode/
 *.user
 
 # Other
 *.bak
+*.swp

@@ -11,7 +11,7 @@
 #include "LPC_Analysis/Autocorrelator.h"
 #include <vector>
 
-// Compute the biased autocorrelation of the segment
+/// Compute the biased autocorrelation of the segment
 std::vector<float> Autocorrelator::process(const std::vector<float> &segment) {
     auto size = segment.size();
     auto acf = std::vector<float>(size);

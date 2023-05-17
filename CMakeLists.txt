@@ -21,6 +21,9 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}
+        #  ====================================
+        #             BACKEND SOURCES
+        #  ====================================
         src/Audio/AudioBuffer.cpp
         src/Audio/AudioFilter.cpp
 
@@ -35,18 +38,18 @@ add_executable(${PROJECT_NAME}
         src/Bitstream_Generation/BitstreamGenerator.cpp
         src/Bitstream_Generation/PathUtils.cpp
 
+        #  ====================================
+        #             FRONTEND SOURCES
+        #  ====================================
         src/User_Interfaces/CommandLineApp.cpp
 
-        # QT requires includes to be explicitly added
         inc/User_Interfaces/MainWindow.h
         src/User_Interfaces/MainWindow.cpp
 
         inc/User_Interfaces/AudioWaveform.h
         src/User_Interfaces/AudioWaveform.cpp
 
-        gui/MainWindow.ui
-        lib/qcustomplot/qcustomplot.cpp
-
+        gui/mainwindow.ui
         src/main.cpp
         )
 

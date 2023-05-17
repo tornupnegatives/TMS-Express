@@ -10,19 +10,21 @@ class PitchEstimator {
 public:
     explicit PitchEstimator(int sampleRateHz, int minFrqHz = 50, int maxFrqHz = 500);
 
-    int getMinPeriod();
-    void setMinPeriod(int maxFrqHz);
-
-    int getMaxPeriod();
+    // Getters & setters
+    [[nodiscard]] int getMaxPeriod() const;
     void setMaxPeriod(int minFrqHz);
 
-    int estimatePeriod(const std::vector<float> &acf) const;
-    float estimateFrequency(const std::vector<float> &acf) const;
+    [[nodiscard]] int getMinPeriod() const;
+    void setMinPeriod(int maxFrqHz);
+
+    // Estimator functions
+    [[nodiscard]] float estimateFrequency(const std::vector<float> &acf) const;
+    [[nodiscard]] int estimatePeriod(const std::vector<float> &acf) const;
 
 private:
-    int sampleRate;
-    int minPeriod;
     int maxPeriod;
+    int minPeriod;
+    int sampleRate;
 };
 
 #endif //TMS_EXPRESS_PITCHESTIMATOR_H

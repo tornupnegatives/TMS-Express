@@ -10,7 +10,7 @@ public:
     explicit LinearPredictor(int modelOrder = 10);
 
     std::vector<float> reflectorCoefficients(const std::vector<float> &acf);
-    float gain() const;
+    [[nodiscard]] float gain() const;
 
 private:
     int order;
