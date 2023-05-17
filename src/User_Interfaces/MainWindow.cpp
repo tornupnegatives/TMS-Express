@@ -17,7 +17,7 @@
 
 /// Configure the GUI window
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
-    // Load the compiled .gui file
+    // Load compiled .gui file
     setWindowTitle("TMS Express");
     ui->setupUi(this);
 
@@ -25,40 +25,42 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::importAudioFile);
     //connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(exportBitstream()));
 
-    // Waveform controls
-    connect(ui->playAudioButton, &QPushButton::pressed, this, &MainWindow::playAudio);
+    // Pitch analysis controls
+    connect(ui->pitchHpfEnable, &QCheckBox::stateChanged, this, &MainWindow::performPitchAnalysis);
+    connect(ui->pitchHpfLine, &QLineEdit::textChanged, this, &MainWindow::performPitchAnalysis);
 
-    // Pre-processing signals
-    connect(ui->windowWidthLine, &QLineEdit::textChanged, this, &MainWindow::applyAudioPreprocessing);
+    connect(ui->pitchLpfEnable, &QCheckBox::stateChanged, this, &MainWindow::performPitchAnalysis);
+    connect(ui->pitchLpfLine, &QLineEdit::textChanged, this, &MainWindow::performPitchAnalysis);
 
-    connect(ui->hpfEnable, &QCheckBox::stateChanged, this, &MainWindow::applyAudioPreprocessing);
-    connect(ui->hpfLine, &QLineEdit::textChanged, this, &MainWindow::applyAudioPreprocessing);
+    connect(ui->pitchPreemphEnable, &QCheckBox::stateChanged, this, &MainWindow::performPitchAnalysis);
+    connect(ui->pitchPreemphLine, &QLineEdit::textChanged, this, &MainWindow::performPitchAnalysis);
 
-    connect(ui->lpfEnable, &QCheckBox::stateChanged, this, &MainWindow::applyAudioPreprocessing);
-    connect(ui->lpfLine, &QLineEdit::textChanged, this, &MainWindow::applyAudioPreprocessing);
+    connect(ui->pitchOverrideToggle, &QRadioButton::toggled, this, &MainWindow::performPitchAnalysis);
 
-    connect(ui->preEmphEnable, &QCheckBox::stateChanged, this, &MainWindow::applyAudioPreprocessing);
-    connect(ui->preEmphLine, &QLineEdit::textChanged, this, &MainWindow::applyAudioPreprocessing);
-
-    connect(ui->showPitchEnable, &QCheckBox::stateChanged, this, &MainWindow::applyAudioPreprocessing);
-
-    // Audio waveform plot
-    audioWaveform = new AudioWaveform(ui->audioWaveform);
-    audioWaveform->setMinimumSize(750, 150);
+    // Input audio waveform
+    connect(ui->inputAudioPlay, &QPushButton::pressed, this, &MainWindow::playInputAudio);
+    audioWaveform = new AudioWaveform(ui->inputAudioWaveformWidget);
+    audioWaveform->setMinimumSize(ui->inputAudioWaveformWidget->minimumSize());
+    audioWaveform->setMaximumSize(ui->inputAudioWaveformWidget->maximumSize());
     audioWaveform->show();
+
+
+    // TODO: LPC analysis controls
+
+    // TODO: Synthesized audio waveform
 
     // TMS Express objects
     audioBuffer = nullptr;
     audioFilter = AudioFilter();
 
-    pitchEstimator.setMaxPeriod(minPitchHz());
-    pitchEstimator.setMinPeriod(maxPitchHz());
+    pitchEstimator.setMaxPeriod(pitchMinFrq());
+    pitchEstimator.setMinPeriod(pitchMaxFrq());
 
     // Analysis buffers
     pitchTable = {};
 
     // Start the application with all controls disabled, as audio has yet to be imported
-    toggleGroupBoxes(true);
+    updatePitchControls();
 }
 
 /// Delete any persistent data
@@ -81,12 +83,13 @@ void MainWindow::importAudioFile() {
     audioBuffer = new AudioBuffer(filePath.toStdString());
     pitchTable = std::vector<float>(audioBuffer->size());
 
-    applyAudioPreprocessing();
-    toggleGroupBoxes(false);
+    performPitchAnalysis();
 }
 
 /// Apply filters to audio buffer before performing LPC analysis, then refresh the AudioWaveform plot
-void MainWindow::applyAudioPreprocessing() {
+void MainWindow::performPitchAnalysis() {
+    updatePitchControls();
+
     if (audioBuffer == nullptr) {
         qDebug() << "Triggered preprocessing but no audio file imported";
         return;
@@ -97,38 +100,29 @@ void MainWindow::applyAudioPreprocessing() {
     audioBuffer->setWindowWidth(windowWidthMs());
 
     // Apply filters
-    if (ui->hpfEnable->isChecked()) {
-        audioFilter.highpass(*audioBuffer, highpassFilterCutoffHz());
+    if (ui->pitchHpfEnable->isChecked()) {
+        audioFilter.highpass(*audioBuffer, pitchHpfCutoff());
     }
 
-    if (ui->lpfEnable->isChecked()) {
-        audioFilter.lowpass(*audioBuffer, lowpassFilterCutoffHz());
+    if (ui->pitchLpfEnable->isChecked()) {
+        audioFilter.lowpass(*audioBuffer, pitchLpfCutoff());
     }
 
-    if (ui->preEmphEnable->isChecked()) {
-        audioFilter.preEmphasis(*audioBuffer, preEmphasisAlpha());
+    if (ui->pitchPreemphEnable->isChecked()) {
+        audioFilter.preEmphasis(*audioBuffer, pitchPreemph());
     }
 
     computePitchTable();
-    updatePlot();
+    plotInputAudio();
 }
 
-void MainWindow::updatePlot() {
-    audioWaveform->plotSamples(audioBuffer->getSamples());
-
-    if (ui->showPitchEnable->isChecked())
-        audioWaveform->plotPitch(pitchTable);
-    else
-        audioWaveform->plotPitch({});
-}
-
-void MainWindow::playAudio() {
+void MainWindow::playInputAudio() {
     if (audioBuffer == nullptr) {
         qDebug() << "Triggered play but no audio file imported";
         return;
     }
 
-   // Generate checksum of audio buffer for unique filename
+    // Generate checksum of audio buffer for unique filename
     char filename[31];
     auto crc = CRC::Calculate(audioBuffer->getSamples().data(), sizeof(float), CRC::CRC_32());
     snprintf(filename, 31, "tmsexpress_render_%x.wav", crc);
@@ -139,7 +133,7 @@ void MainWindow::playAudio() {
     // Only render audio if this version of buffer doesn't already exist
     // Unfortunately, the pre-emphasis filter produces small changes that won't be picked up by this checksum,
     // so it will override this check for the time being
-    if (!std::filesystem::exists(tempDir) || ui->preEmphEnable->isChecked()) {
+    if (!std::filesystem::exists(tempDir) || ui->pitchPreemphEnable->isChecked()) {
         audioBuffer->render(tempDir);
         qDebug() << "Rendered audio to path: " << tempDir.c_str();
     }
@@ -151,6 +145,11 @@ void MainWindow::playAudio() {
     audioOutput->setVolume(100);
 
     player->play();
+}
+
+void MainWindow::plotInputAudio() {
+    audioWaveform->plotSamples(audioBuffer->getSamples());
+    audioWaveform->plotPitch(pitchTable);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -165,7 +164,7 @@ void MainWindow::computePitchTable() {
         auto acf = Autocorrelator::process(segment);
 
         // Normalize samples by max period
-        pitchTable[i] = pitchEstimator.estimateFrequency(acf) / float(maxPitchHz());
+        pitchTable[i] = pitchEstimator.estimateFrequency(acf) / float(pitchMaxFrq());
     }
 }
 
@@ -173,45 +172,78 @@ void MainWindow::computePitchTable() {
 //                             UI state controls
 ///////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::toggleGroupBoxes(bool enabled) {
-    ui->showPitchEnable->setDisabled(enabled);
-    ui->playAudioButton->setDisabled(enabled);
-    ui->preProcGroupBox->setDisabled(enabled);
-    ui->bitstreamCtrlGroupBox->setDisabled(enabled);
+void MainWindow::updatePitchControls() {
+    // If no audio file has been imported, do not allow playback
+    if (audioBuffer == nullptr) {
+        ui->inputAudioPlay->setDisabled(true);
+    } else {
+        ui->inputAudioPlay->setDisabled(false);
+    }
+
+    // Disallow editing text fields if disabled
+    if (ui->pitchHpfEnable->isChecked()) {
+        ui->pitchHpfLine->setDisabled(false);
+    } else {
+        ui->pitchHpfLine->setDisabled(true);
+    }
+
+    if (ui->pitchLpfEnable->isChecked()) {
+        ui->pitchLpfLine->setDisabled(false);
+    } else {
+        ui->pitchLpfLine->setDisabled(true);
+    }
+
+    // Disallow editing text fields if disabled
+    if (ui->pitchPreemphEnable->isChecked()) {
+        ui->pitchPreemphLine->setDisabled(false);
+    } else {
+        ui->pitchPreemphLine->setDisabled(true);
+    }
+
+    // If pitch override is enabled, disallow pitch interpolation
+    if (ui->pitchOverrideToggle->isChecked()) {
+        ui->pitchInterpEnable->setDisabled(true);
+    } else {
+        ui->pitchInterpEnable->setDisabled(false);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                               UI getters
+//                             Pitch UI getters
 ///////////////////////////////////////////////////////////////////////////////
 
-float MainWindow::windowWidthMs() {
-    return ui->windowWidthLine->text().toFloat();
+int MainWindow::pitchHpfCutoff() {
+    return ui->pitchHpfLine->text().toInt();
 }
 
-int MainWindow::highpassFilterCutoffHz() {
-    return ui->hpfLine->text().toInt();
+int MainWindow::pitchLpfCutoff() {
+    return ui->pitchLpfLine->text().toInt();
 }
 
-int MainWindow::lowpassFilterCutoffHz() {
-    return ui->lpfLine->text().toInt();
+float MainWindow::pitchPreemph() {
+    return ui->pitchPreemphLine->text().toFloat();
 }
 
-float MainWindow::preEmphasisAlpha() {
-    return ui->preEmphLine->text().toFloat();
+int MainWindow::pitchMaxFrq() {
+    return ui->pitchMaxFrqLine->text().toInt();
 }
+
+int MainWindow::pitchMinFrq() {
+    return ui->pitchMinFrqLine->text().toInt();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                              LPC UI getters
+///////////////////////////////////////////////////////////////////////////////
 
 float MainWindow::maxVoicedGainDb() {
-    return ui->maxVoicedGainLine->text().toFloat();
+    return ui->lpcMaxVoicedGainLine->text().toFloat();
 }
 
 float MainWindow::maxUnvoicedGainDb() {
-    return ui->maxUnvoicedGainLine->text().toFloat();
+    return ui->lpcMaxUnvoicedGainLine->text().toFloat();
 }
 
-int MainWindow::maxPitchHz() {
-    return ui->maxPitchLine->text().toInt();
-}
-
-int MainWindow::minPitchHz() {
-    return ui->minPitchLine->text().toInt();
+float MainWindow::windowWidthMs() {
+    return ui->lpcWindowWidth->text().toFloat();
 }

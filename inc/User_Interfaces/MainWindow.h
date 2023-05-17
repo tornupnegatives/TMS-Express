@@ -27,11 +27,16 @@ public:
 public slots:
     void importAudioFile();
     // TODO: exportBitstream();
-    void applyAudioPreprocessing();
-    // TODO: applyBitstreamPostProcessing();
-    void updatePlot();
-    void playAudio();
 
+    // Pitch analysis functions
+    void performPitchAnalysis();
+    void playInputAudio();
+    void plotInputAudio();
+
+    // LPC analysis functions
+    // TODO: performLpcAnalysis();
+    // TODO: playLpcAudio();
+    // TODO: plotLpcAudio();
 
 private:
     Ui::MainWindow *ui;
@@ -39,25 +44,27 @@ private:
 
     AudioBuffer* audioBuffer;
     AudioFilter audioFilter;
-    PitchEstimator pitchEstimator = PitchEstimator(8000);
 
+    PitchEstimator pitchEstimator = PitchEstimator(8000);
     std::vector<float> pitchTable;
 
     // Analysis functions
     void computePitchTable();
 
     // UI state controls
-    void toggleGroupBoxes(bool enabled);
+    void updatePitchControls();
 
-    // UI getters
-    float windowWidthMs();
-    int highpassFilterCutoffHz();
-    int lowpassFilterCutoffHz();
-    float preEmphasisAlpha();
+    // Pitch UI getters
+    int pitchHpfCutoff();
+    int pitchLpfCutoff();
+    int pitchMaxFrq();
+    int pitchMinFrq();
+    float pitchPreemph();
+
+    // LPC UI getters
     float maxVoicedGainDb();
     float maxUnvoicedGainDb();
-    int maxPitchHz();
-    int minPitchHz();
+    float windowWidthMs();
 };
 
 #endif //TMS_EXPRESS_MAINWINDOW_H
