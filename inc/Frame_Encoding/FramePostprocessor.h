@@ -10,7 +10,7 @@ class FramePostprocessor {
 public:
     explicit FramePostprocessor(std::vector<Frame> *frames, float maxVoicedGainDB = 37.5, float maxUnvoicedGainDB = 37.5);
 
-    void detectRepeatFrames();
+    int detectRepeatFrames();
     void normalizeGain();
     void shiftGain(int offset);
 

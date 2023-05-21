@@ -29,7 +29,11 @@ FramePostprocessor::FramePostprocessor(std::vector<Frame> *frames, float maxVoic
 /// \note   Because the human vocal tract changes rather slowly, consecutive encoded Frames may not always vary
 ///         significantly. In this case, the size of the bitstream can be reduced by marking certain Frames a repeats of
 ///         preceding ones and allowing the LPC synthesizer to reuse parameters
-void FramePostprocessor::detectRepeatFrames() {
+///
+/// \return Number of frames converted to a repeat frame
+int FramePostprocessor::detectRepeatFrames() {
+    int nRepeatFrames = 0;
+
     for (int i = 1; i < frameData->size(); i++) {
         Frame previousFrame = frameData->at(i - 1);
         Frame &frame = frameData->at(i);
@@ -46,8 +50,11 @@ void FramePostprocessor::detectRepeatFrames() {
 
         if (abs(coeff - prevCoeff) == 1) {
             frame.setRepeat(true);
+            nRepeatFrames++;
         }
     }
+
+    return nRepeatFrames;
 }
 
 /// Normalize Frame gain
