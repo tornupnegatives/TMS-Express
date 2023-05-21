@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
         src/Frame_Encoding/Frame.cpp
         src/Frame_Encoding/FrameEncoder.cpp
         src/Frame_Encoding/FramePostprocessor.cpp
+        src/Frame_Encoding/Synthesizer.cpp
 
         src/Bitstream_Generation/BitstreamGenerator.cpp
         src/Bitstream_Generation/PathUtils.cpp

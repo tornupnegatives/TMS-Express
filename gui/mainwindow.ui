@@ -35,9 +35,21 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="1" column="0">
      <widget class="QGroupBox" name="lpcGroupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>350</width>
+        <height>0</height>
+       </size>
+      </property>
       <property name="maximumSize">
        <size>
-        <width>400</width>
+        <width>350</width>
         <height>16777215</height>
        </size>
       </property>
@@ -59,80 +71,17 @@
          <property name="bottomMargin">
           <number>5</number>
          </property>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="lpcWindowWidth">
-           <property name="text">
-            <string>25.0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="lineEdit_7">
-           <property name="text">
-            <string>800</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="Line" name="line_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Analysis window width (ms)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QCheckBox" name="lpcHpfEnable">
-           <property name="text">
-            <string>Highpass filter cutoff (Hz)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QCheckBox" name="lpcLpfEnable">
-           <property name="text">
-            <string>Lowpass filter cutoff (Hz)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QCheckBox" name="lpfPreemphEnable">
-           <property name="text">
-            <string>Pre-emphasis filter coefficient</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLineEdit" name="lineEdit_8">
-           <property name="text">
-            <string>100</string>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="0">
+         <item row="8" column="0">
           <widget class="QLabel" name="label_3">
            <property name="text">
             <string>Max voiced gain (dB)</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
-          <widget class="QLineEdit" name="lineEdit_9">
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="lpcLpfLine">
            <property name="text">
-            <string>0.9375</string>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="1">
-          <widget class="QLineEdit" name="lpcMaxVoicedGainLine">
-           <property name="text">
-            <string>37.5</string>
+            <string>100</string>
            </property>
           </widget>
          </item>
@@ -143,17 +92,80 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
+         <item row="9" column="1">
+          <widget class="QLineEdit" name="lpcMaxUnvoicedGainLine">
+           <property name="text">
+            <string>37.5</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QCheckBox" name="lpcPreemphEnable">
+           <property name="text">
+            <string>Pre-emphasis filter coefficient</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QCheckBox" name="lpcHpfEnable">
+           <property name="text">
+            <string>Highpass filter cutoff (Hz)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="lpcPreemphLine">
+           <property name="text">
+            <string>0.9375</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
           <widget class="QLabel" name="label_4">
            <property name="text">
             <string>Min voiced gain (dB)</string>
            </property>
           </widget>
          </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Analysis window width (ms)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="Line" name="line_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="lpcHpfLine">
+           <property name="text">
+            <string>800</string>
+           </property>
+          </widget>
+         </item>
          <item row="8" column="1">
-          <widget class="QLineEdit" name="lpcMaxUnvoicedGainLine">
+          <widget class="QLineEdit" name="lpcMaxVoicedGainLine">
            <property name="text">
             <string>37.5</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="lpcWindowWidthLine">
+           <property name="text">
+            <string>25.0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QCheckBox" name="lpcLpfEnable">
+           <property name="text">
+            <string>Lowpass filter cutoff (Hz)</string>
            </property>
           </widget>
          </item>
@@ -164,9 +176,21 @@
     </item>
     <item row="0" column="0">
      <widget class="QGroupBox" name="pitchGroupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>350</width>
+        <height>0</height>
+       </size>
+      </property>
       <property name="maximumSize">
        <size>
-        <width>400</width>
+        <width>350</width>
         <height>16777215</height>
        </size>
       </property>
@@ -191,22 +215,6 @@
          <property name="bottomMargin">
           <number>5</number>
          </property>
-         <item row="7" column="1">
-          <widget class="QSlider" name="pitchOffsetSlider">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="invertedAppearance">
-            <bool>false</bool>
-           </property>
-           <property name="invertedControls">
-            <bool>false</bool>
-           </property>
-           <property name="tickPosition">
-            <enum>QSlider::TicksBelow</enum>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="1">
           <widget class="QLineEdit" name="pitchHpfLine">
            <property name="text">
@@ -228,24 +236,10 @@
            </property>
           </widget>
          </item>
-         <item row="7" column="0">
-          <widget class="QRadioButton" name="pitchOffsetToggle">
-           <property name="text">
-            <string>Pitch period offset</string>
-           </property>
-          </widget>
-         </item>
          <item row="5" column="0">
           <widget class="QLabel" name="pitchMinFrqLabel">
            <property name="text">
             <string>Min pitch frequency (Hz)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0" colspan="2">
-          <widget class="Line" name="line_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
@@ -256,13 +250,6 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
-          <widget class="QRadioButton" name="pitchOverrideToggle">
-           <property name="text">
-            <string>Pitch period override</string>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="0" colspan="2">
           <widget class="Line" name="line">
            <property name="windowModality">
@@ -270,13 +257,6 @@
            </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="1">
-          <widget class="QLineEdit" name="pitchOverrideLine">
-           <property name="text">
-            <string>0</string>
            </property>
           </widget>
          </item>
@@ -315,16 +295,6 @@
            </property>
           </widget>
          </item>
-         <item row="9" column="0">
-          <widget class="QCheckBox" name="pitchInterpEnable">
-           <property name="text">
-            <string>Pitch interpolation (beta)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="1">
-          <widget class="QLineEdit" name="pitchInterpLine"/>
-         </item>
         </layout>
        </item>
       </layout>
@@ -345,21 +315,72 @@
        <number>5</number>
       </property>
       <item>
-       <widget class="QWidget" name="widget_2" native="true">
+       <widget class="QWidget" name="lpcAudioWaveformWidget" native="true">
         <property name="minimumSize">
          <size>
-          <width>600</width>
+          <width>500</width>
           <height>220</height>
          </size>
         </property>
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
+        <widget class="QLabel" name="label_2">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>200</y>
+           <width>110</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Synthesized audio</string>
+         </property>
+        </widget>
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <layout class="QHBoxLayout" name="postProcLayout">
         <item>
-         <widget class="QLabel" name="label_2">
+         <widget class="QRadioButton" name="postPitchOffsetToggle">
           <property name="text">
-           <string>Synthesized audio</string>
+           <string>Pitch offset</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="postPitchOffsetLine">
+          <property name="text">
+           <string>0</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="postPitchOverrideToggle">
+          <property name="text">
+           <string>Pitch override</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="postPitchOverrideLine">
+          <property name="text">
+           <string>0</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="postPitchInterpEnable">
+          <property name="text">
+           <string>Pitch interpolation</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="postRepeatFramesEnable">
+          <property name="text">
+           <string>Repeat frames</string>
           </property>
          </widget>
         </item>
@@ -377,7 +398,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_2">
+         <widget class="QPushButton" name="lpcAudioPlay">
           <property name="text">
            <string>Play</string>
           </property>
@@ -405,24 +426,33 @@
        <widget class="QWidget" name="inputAudioWaveformWidget" native="true">
         <property name="minimumSize">
          <size>
-          <width>600</width>
+          <width>500</width>
           <height>220</height>
          </size>
         </property>
         <property name="acceptDrops">
          <bool>false</bool>
         </property>
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
+        <widget class="QLabel" name="inputAudioLabel">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>200</y>
+           <width>133</width>
+           <height>20</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Processed input audio</string>
+         </property>
+        </widget>
        </widget>
       </item>
       <item>
        <layout class="QHBoxLayout" name="inputAudioControlLayout">
-        <item>
-         <widget class="QLabel" name="inputAudioLabel">
-          <property name="text">
-           <string>Processed input audio</string>
-          </property>
-         </widget>
-        </item>
         <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
@@ -467,36 +497,73 @@
       <string>Save</string>
      </property>
      <addaction name="separator"/>
-     <addaction name="actionASCII_bitstream_LPC"/>
-     <addaction name="actionC_header_h"/>
-     <addaction name="actionRaw_binary_bin"/>
+     <addaction name="actionSaveAsciiBitstream"/>
+     <addaction name="actionSaveEmbeddedBitstream"/>
+     <addaction name="actionSaveJsonBitstream"/>
     </widget>
-    <addaction name="actionOpen"/>
+    <widget class="QMenu" name="menuOpen">
+     <property name="title">
+      <string>Open</string>
+     </property>
+     <addaction name="actionOpenAudio"/>
+     <addaction name="separator"/>
+     <addaction name="actionOpenAsciiBitstream"/>
+     <addaction name="actionOpenEmbeddedBitstream"/>
+     <addaction name="actionOpenJsonBitstream"/>
+    </widget>
+    <addaction name="menuOpen"/>
     <addaction name="menuSave"/>
+    <addaction name="actionExportAudio"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
-  <action name="actionOpen">
+  <action name="actionSaveAsciiBitstream">
    <property name="text">
-    <string>Open Audio File</string>
+    <string>ASCII bitstream (.lpc)</string>
+   </property>
+  </action>
+  <action name="actionSaveEmbeddedBitstream">
+   <property name="text">
+    <string>Embedded bitstream (.h)</string>
+   </property>
+  </action>
+  <action name="actionSaveJsonBitstream">
+   <property name="text">
+    <string>Detailed bitstream (.json)</string>
+   </property>
+  </action>
+  <action name="actionOpenAudio">
+   <property name="text">
+    <string>Audio file</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionASCII_bitstream_LPC">
+  <action name="actionOpenAsciiBitstream">
    <property name="text">
-    <string>ASCII bitstream (.LPC)</string>
+    <string>ASCII bitstream (.lpc)</string>
    </property>
   </action>
-  <action name="actionC_header_h">
+  <action name="actionOpenEmbeddedBitstream">
    <property name="text">
-    <string>C header (.h)</string>
+    <string>Embedded bitstream (.h)</string>
    </property>
   </action>
-  <action name="actionRaw_binary_bin">
+  <action name="actionOpenJsonBitstream">
    <property name="text">
-    <string>Raw binary (.bin)</string>
+    <string>Detailed bitstream (.json)</string>
+   </property>
+  </action>
+  <action name="actionExportAudio">
+   <property name="text">
+    <string>Export audio</string>
+   </property>
+   <property name="toolTip">
+    <string>Export audio file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
  </widget>

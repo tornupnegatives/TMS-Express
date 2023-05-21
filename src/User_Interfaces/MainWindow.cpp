@@ -3,7 +3,8 @@
 //
 
 #include "Audio/AudioBuffer.h"
-#include "Audio/AudioFilter.h"
+#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/FramePostprocessor.h"
 #include "LPC_Analysis/Autocorrelator.h"
 #include "User_Interfaces/AudioWaveform.h"
 #include "User_Interfaces/MainWindow.h"
@@ -15,201 +16,502 @@
 #include <QMediaPlayer>
 #include <QtMultimedia/QAudioOutput>
 
-/// Configure the GUI window
+/// Setup the main window of the application
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     // Load compiled .gui file
-    setWindowTitle("TMS Express");
     ui->setupUi(this);
+    setWindowTitle("TMS Express");
 
-    // Menu bar signals
-    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::importAudioFile);
-    //connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(exportBitstream()));
+    player = new QMediaPlayer(this);
+    audioOutput = new QAudioOutput(this);
 
-    // Pitch analysis controls
-    connect(ui->pitchHpfEnable, &QCheckBox::stateChanged, this, &MainWindow::performPitchAnalysis);
-    connect(ui->pitchHpfLine, &QLineEdit::textChanged, this, &MainWindow::performPitchAnalysis);
+    inputWaveform = new AudioWaveform(ui->inputAudioWaveformWidget);
+    inputWaveform->setMinimumSize(ui->inputAudioWaveformWidget->minimumSize());
+    inputWaveform->show();
 
-    connect(ui->pitchLpfEnable, &QCheckBox::stateChanged, this, &MainWindow::performPitchAnalysis);
-    connect(ui->pitchLpfLine, &QLineEdit::textChanged, this, &MainWindow::performPitchAnalysis);
+    lpcWaveform = new AudioWaveform(ui->lpcAudioWaveformWidget);
+    lpcWaveform->setMinimumSize(ui->lpcAudioWaveformWidget->minimumSize());
+    lpcWaveform->show();
 
-    connect(ui->pitchPreemphEnable, &QCheckBox::stateChanged, this, &MainWindow::performPitchAnalysis);
-    connect(ui->pitchPreemphLine, &QLineEdit::textChanged, this, &MainWindow::performPitchAnalysis);
+    inputBuffer = nullptr;
+    lpcBuffer = nullptr;
 
-    connect(ui->pitchOverrideToggle, &QRadioButton::toggled, this, &MainWindow::performPitchAnalysis);
+    frameTable = {};
+    pitchPeriodTable = {};
+    pitchFrqTable = {};
 
-    // Input audio waveform
-    connect(ui->inputAudioPlay, &QPushButton::pressed, this, &MainWindow::playInputAudio);
-    audioWaveform = new AudioWaveform(ui->inputAudioWaveformWidget);
-    audioWaveform->setMinimumSize(ui->inputAudioWaveformWidget->minimumSize());
-    audioWaveform->setMaximumSize(ui->inputAudioWaveformWidget->maximumSize());
-    audioWaveform->show();
+    configureUiSlots();
+    configureUiState();
 
+    // Enable default lowpass filter for pitch estimation
+    ui->pitchLpfEnable->setChecked(true);
+    ui->pitchLpfLine->setText("800");
 
-    // TODO: LPC analysis controls
+    // Enable initial pre-emphasis filter for LPC analysis
+    ui->lpcPreemphEnable->setChecked(true);
 
-    // TODO: Synthesized audio waveform
+}
 
-    // TMS Express objects
-    audioBuffer = nullptr;
-    audioFilter = AudioFilter();
+/// Free pointers associated with UI
+MainWindow::~MainWindow() {
+    delete player;
+    delete audioOutput;
+
+    delete inputWaveform;
+    delete lpcWaveform;
+
+    delete inputBuffer;
+    delete lpcBuffer;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                              UI Helpers
+///////////////////////////////////////////////////////////////////////////////
+
+/// Connect UI elements to member functions
+void MainWindow::configureUiSlots() {
+    // Menu bar (Open)
+    connect(ui->actionOpenAudio, &QAction::triggered, this, &MainWindow::onOpenAudio);
+    connect(ui->actionOpenAsciiBitstream, &QAction::triggered, this, &MainWindow::onOpenBitstream);
+    connect(ui->actionOpenEmbeddedBitstream, &QAction::triggered, this, &MainWindow::onOpenBitstream);
+    connect(ui->actionOpenJsonBitstream, &QAction::triggered, this, &MainWindow::onOpenBitstream);
+
+    // Menu bar (Save)
+    connect(ui->actionSaveAsciiBitstream, &QAction::triggered, this, &MainWindow::onSaveBitstream);
+    connect(ui->actionSaveEmbeddedBitstream, &QAction::triggered, this, &MainWindow::onSaveBitstream);
+    connect(ui->actionSaveJsonBitstream, &QAction::triggered, this, &MainWindow::onSaveBitstream);
+
+    // Menu bar (Export)
+    connect(ui->actionExportAudio, &QAction::triggered, this, &MainWindow::onExportAudio);
+
+    // Play buttons
+    connect(ui->inputAudioPlay, &QPushButton::pressed, this, &MainWindow::onInputAudioPlay);
+    connect(ui->lpcAudioPlay, &QPushButton::pressed, this, &MainWindow::onLpcAudioPlay);
+
+    // Control panel (Pitch Estimator)
+    connect(ui->pitchHpfEnable, &QCheckBox::stateChanged, this, &MainWindow::onPitchParamEdit);
+    connect(ui->pitchHpfLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
+    connect(ui->pitchLpfEnable, &QCheckBox::stateChanged, this, &MainWindow::onPitchParamEdit);
+    connect(ui->pitchLpfLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
+    connect(ui->pitchPreemphEnable, &QCheckBox::stateChanged, this, &MainWindow::onPitchParamEdit);
+    connect(ui->pitchPreemphLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
+    connect(ui->pitchMaxFrqLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
+    connect(ui->pitchMinFrqLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
+
+    // Control panel (Linear Predictor)
+    connect(ui->lpcWindowWidthLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
+    connect(ui->lpcHpfEnable, &QCheckBox::stateChanged, this, &MainWindow::onLpcParamEdit);
+    connect(ui->lpcHpfLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
+    connect(ui->lpcLpfEnable, &QCheckBox::stateChanged, this, &MainWindow::onLpcParamEdit);
+    connect(ui->lpcLpfLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
+    connect(ui->lpcPreemphEnable, &QCheckBox::stateChanged, this, &MainWindow::onLpcParamEdit);
+    connect(ui->lpcPreemphLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
+    connect(ui->lpcMaxUnvoicedGainLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
+    connect(ui->lpcMaxVoicedGainLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
+
+    // Control panel (Frame Post-Processor)
+    connect(ui->postPitchOffsetToggle, &QRadioButton::clicked, this, &MainWindow::onPostProcEdit);
+    connect(ui->postPitchOffsetLine, &QLineEdit::editingFinished, this, &MainWindow::onPostProcEdit);
+    connect(ui->postPitchOverrideToggle, &QRadioButton::clicked, this, &MainWindow::onPostProcEdit);
+    connect(ui->postPitchOffsetLine, &QLineEdit::editingFinished, this, &MainWindow::onPostProcEdit);
+    connect(ui->postPitchInterpEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
+    connect(ui->postRepeatFramesEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
+}
+
+/// Toggle UI elements based on the state of the application
+void MainWindow::configureUiState() {
+    // Get UI state
+    auto disableAudioDependentObject = !isAudioFileLoaded();
+    auto disableBitstreamDependentObject = !isBitstreamLoaded();
+
+    auto disablePitchControl = disableAudioDependentObject;
+    auto disableLpcControl = disableBitstreamDependentObject;
+
+    // Menu bar
+    ui->menuSave->setDisabled(!disableAudioDependentObject);
+    ui->actionExportAudio->setDisabled(disableAudioDependentObject);
+
+    // Play buttons
+    ui->inputAudioPlay->setDisabled(disableAudioDependentObject);
+    ui->lpcAudioPlay->setDisabled(disableBitstreamDependentObject);
+
+    // Control panel
+    ui->pitchHpfLine->setDisabled(disablePitchControl || !ui->pitchHpfEnable->isChecked());
+    ui->pitchLpfLine->setDisabled(disablePitchControl || !ui->pitchLpfEnable->isChecked());
+    ui->pitchPreemphLine->setDisabled(disablePitchControl || !ui->pitchPreemphEnable->isChecked());
+    ui->pitchMaxFrqLine->setDisabled(disablePitchControl);
+    ui->pitchMinFrqLine->setDisabled(disablePitchControl);
+
+    ui->lpcWindowWidthLine->setDisabled(disableLpcControl);
+    ui->lpcHpfLine->setDisabled(disableLpcControl || !ui->lpcHpfEnable->isChecked());
+    ui->lpcLpfLine->setDisabled(disableLpcControl || !ui->lpcLpfEnable->isChecked());
+    ui->lpcPreemphLine->setDisabled(disableLpcControl || !ui->lpcPreemphEnable->isChecked());
+    ui->lpcMaxUnvoicedGainLine->setDisabled(disableLpcControl);
+    ui->lpcMaxVoicedGainLine->setDisabled(disableLpcControl);
+
+    ui->postPitchOffsetToggle->setDisabled(disableLpcControl || !ui->postPitchOverrideToggle->isChecked());
+    ui->postPitchOverrideToggle->setDisabled(disableLpcControl || !ui->postPitchOffsetToggle->isChecked());
+    ui->postPitchInterpEnable->setDisabled(disableLpcControl);
+    ui->postRepeatFramesEnable->setDisabled(disableLpcControl);
+
+    // Allow un-checking of radio buttons
+    if (ui->postPitchOffsetToggle->isEnabled() && ui->postPitchOffsetToggle->isChecked() && ui->postPitchOffsetToggle->isDown()) {
+        ui->postPitchOffsetToggle->setChecked(false);
+    }
+
+    if (ui->postPitchOverrideToggle->isEnabled() && ui->postPitchOverrideToggle->isChecked() && ui->postPitchOverrideToggle->isDown()) {
+        ui->postPitchOverrideToggle->setChecked(false);
+    }
+}
+
+/// Draw the input and output signal waveforms, along with an abstract representation of their associated pitch data
+void MainWindow::drawPlots() {
+    if (isAudioFileLoaded()) {
+        inputWaveform->plotSamples(inputBuffer->getSamples());
+        inputWaveform->plotPitch(pitchFrqTable);
+    }
+
+    if (isBitstreamLoaded()) {
+        lpcWaveform->plotSamples(synthesizer.normalizedSamples());
+
+        auto framePitchTable = std::vector<float>(frameTable.size());
+        for (int i = 0; i < frameTable.size(); i++)
+            framePitchTable[i] = (float(lpcBuffer->sampleRate()) / float(frameTable[i].quantizedPitch())) / float(pitchMaxFrq());
+
+        lpcWaveform->plotPitch(framePitchTable);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                              UI Slots
+///////////////////////////////////////////////////////////////////////////////
+
+/// Import audio file from disk and perform LPC analysis thereupon
+void MainWindow::onOpenAudio() {
+    // Display file picker
+    auto filePath = QFileDialog::getOpenFileName(this, "Import audio file",
+                                                 QDir::homePath(),
+                                                 "Audio Files (*.wav *.aif *.aiff *.raw *.wav *.caf *.flac)"
+                                                 );
+
+    if (filePath.isNull()) {
+        qDebug() << "Import audio canceled";
+        return;
+    }
+
+    if (isAudioFileLoaded()) {
+        delete inputBuffer;
+        delete lpcBuffer;
+    }
+
+    inputBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
+    lpcBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
+
+    performPitchAnalysis();
+    performLpcAnalysis();
+    performPostProc();
+
+    configureUiState();
+    drawPlots();
+}
+
+/// Import bitstream from disk and synthesize
+void MainWindow::onOpenBitstream() {
+    auto filePath = QFileDialog::getOpenFileName(this, "Open bitstream",
+                                                 QDir::homePath(),
+                                                 "TMS5220 Bitstreams (*.lpc *.h *.json)"
+                                                 );
+
+    if (filePath.isNull()) {
+        qDebug() << "Open bitstream canceled";
+        return;
+    }
+
+    if (isAudioFileLoaded() || isBitstreamLoaded()) {
+        delete inputBuffer;
+        delete lpcBuffer;
+    }
+
+    performBitstreamParsing(filePath.toStdString());
+    performPostProc();
+}
+
+/// Save bitstream to disk
+void MainWindow::onSaveBitstream() {
+    auto filePath = QFileDialog::getSaveFileName(this, "Save bitstream",
+                                                 QDir::homePath(),
+                                                 "Bitstream Files (*.lpc *.h *.json)"
+                                                 );
+
+    if (filePath.isNull()) {
+        qDebug() << "Save bitstream canceled";
+        return;
+    }
+
+    exportBitstream(filePath.toStdString());
+}
+
+/// Export synthesized bitstream to disk
+void MainWindow::onExportAudio() {
+    // Display file picker
+    auto filePath = QFileDialog::getSaveFileName(this, "Export audio file",
+                                                 QDir::homePath(),
+                                                 "Audio Files (*.wav *.aif *.aiff *.raw *.wav *.caf *.flac)"
+                                                 );
+
+    if (filePath.isNull()) {
+        qDebug() << "Export audio canceled";
+        return;
+    }
+
+    synthesizer.render(filePath.toStdString());
+}
+
+/// Play contents of input buffer
+void MainWindow::onInputAudioPlay() {
+    if (!isAudioFileLoaded()) {
+        qDebug() << "Requested play, but input buffer is null";
+        return;
+    }
+
+    // Generate checksum of buffer to produce unique temporary filename
+    //
+    // The pre-emphasis alpha coefficient will be included in this computation, as its impact on the buffer may not
+    // be significant enough to modify the buffer checksum alone
+    char filename[31];
+    auto checksum = bufferChecksum(inputBuffer);
+    snprintf(filename, 31, "tmsexpress_render_%x.wav", checksum);
+
+    // Only render audio if this particular buffer does not exist
+    auto tempDir = std::filesystem::temp_directory_path();
+    tempDir.append(filename);
+    qDebug() << "Playing " << tempDir.c_str();
+    inputBuffer->render(tempDir);
+
+    // Setup player and play
+    player->setAudioOutput(audioOutput);
+    player->setSource(QUrl::fromLocalFile(tempDir.c_str()));
+    audioOutput->setVolume(100);
+    player->play();
+}
+
+/// Play synthesized bitstream audio
+void MainWindow::onLpcAudioPlay() {
+    if (!isBitstreamLoaded()) {
+        return;
+    }
+
+    // Generate checksum of buffer to produce unique temporary filename
+    //
+    // The pre-emphasis alpha coefficient will be included in this computation, as its impact on the buffer may not
+    // be significant enough to modify the buffer checksum alone
+    char filename[35];
+    auto checksum = bufferChecksum(lpcBuffer);
+    snprintf(filename, 35, "tmsexpress_lpc_render_%x.wav", checksum);
+
+    // Only render audio if this particular buffer does not exist
+    auto tempDir = std::filesystem::temp_directory_path();
+    tempDir.append(filename);
+    qDebug() << "Playing " << tempDir.c_str();
+    synthesizer.render(tempDir);
+
+    // Setup player and play
+    player->setAudioOutput(audioOutput);
+    player->setSource(QUrl::fromLocalFile(tempDir.c_str()));
+    audioOutput->setVolume(100);
+    player->play();
+}
+
+/// Re-perform pitch and LPC analysis when pitch controls are changed
+void MainWindow::onPitchParamEdit() {
+    configureUiState();
+
+    if (isAudioFileLoaded()) {
+        inputBuffer->reset();
+
+        performPitchAnalysis();
+        performLpcAnalysis();
+
+        drawPlots();
+    }
+}
+
+/// Re-perform LPC analysis when LPC controls are changed
+void MainWindow::onLpcParamEdit() {
+    configureUiState();
+
+    if (isBitstreamLoaded()) {
+        lpcBuffer->reset();
+
+        performLpcAnalysis();
+        performPostProc();
+
+        drawPlots();
+    }
+}
+
+/// Re-perform LPC analysis when bitstream controls are changed
+void MainWindow::onPostProcEdit() {
+    configureUiState();
+
+    if (isBitstreamLoaded()) {
+        synthesizer.reset();
+        performPostProc();
+
+        drawPlots();
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                              Metadata
+///////////////////////////////////////////////////////////////////////////////
+
+/// Compute checksum of an AudioBuffer's samples to uniquely identify it
+///
+/// \note   The checksum is used to generate a unique filename, which is stored temporarily to facilitate playback of
+///         rendered audio. In addition to the samples from the buffer, this checksum also incorporates the pre-emphasis
+///         filter coefficients of both the input audio and synthesized bitstream buffers, as applying the small
+///         pre-emphasis filter to floating point samples may not impact the checksum.
+///
+/// \param buffer AudioBuffer of which to compute checksum
+/// \return Checksum
+unsigned int MainWindow::bufferChecksum(AudioBuffer *buffer) {
+    auto bufferSize = int(buffer->size());
+    auto checksumBuffer = (float *) malloc(sizeof(float) * (bufferSize + 1));
+    memccpy(checksumBuffer, buffer->getSamples().data(), bufferSize, sizeof(float));
+    checksumBuffer[bufferSize] = char(lpcPreemph() + pitchPreemph());
+
+    auto checksum = CRC::Calculate(checksumBuffer, sizeof(float), CRC::CRC_32());
+
+    free(checksumBuffer);
+    return checksum;
+}
+
+/// Return whether an audio file has been loaded from the disk
+///
+/// \note If an audio file has been loaded, a bitstream has also been generated and synthesized
+///
+/// \return Whether an audio file has been loaded from the disk
+bool MainWindow::isAudioFileLoaded() {
+    return (inputBuffer != nullptr);
+}
+
+/// Return whether a bitstream file has been loaded from the disk
+///
+/// \warning A bitstream file having been loaded does not mean that the input and LPC buffers are not null
+///
+/// \return Whether an audio file has been loaded from the disk
+bool MainWindow::isBitstreamLoaded() {
+    return (!frameTable.empty());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                              Data Maniuplation
+///////////////////////////////////////////////////////////////////////////////
+
+/// Apply filters to input buffer and perform pitch analysis to populate the pitch tables
+void MainWindow::performPitchAnalysis() {
+    // Clear tables
+    pitchPeriodTable.clear();
+    pitchFrqTable.clear();
+
+    // Pre-process
+    if (ui->pitchHpfEnable->isChecked()) {
+        filter.highpass(*inputBuffer, pitchHpfCutoff());
+    }
+
+    if (ui->pitchLpfEnable->isChecked()) {
+        filter.lowpass(*inputBuffer, pitchLpfCutoff());
+    }
+
+    if (ui->pitchPreemphEnable->isChecked()) {
+        filter.preEmphasis(*inputBuffer, pitchPreemph());
+    }
 
     pitchEstimator.setMaxPeriod(pitchMinFrq());
     pitchEstimator.setMinPeriod(pitchMaxFrq());
 
-    // Analysis buffers
-    pitchTable = {};
+    for (const auto &segment : inputBuffer->segments()) {
+        auto acf = Autocorrelator::process(segment);
+        auto pitchPeriod = pitchEstimator.estimatePeriod(acf);
+        auto pitchFrq = pitchEstimator.estimateFrequency(acf) / float(pitchMaxFrq());
 
-    // Start the application with all controls disabled, as audio has yet to be imported
-    updatePitchControls();
+        pitchPeriodTable.push_back(pitchPeriod);
+        pitchFrqTable.push_back(pitchFrq);
+    }
 }
 
-/// Delete any persistent data
-MainWindow::~MainWindow() {
-    delete ui;
-    delete audioBuffer;
-    delete audioWaveform;
-}
+/// Apply filters to input buffer and perform LPC analysis to populate the frame table
+///
+/// \note   This function may re-trigger pitch analysis if the window width has been modified, as both the pitch and
+///         frame tables must share segment boundaries
+void MainWindow::performLpcAnalysis() {
+    // Clear tables
+    frameTable.clear();
 
-///////////////////////////////////////////////////////////////////////////////
-//                             Qt UI Slots
-///////////////////////////////////////////////////////////////////////////////
+    // Re-trigger pitch analysis if window width has changed
+    if (lpcWindowWidth() != inputBuffer->getWindowWidth()) {
+        inputBuffer->setWindowWidth(lpcWindowWidth());
+        lpcBuffer->setWindowWidth(lpcWindowWidth());
 
-/// Import an audio file from the disk using the system file picker
-void MainWindow::importAudioFile() {
-    auto filePath = QFileDialog::getOpenFileName(this, "Import audio file", QDir::homePath(),
-                                                 "Audio Files (*.wav *.aif *.mp3)"
-                                                 );
-
-    audioBuffer = new AudioBuffer(filePath.toStdString());
-    pitchTable = std::vector<float>(audioBuffer->size());
-
-    performPitchAnalysis();
-}
-
-/// Apply filters to audio buffer before performing LPC analysis, then refresh the AudioWaveform plot
-void MainWindow::performPitchAnalysis() {
-    updatePitchControls();
-
-    if (audioBuffer == nullptr) {
-        qDebug() << "Triggered preprocessing but no audio file imported";
-        return;
+        qDebug() << "Adjusting window width for pitch and LPC buffers";
+        performPitchAnalysis();
     }
 
-    // Reset all buffer edits, including window width
-    audioBuffer->reset();
-    audioBuffer->setWindowWidth(windowWidthMs());
-
-    // Apply filters
-    if (ui->pitchHpfEnable->isChecked()) {
-        audioFilter.highpass(*audioBuffer, pitchHpfCutoff());
+    // Pre-process
+    if (ui->lpcHpfEnable->isChecked()) {
+        filter.highpass(*lpcBuffer, lpcHpfCutoff());
     }
 
-    if (ui->pitchLpfEnable->isChecked()) {
-        audioFilter.lowpass(*audioBuffer, pitchLpfCutoff());
+    if (ui->lpcLpfEnable->isChecked()) {
+        filter.lowpass(*lpcBuffer, lpcLpfCutoff());
     }
 
-    if (ui->pitchPreemphEnable->isChecked()) {
-        audioFilter.preEmphasis(*audioBuffer, pitchPreemph());
+    if (ui->lpcPreemphEnable->isChecked()) {
+        filter.preEmphasis(*lpcBuffer, lpcPreemph());
     }
 
-    computePitchTable();
-    plotInputAudio();
-}
-
-void MainWindow::playInputAudio() {
-    if (audioBuffer == nullptr) {
-        qDebug() << "Triggered play but no audio file imported";
-        return;
-    }
-
-    // Generate checksum of audio buffer for unique filename
-    char filename[31];
-    auto crc = CRC::Calculate(audioBuffer->getSamples().data(), sizeof(float), CRC::CRC_32());
-    snprintf(filename, 31, "tmsexpress_render_%x.wav", crc);
-
-    auto tempDir = std::filesystem::temp_directory_path();
-    tempDir.append(filename);
-
-    // Only render audio if this version of buffer doesn't already exist
-    // Unfortunately, the pre-emphasis filter produces small changes that won't be picked up by this checksum,
-    // so it will override this check for the time being
-    if (!std::filesystem::exists(tempDir) || ui->pitchPreemphEnable->isChecked()) {
-        audioBuffer->render(tempDir);
-        qDebug() << "Rendered audio to path: " << tempDir.c_str();
-    }
-
-    auto player = new QMediaPlayer();
-    auto audioOutput = new QAudioOutput;
-    player->setAudioOutput(audioOutput);
-    player->setSource(QUrl::fromLocalFile(tempDir.c_str()));
-    audioOutput->setVolume(100);
-
-    player->play();
-}
-
-void MainWindow::plotInputAudio() {
-    audioWaveform->plotSamples(audioBuffer->getSamples());
-    audioWaveform->plotPitch(pitchTable);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//                             Analysis functions
-///////////////////////////////////////////////////////////////////////////////
-
-void MainWindow::computePitchTable() {
-    pitchTable = std::vector<float>(audioBuffer->size());
-
-    for (int i = 0; i < audioBuffer->size(); i++) {
-        auto segment = audioBuffer->segment(i);
+    for (int i = 0; i < lpcBuffer->size(); i++) {
+        auto segment = lpcBuffer->segment(i);
         auto acf = Autocorrelator::process(segment);
 
-        // Normalize samples by max period
-        pitchTable[i] = pitchEstimator.estimateFrequency(acf) / float(pitchMaxFrq());
+        auto coeffs = linearPredictor.reflectorCoefficients(acf);
+        auto gain = linearPredictor.gain();
+
+        auto pitchPeriod = pitchPeriodTable[i];
+        auto isVoiced = coeffs[0] < 0;
+
+        frameTable.emplace_back(pitchPeriod, isVoiced, gain, coeffs);
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                             UI state controls
-///////////////////////////////////////////////////////////////////////////////
+/// Perform post-processing on and synthesize bitstream from frame table
+void MainWindow::performPostProc() {
+    auto framePostProcessor = FramePostprocessor(&frameTable, lpcMaxVoicedGain(), lpcMaxUnvoicedGain());
+    framePostProcessor.normalizeGain();
 
-void MainWindow::updatePitchControls() {
-    // If no audio file has been imported, do not allow playback
-    if (audioBuffer == nullptr) {
-        ui->inputAudioPlay->setDisabled(true);
-    } else {
-        ui->inputAudioPlay->setDisabled(false);
+    if (ui->postRepeatFramesEnable->isChecked()) {
+        auto nRepeatFrames = framePostProcessor.detectRepeatFrames();
+        qDebug() << "Detected " << nRepeatFrames << " repeat frames";
     }
 
-    // Disallow editing text fields if disabled
-    if (ui->pitchHpfEnable->isChecked()) {
-        ui->pitchHpfLine->setDisabled(false);
-    } else {
-        ui->pitchHpfLine->setDisabled(true);
-    }
+    synthesizer.synthesize(frameTable);
+}
 
-    if (ui->pitchLpfEnable->isChecked()) {
-        ui->pitchLpfLine->setDisabled(false);
-    } else {
-        ui->pitchLpfLine->setDisabled(true);
-    }
+// TODO: Implement
+void MainWindow::performBitstreamParsing(const std::string &path) {
+    // Determine file extension
+    std::string extension = path.substr(path.size() - 3, 4);
+    qDebug() << "Detected extension " << extension.c_str();
+}
 
-    // Disallow editing text fields if disabled
-    if (ui->pitchPreemphEnable->isChecked()) {
-        ui->pitchPreemphLine->setDisabled(false);
-    } else {
-        ui->pitchPreemphLine->setDisabled(true);
-    }
-
-    // If pitch override is enabled, disallow pitch interpolation
-    if (ui->pitchOverrideToggle->isChecked()) {
-        ui->pitchInterpEnable->setDisabled(true);
-    } else {
-        ui->pitchInterpEnable->setDisabled(false);
-    }
+// TODO: Implement
+void MainWindow::exportBitstream(const std::string &path) {
+    return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                             Pitch UI getters
+//                              UI Getters
 ///////////////////////////////////////////////////////////////////////////////
 
 int MainWindow::pitchHpfCutoff() {
@@ -224,26 +526,34 @@ float MainWindow::pitchPreemph() {
     return ui->pitchPreemphLine->text().toFloat();
 }
 
-int MainWindow::pitchMaxFrq() {
-    return ui->pitchMaxFrqLine->text().toInt();
-}
-
 int MainWindow::pitchMinFrq() {
     return ui->pitchMinFrqLine->text().toInt();
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                              LPC UI getters
-///////////////////////////////////////////////////////////////////////////////
-
-float MainWindow::maxVoicedGainDb() {
-    return ui->lpcMaxVoicedGainLine->text().toFloat();
+int MainWindow::pitchMaxFrq() {
+    return ui->pitchMaxFrqLine->text().toInt();
 }
 
-float MainWindow::maxUnvoicedGainDb() {
+float MainWindow::lpcWindowWidth() {
+    return ui->lpcWindowWidthLine->text().toFloat();
+}
+
+int MainWindow::lpcHpfCutoff() {
+    return ui->lpcHpfLine->text().toInt();
+}
+
+int MainWindow::lpcLpfCutoff() {
+    return ui->lpcLpfLine->text().toInt();
+}
+
+float MainWindow::lpcPreemph() {
+    return ui->pitchPreemphLine->text().toFloat();
+}
+
+float MainWindow::lpcMaxUnvoicedGain() {
     return ui->lpcMaxUnvoicedGainLine->text().toFloat();
 }
 
-float MainWindow::windowWidthMs() {
-    return ui->lpcWindowWidth->text().toFloat();
+float MainWindow::lpcMaxVoicedGain() {
+    return ui->lpcMaxVoicedGainLine->text().toFloat();
 }

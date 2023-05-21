@@ -5,10 +5,18 @@
 
 #include "Audio/AudioBuffer.h"
 #include "Audio/AudioFilter.h"
+#include "Bitstream_Generation/BitstreamGenerator.h"
+#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/FrameEncoder.h"
+#include "Frame_Encoding/FramePostprocessor.h"
+#include "Frame_Encoding/Synthesizer.h"
 #include "LPC_Analysis/PitchEstimator.h"
+#include "LPC_Analysis/LinearPredictor.h"
 #include "User_Interfaces/AudioWaveform.h"
 
 #include <QMainWindow>
+#include <QMediaPlayer>
+#include <QtMultimedia/QAudioOutput>
 
 #include <vector>
 
@@ -21,50 +29,80 @@ class MainWindow : public QMainWindow
 Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 
 public slots:
-    void importAudioFile();
-    // TODO: exportBitstream();
+    // Menu bar
+    void onOpenAudio();
+    void onOpenBitstream();
+    void onSaveBitstream();
+    void onExportAudio();
 
-    // Pitch analysis functions
-    void performPitchAnalysis();
-    void playInputAudio();
-    void plotInputAudio();
+    // Play buttons
+    void onInputAudioPlay();
+    void onLpcAudioPlay();
 
-    // LPC analysis functions
-    // TODO: performLpcAnalysis();
-    // TODO: playLpcAudio();
-    // TODO: plotLpcAudio();
+    // Control panels
+    void onPitchParamEdit();
+    void onLpcParamEdit();
+    void onPostProcEdit();
 
 private:
+    // Qt modules
     Ui::MainWindow *ui;
-    AudioWaveform *audioWaveform;
+    QMediaPlayer *player;
+    QAudioOutput *audioOutput;
 
-    AudioBuffer* audioBuffer;
-    AudioFilter audioFilter;
+    // Custom Qt widgets
+    AudioWaveform *inputWaveform;
+    AudioWaveform *lpcWaveform;
 
+    // Audio buffers
+    AudioBuffer *inputBuffer;
+    AudioBuffer *lpcBuffer;
+
+    // Data tables
+    std::vector<Frame> frameTable;
+    std::vector<int> pitchPeriodTable;
+    std::vector<float> pitchFrqTable;
+
+    // Analysis objects
+    Synthesizer synthesizer = Synthesizer();
+    AudioFilter filter = AudioFilter();
     PitchEstimator pitchEstimator = PitchEstimator(8000);
-    std::vector<float> pitchTable;
+    LinearPredictor linearPredictor = LinearPredictor();
 
-    // Analysis functions
-    void computePitchTable();
+    // UI helpers
+    void configureUiSlots();
+    void configureUiState();
+    void drawPlots();
 
-    // UI state controls
-    void updatePitchControls();
+    // Data manipulation
+    void performBitstreamParsing(const std::string& path);
+    void performPitchAnalysis();
+    void performLpcAnalysis();
+    void performPostProc();
+    void exportBitstream(const std::string& path);
 
-    // Pitch UI getters
+    // Metadata
+    bool isAudioFileLoaded();
+    bool isBitstreamLoaded();
+    unsigned int bufferChecksum(AudioBuffer *buffer);
+
+    // UI getters
     int pitchHpfCutoff();
     int pitchLpfCutoff();
-    int pitchMaxFrq();
-    int pitchMinFrq();
     float pitchPreemph();
+    int pitchMinFrq();
+    int pitchMaxFrq();
 
-    // LPC UI getters
-    float maxVoicedGainDb();
-    float maxUnvoicedGainDb();
-    float windowWidthMs();
+    float lpcWindowWidth();
+    int lpcHpfCutoff();
+    int lpcLpfCutoff();
+    float lpcPreemph();
+    float lpcMaxUnvoicedGain();
+    float lpcMaxVoicedGain();
 };
 
 #endif //TMS_EXPRESS_MAINWINDOW_H
