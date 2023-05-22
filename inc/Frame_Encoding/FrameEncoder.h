@@ -5,6 +5,7 @@
 
 #include "Frame.h"
 #include <string>
+#include <vector>
 
 class FrameEncoder {
 public:
@@ -15,9 +16,18 @@ public:
     void append(Frame frame);
     void append(const std::vector<Frame> &newFrames);
 
+    // Import functions
+    size_t importFromAscii(const std::string &path);
+    //int importFromEmbedded(std::string path) {};
+    //int importFromJson(std::string path) {};
+
     // Serialization
     std::string toHex(bool shouldAppendStopFrame = true);
     std::string toJSON();
+    std::vector<Frame> frameTable();
+
+    // De-serialization
+    size_t parseAsciiBitstream(std::string flatBitstream);
 
 private:
     std::vector<std::string> bytes;
@@ -26,7 +36,7 @@ private:
     bool shouldIncludeHexPrefix;
 
     void appendStopFrame();
-    [[nodiscard]] std::string byteToHex(const std::string& byte) const;
+    [[nodiscard]] std::string byteToHex(const std::string &byte) const;
 };
 
 #endif //TMS_EXPRESS_FRAMEENCODER_H

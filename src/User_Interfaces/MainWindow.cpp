@@ -176,7 +176,7 @@ void MainWindow::drawPlots() {
 
         auto framePitchTable = std::vector<float>(frameTable.size());
         for (int i = 0; i < frameTable.size(); i++)
-            framePitchTable[i] = (float(lpcBuffer->sampleRate()) / float(frameTable[i].quantizedPitch())) / float(pitchMaxFrq());
+            framePitchTable[i] = (8000.0f / float(frameTable[i].quantizedPitch())) / float(pitchMaxFrq());
 
         lpcWaveform->plotPitch(framePitchTable);
     }
@@ -234,6 +234,9 @@ void MainWindow::onOpenBitstream() {
 
     performBitstreamParsing(filePath.toStdString());
     performPostProc();
+
+    configureUiState();
+    drawPlots();
 }
 
 /// Save bitstream to disk
@@ -306,7 +309,8 @@ void MainWindow::onLpcAudioPlay() {
     // The pre-emphasis alpha coefficient will be included in this computation, as its impact on the buffer may not
     // be significant enough to modify the buffer checksum alone
     char filename[35];
-    auto checksum = bufferChecksum(lpcBuffer);
+
+    uint checksum = (lpcBuffer != nullptr) ? bufferChecksum(lpcBuffer) : 0xdeadc0de;
     snprintf(filename, 35, "tmsexpress_lpc_render_%x.wav", checksum);
 
     // Only render audio if this particular buffer does not exist
@@ -498,11 +502,29 @@ void MainWindow::performPostProc() {
     synthesizer.synthesize(frameTable);
 }
 
-// TODO: Implement
+/// Import bitstream file from the disk and populate the frame table
 void MainWindow::performBitstreamParsing(const std::string &path) {
     // Determine file extension
     std::string extension = path.substr(path.size() - 3, 4);
-    qDebug() << "Detected extension " << extension.c_str();
+
+    // Ensure string is lowercase
+    for (char &c : extension) {
+        c = char(std::tolower(c));
+    }
+
+    auto frameEncoder = FrameEncoder();
+
+    if (extension == "lpc") {
+        frameEncoder.importFromAscii(path);
+    } else if (extension == "h") {
+        //frameEncoder.importFromEmbedded(path);
+    } else if (extension == "json") {
+        //frameEncoder.importFromJson(path);
+    } else {
+        return;
+    }
+
+    frameTable = frameEncoder.frameTable();
 }
 
 // TODO: Implement
