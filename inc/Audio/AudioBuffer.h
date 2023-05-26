@@ -9,6 +9,7 @@
 class AudioBuffer {
 public:
     explicit AudioBuffer(const std::string &path, int targetSampleRateHz = 8000, float windowWidthMs = 25.0f);
+    explicit AudioBuffer(std::vector<float> pcmSamples, int sampleRate = 8000, float windowWidthMs = 25.0f);
     AudioBuffer(const AudioBuffer &buffer);
 
     // Getters & setters
