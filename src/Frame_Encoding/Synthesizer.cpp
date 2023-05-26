@@ -1,168 +1,194 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Class: Synthesizer
 //
-// Description: The Synthesizer converts a Frame vector into PCM samples representing synthesized speech. It does so
-//              by applying a reverse lattice filter with the Frame's reflector coefficients.
+// Description: The Synthesizer converts a Frame vector into PCM samples representing synthesized speech. The lattice
+//              filter through which Frame parameters pass is modeled after the TMS5220 Voice Synthesis Processor
 //
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 //
-// Acknowledgement: This code is adapted from the popular Arduino Talkie library, written by Peter Knight and
-//                  Jonathan Gevaryahu. The original source code can be found at https://github.com/going-digital/Talkie
+// Acknowledgement: This class implements a pure-software version of the popular Arduino Talkie library, written by
+//                  Peter Knight and Jonathan Gevaryahu, which emulates the behavior of the TMS5220. It also draws from
+//                  a Lua implementation of the original C++ codebase, which utilized a floating-point coding table.
+//                  The original source codes may be found at https://github.com/going-digital/Talkie and
+//                  https://github.com/tocisz/talkie.love
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "Audio/AudioBuffer.h"
 #include "Frame_Encoding/Synthesizer.h"
 #include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/Tms5220CodingTable.h"
 
-#include <sndfile.hh>
-
-#include <cstdint>
+#include <cmath>
 #include <string>
 #include <vector>
 
-#include <iostream>
+using namespace Tms5220CodingTable;
 
-Synthesizer::Synthesizer() {
-    synthPeriod = 0;
-    synthEnergy = 0;
-    synthK1 = synthK2 = 0;
-    synthK3 = synthK4 = synthK5 = synthK6 = synthK7 = synthK8 = synthK9 = synthK10 = 0;
-    pcmSamples = {};
+/// Create a new synthesizer
+///
+/// \note   The synthesizer consists of three parts: the synthesis table, the random noise generator, and the lattice
+///         filter. The synthesis table holds parameters of the current frame. These parameters pass through the lattice
+///         filter repeatedly to produce audio. The random noise generator provides the basis for unvoiced sounds
+///
+/// \param sampleRateHz Sample rate of synthesized audio (in Hertz)
+/// \param frameRateMs Frame rate of synthesized audio, or duration of each frame (in milliseconds)
+Synthesizer::Synthesizer(int sampleRateHz, float frameRateMs) {
+    sampleRate = sampleRateHz;
+    windowWidth = frameRateMs;
+    samplesPerFrame = int(float(sampleRateHz) * frameRateMs * 1e-3f);
+
+    synthEnergy = synthPeriod = 0;
+    synthK1 = synthK2 = synthK3 = synthK4 = synthK5 = synthK6 = synthK7 = synthK8 = synthK9 = synthK10 = 0;
+    x0 = x1 = x2 = x3 = x4 = x5 = x6 = x7 = x8 = x9 = u0 = 0;
+    synthRand = periodCounter = 0;
+    synthesizedSamples = {};
 }
 
+/// Reset the synthesizer
+///
+/// \note Synthesizer::synthesize calls this automatically
 void Synthesizer::reset() {
-    pcmSamples = {};
-
-    synthPeriod = 0;
-    synthEnergy = 0;
-    synthK1 = synthK2 = 0;
-    synthK3 = synthK4 = synthK5 = synthK6 = synthK7 = synthK8 = synthK9 = synthK10 = 0;
+    synthEnergy = synthPeriod = 0;
+    synthK1 = synthK2 = synthK3 = synthK4 = synthK5 = synthK6 = synthK7 = synthK8 = synthK9 = synthK10 = 0;
+    x0 = x1 = x2 = x3 = x4 = x5 = x6 = x7 = x8 = x9 = u0 = 0;
+    synthRand = periodCounter = 0;
+    synthesizedSamples = {};
 }
 
-void Synthesizer::synthesize(const std::vector<Frame>& frames) {
+/// Reconstruct audio from frame data
+///
+/// \param frames Frames to synthesize
+/// \return Synthesized PCM samples
+std::vector<float> Synthesizer::synthesize(const std::vector<Frame>& frames) {
     reset();
 
-    for (auto frame : frames) {
-        readFrame(frame);
+    for (const auto &frame : frames) {
+        if (updateSynthTable(frame)) {
+            break;
+        }
 
-        for (int i = 0; i < 8000 / 40; i++)
-            pcmSamples.push_back(generateSample());
+        for (int i = 0; i < samplesPerFrame; i++)
+            synthesizedSamples.push_back(updateLatticeFilter());
     }
+
+    return synthesizedSamples;
 }
 
-void Synthesizer::render(std::string path) {
-    std::cout << "Rendering " << pcmSamples.size() << " pcmSamples" << std::endl;
-
-    auto sndfileHandle = SndfileHandle(path, SFM_WRITE, SF_FORMAT_WAV | SF_FORMAT_PCM_16, 1, 8000);
-    sndfileHandle.write(pcmSamples.data(), pcmSamples.size());
+/// Export synthesized samples as an audio file
+void Synthesizer::render(const std::string &path) {
+    AudioBuffer(synthesizedSamples, sampleRate, windowWidth).render(path);
 }
 
-void Synthesizer::readFrame(Frame frame) {
-    auto energy = frame.quantizedGain();
+/// Update the synthesizer state based on incoming frame
+///
+/// \param frame Frame to load into synthesis table
+/// \return Whether stop frame encountered, at which point synthesis should halt
+bool Synthesizer::updateSynthTable(Frame frame) {
+    auto quantizedGain = frame.quantizedGain();
 
     // Silent frame
-    if (frame.isSilent()) {
-        //std::cout << "SILENT" << std::endl;
+    if (quantizedGain == 0) {
         synthEnergy = 0;
 
         // Stop frame
-    } else if (energy == 0xf) {
-        //std::cout << "DONE" << std::endl;
-        synthEnergy = 0;
-        synthK1 = 0;
-        synthK2 = 0;
-        synthK3 = 0;
-        synthK4 = 0;
-        synthK5 = 0;
-        synthK6 = 0;
-        synthK7 = 0;
-        synthK8 = 0;
-        synthK9 = 0;
-        synthK10 = 0;
+    } else if (quantizedGain == 0xf) {
+        reset();
+        return true;
 
     } else {
-        synthEnergy = tmsEnergy[energy];
-        synthPeriod = tmsPeriod[frame.quantizedPitch()];
+        synthEnergy = energy[quantizedGain];
+        synthPeriod = pitch[frame.quantizedPitch()];
 
         if (!frame.isRepeat()) {
             auto coeffs = frame.quantizedCoeffs();
 
-            synthK1 = tmsK1[coeffs[0]];
-            synthK2 = tmsK2[coeffs[1]];
-            synthK3 = tmsK3[coeffs[2]];
-            synthK4 = tmsK4[coeffs[3]];
+            // Voiced/unvoiced parameters
+            synthK1 = k1[coeffs[0]];
+            synthK2 = k2[coeffs[1]];
+            synthK3 = k3[coeffs[2]];
+            synthK4 = k4[coeffs[3]];
 
-            if (synthPeriod) {
-                synthK5 = tmsK5[coeffs[4]];
-                synthK6 = tmsK6[coeffs[5]];
-                synthK7 = tmsK7[coeffs[6]];
-                synthK8 = tmsK8[coeffs[7]];
-                synthK9 = tmsK9[coeffs[8]];
-                synthK10 = tmsK10[coeffs[9]];
+            // Voiced-only parameters
+            if (fpclassify(synthPeriod) != FP_ZERO) {
+                synthK5 = k5[coeffs[4]];
+                synthK6 = k6[coeffs[5]];
+                synthK7 = k7[coeffs[6]];
+                synthK8 = k8[coeffs[7]];
+                synthK9 = k9[coeffs[8]];
+                synthK10 = k9[coeffs[9]];
             }
         }
     }
+
+    return false;
 }
 
-unsigned short Synthesizer::generateSample() {
-    static uint8_t periodCounter;
-    static int16_t x0,x1,x2,x3,x4,x5,x6,x7,x8,x9;
-    int16_t u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10;
+/// Advance the random noise generator
+///
+/// \return The polarity (+true, -false) of the unvoiced sample to generate
+bool Synthesizer::updateNoiseGenerator() {
+    synthRand = (synthRand >> 1) ^ ((synthRand & 1) ? 0xB800 : 0);
+    return (synthRand & 1);
+}
 
-    if (synthPeriod) {
-        // Voiced source
-        if (periodCounter < synthPeriod) {
+/// Synthesize new sample and advance synthesizer state
+///
+/// \return Newly synthesized sample
+float Synthesizer::updateLatticeFilter() {
+    // Generate voiced sample
+    if (fpclassify(synthPeriod) != FP_ZERO) {
+        if (float(periodCounter) < synthPeriod) {
             periodCounter++;
         } else {
             periodCounter = 0;
         }
-        if (periodCounter < sizeof(chirp)) {
-            u10 = ((chirp[periodCounter]) * (uint32_t) synthEnergy) >> 8;
+
+        if (periodCounter < chirpWidth) {
+            u0 = ((chirp[periodCounter]) * synthEnergy);
         } else {
-            u10 = 0;
+            u0 = 0;
         }
+
+    // Generate unvoiced sample
     } else {
-        // Unvoiced source
-        static uint16_t synthRand = 1;
-        synthRand = (synthRand >> 1) ^ ((synthRand & 1) ? 0xB800 : 0);
-        u10 = (synthRand & 1) ? synthEnergy : -synthEnergy;
+        u0 = (updateNoiseGenerator()) ? synthEnergy : -synthEnergy;
     }
-    // Lattice filter forward path
-    u9 = u10 - (((int16_t)synthK10*x9) >> 7);
-    u8 = u9 - (((int16_t)synthK9*x8) >> 7);
-    u7 = u8 - (((int16_t)synthK8*x7) >> 7);
-    u6 = u7 - (((int16_t)synthK7*x6) >> 7);
-    u5 = u6 - (((int16_t)synthK6*x5) >> 7);
-    u4 = u5 - (((int16_t)synthK5*x4) >> 7);
-    u3 = u4 - (((int16_t)synthK4*x3) >> 7);
-    u2 = u3 - (((int16_t)synthK3*x2) >> 7);
-    u1 = u2 - (((int32_t)synthK2*x1) >> 15);
-    u0 = u1 - (((int32_t)synthK1*x0) >> 15);
 
-    // Output clamp
-    if (u0 > 511) u0 = 511;
-    if (u0 < -512) u0 = -512;
+    // Push new data through lattice filter
+    if (fpclassify(synthPeriod) != FP_ZERO) {
+        u0 -= (synthK10 * x9) + (synthK9 * x8);
+        x9 = x8 + (synthK9 * u0);
 
-    // Lattice filter reverse path
-    x9 = x8 + (((int16_t)synthK9*u8) >> 7);
-    x8 = x7 + (((int16_t)synthK8*u7) >> 7);
-    x7 = x6 + (((int16_t)synthK7*u6) >> 7);
-    x6 = x5 + (((int16_t)synthK6*u5) >> 7);
-    x5 = x4 + (((int16_t)synthK5*u4) >> 7);
-    x4 = x3 + (((int16_t)synthK4*u3) >> 7);
-    x3 = x2 + (((int16_t)synthK3*u2) >> 7);
-    x2 = x1 + (((int32_t)synthK2*u1) >> 15);
-    x1 = x0 + (((int32_t)synthK1*u0) >> 15);
-    x0 = u0;
+        u0 -= synthK8 * x7;
+        x8 = x7 + (synthK8 * u0);
 
-    return (u0 << 6);
+        u0 -= synthK7 * x6;
+        x7 = x6 + (synthK7 * u0);
+
+        u0 -= synthK6 * x5;
+        x6 = x5 + (synthK6 * u0);
+
+        u0 -= synthK5 * x4;
+        x5 = x4 + (synthK5 * u0);
+    }
+
+    u0 -= synthK4 * x3;
+    x4 = x3 + (synthK4 * u0);
+
+    u0 -= synthK3 * x2;
+    x3 = x2 + (synthK3 * u0);
+
+    u0 -= synthK2 * x1;
+    x2 = x1 + (synthK2 * u0);
+
+    u0 -= synthK1 * x0;
+    x1 = x0 + (synthK1 * u0);
+
+    // Normalize result
+    x0 = std::max(std::min(u0, 1.0f), -1.0f);
+    return x0;
 }
 
-std::vector<float> Synthesizer::normalizedSamples() {
-    auto normalized = std::vector<float>(pcmSamples.size());
-
-    for (int i = 0; i < pcmSamples.size(); i++) {
-        normalized[i] = float(pcmSamples[i]) / INT16_MAX;
-    }
-
-    return normalized;
+std::vector<float> Synthesizer::samples() {
+    return synthesizedSamples;
 }
