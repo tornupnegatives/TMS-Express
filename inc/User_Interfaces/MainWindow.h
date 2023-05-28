@@ -33,9 +33,7 @@ public:
     ~MainWindow() override;
 
 public slots:
-    // Menu bar
-    void onOpenAudio();
-    void onOpenBitstream();
+    void onOpenFile();
     void onSaveBitstream();
     void onExportAudio();
 
@@ -88,7 +86,7 @@ private:
     // Metadata
     bool isAudioFileLoaded();
     bool isBitstreamLoaded();
-    unsigned int bufferChecksum(AudioBuffer *buffer);
+    unsigned int samplesChecksum(std::vector<float> samples);
 
     // UI getters
     int pitchHpfCutoff();

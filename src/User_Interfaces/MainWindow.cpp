@@ -20,17 +20,16 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     // Load compiled .gui file
     ui->setupUi(this);
-    setWindowTitle("TMS Express");
 
     player = new QMediaPlayer(this);
     audioOutput = new QAudioOutput(this);
 
-    inputWaveform = new AudioWaveform(ui->inputAudioWaveformWidget);
-    inputWaveform->setMinimumSize(ui->inputAudioWaveformWidget->minimumSize());
+    inputWaveform = new AudioWaveform();
+    ui->inputWaveformLayout->insertWidget(1, inputWaveform);
     inputWaveform->show();
 
-    lpcWaveform = new AudioWaveform(ui->lpcAudioWaveformWidget);
-    lpcWaveform->setMinimumSize(ui->lpcAudioWaveformWidget->minimumSize());
+    lpcWaveform = new AudioWaveform();
+    ui->outputWaveformLayout->insertWidget(1, lpcWaveform);
     lpcWaveform->show();
 
     inputBuffer = nullptr;
@@ -70,19 +69,10 @@ MainWindow::~MainWindow() {
 
 /// Connect UI elements to member functions
 void MainWindow::configureUiSlots() {
-    // Menu bar (Open)
-    connect(ui->actionOpenAudio, &QAction::triggered, this, &MainWindow::onOpenAudio);
-    connect(ui->actionOpenAsciiBitstream, &QAction::triggered, this, &MainWindow::onOpenBitstream);
-    connect(ui->actionOpenEmbeddedBitstream, &QAction::triggered, this, &MainWindow::onOpenBitstream);
-    connect(ui->actionOpenJsonBitstream, &QAction::triggered, this, &MainWindow::onOpenBitstream);
-
-    // Menu bar (Save)
-    connect(ui->actionSaveAsciiBitstream, &QAction::triggered, this, &MainWindow::onSaveBitstream);
-    connect(ui->actionSaveEmbeddedBitstream, &QAction::triggered, this, &MainWindow::onSaveBitstream);
-    connect(ui->actionSaveJsonBitstream, &QAction::triggered, this, &MainWindow::onSaveBitstream);
-
-    // Menu bar (Export)
-    connect(ui->actionExportAudio, &QAction::triggered, this, &MainWindow::onExportAudio);
+    // Menu bar
+    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::onOpenFile);
+    connect(ui->actionSave, &QAction::triggered, this, &MainWindow::onSaveBitstream);
+    connect(ui->actionExport, &QAction::triggered, this, &MainWindow::onExportAudio);
 
     // Play buttons
     connect(ui->inputAudioPlay, &QPushButton::pressed, this, &MainWindow::onInputAudioPlay);
@@ -110,10 +100,10 @@ void MainWindow::configureUiSlots() {
     connect(ui->lpcMaxVoicedGainLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
 
     // Control panel (Frame Post-Processor)
-    connect(ui->postPitchOffsetToggle, &QRadioButton::clicked, this, &MainWindow::onPostProcEdit);
-    connect(ui->postPitchOffsetLine, &QLineEdit::editingFinished, this, &MainWindow::onPostProcEdit);
-    connect(ui->postPitchOverrideToggle, &QRadioButton::clicked, this, &MainWindow::onPostProcEdit);
-    connect(ui->postPitchOffsetLine, &QLineEdit::editingFinished, this, &MainWindow::onPostProcEdit);
+    //connect(ui->postPitchOffsetToggle, &QRadioButton::clicked, this, &MainWindow::onPostProcEdit);
+    //connect(ui->postPitchOffsetLine, &QLineEdit::editingFinished, this, &MainWindow::onPostProcEdit);
+    //connect(ui->postPitchOverrideToggle, &QRadioButton::clicked, this, &MainWindow::onPostProcEdit);
+    //connect(ui->postPitchOffsetLine, &QLineEdit::editingFinished, this, &MainWindow::onPostProcEdit);
     connect(ui->postPitchInterpEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
     connect(ui->postRepeatFramesEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
 }
@@ -128,8 +118,8 @@ void MainWindow::configureUiState() {
     auto disableLpcControl = disableBitstreamDependentObject;
 
     // Menu bar
-    ui->menuSave->setDisabled(!disableAudioDependentObject);
-    ui->actionExportAudio->setDisabled(disableAudioDependentObject);
+    ui->actionSave->setDisabled(disableAudioDependentObject);
+    ui->actionExport->setDisabled(disableAudioDependentObject);
 
     // Play buttons
     ui->inputAudioPlay->setDisabled(disableAudioDependentObject);
@@ -149,12 +139,13 @@ void MainWindow::configureUiState() {
     ui->lpcMaxUnvoicedGainLine->setDisabled(disableLpcControl);
     ui->lpcMaxVoicedGainLine->setDisabled(disableLpcControl);
 
-    ui->postPitchOffsetToggle->setDisabled(disableLpcControl || !ui->postPitchOverrideToggle->isChecked());
-    ui->postPitchOverrideToggle->setDisabled(disableLpcControl || !ui->postPitchOffsetToggle->isChecked());
+    //ui->postPitchOffsetToggle->setDisabled(disableLpcControl || !ui->postPitchOverrideToggle->isChecked());
+    //ui->postPitchOverrideToggle->setDisabled(disableLpcControl || !ui->postPitchOffsetToggle->isChecked());
     ui->postPitchInterpEnable->setDisabled(disableLpcControl);
     ui->postRepeatFramesEnable->setDisabled(disableLpcControl);
 
     // Allow un-checking of radio buttons
+    /*
     if (ui->postPitchOffsetToggle->isEnabled() && ui->postPitchOffsetToggle->isChecked() && ui->postPitchOffsetToggle->isDown()) {
         ui->postPitchOffsetToggle->setChecked(false);
     }
@@ -162,6 +153,7 @@ void MainWindow::configureUiState() {
     if (ui->postPitchOverrideToggle->isEnabled() && ui->postPitchOverrideToggle->isChecked() && ui->postPitchOverrideToggle->isDown()) {
         ui->postPitchOverrideToggle->setChecked(false);
     }
+     */
 }
 
 /// Draw the input and output signal waveforms, along with an abstract representation of their associated pitch data
@@ -172,7 +164,7 @@ void MainWindow::drawPlots() {
     }
 
     if (isBitstreamLoaded()) {
-        lpcWaveform->plotSamples(synthesizer.normalizedSamples());
+        lpcWaveform->plotSamples(synthesizer.samples());
 
         auto framePitchTable = std::vector<float>(frameTable.size());
         for (int i = 0; i < frameTable.size(); i++)
@@ -186,57 +178,53 @@ void MainWindow::drawPlots() {
 //                              UI Slots
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Import audio file from disk and perform LPC analysis thereupon
-void MainWindow::onOpenAudio() {
-    // Display file picker
-    auto filePath = QFileDialog::getOpenFileName(this, "Import audio file",
+void MainWindow::onOpenFile() {
+    auto filePath = QFileDialog::getOpenFileName(this, "Open file",
                                                  QDir::homePath(),
-                                                 "Audio Files (*.wav *.aif *.aiff *.raw *.wav *.caf *.flac)"
-                                                 );
+                                                 "WAV Audio (*.wav);;" \
+                                                 "Bitstream (*.lpc *.h *.json)"
+    );
 
+    // Do nothing if user cancels request
     if (filePath.isNull()) {
-        qDebug() << "Import audio canceled";
+        qDebug() << "Open file canceled";
         return;
     }
 
-    if (isAudioFileLoaded()) {
-        delete inputBuffer;
-        delete lpcBuffer;
-    }
+    // Import audio file
+    if (filePath.endsWith(".wav", Qt::CaseInsensitive)) {
+        if (isAudioFileLoaded()) {
+            delete inputBuffer;
+            delete lpcBuffer;
+        }
 
-    inputBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
-    lpcBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
+        inputBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
+        lpcBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
 
-    performPitchAnalysis();
-    performLpcAnalysis();
-    performPostProc();
+        performPitchAnalysis();
+        performLpcAnalysis();
+        performPostProc();
 
-    configureUiState();
-    drawPlots();
-}
-
-/// Import bitstream from disk and synthesize
-void MainWindow::onOpenBitstream() {
-    auto filePath = QFileDialog::getOpenFileName(this, "Open bitstream",
-                                                 QDir::homePath(),
-                                                 "TMS5220 Bitstreams (*.lpc *.h *.json)"
-                                                 );
-
-    if (filePath.isNull()) {
-        qDebug() << "Open bitstream canceled";
+        configureUiState();
+        drawPlots();
         return;
     }
 
-    if (isAudioFileLoaded() || isBitstreamLoaded()) {
-        delete inputBuffer;
-        delete lpcBuffer;
+    if (filePath.endsWith(".lpc", Qt::CaseInsensitive)) {
+        if (isAudioFileLoaded()) {
+            delete inputBuffer;
+            delete lpcBuffer;
+        }
+
+        frameTable.clear();
+
+        performBitstreamParsing(filePath.toStdString());
+        performPostProc();
+
+        configureUiState();
+        drawPlots();
+        return;
     }
-
-    performBitstreamParsing(filePath.toStdString());
-    performPostProc();
-
-    configureUiState();
-    drawPlots();
 }
 
 /// Save bitstream to disk
@@ -244,7 +232,7 @@ void MainWindow::onSaveBitstream() {
     auto filePath = QFileDialog::getSaveFileName(this, "Save bitstream",
                                                  QDir::homePath(),
                                                  "Bitstream Files (*.lpc *.h *.json)"
-                                                 );
+    );
 
     if (filePath.isNull()) {
         qDebug() << "Save bitstream canceled";
@@ -260,7 +248,7 @@ void MainWindow::onExportAudio() {
     auto filePath = QFileDialog::getSaveFileName(this, "Export audio file",
                                                  QDir::homePath(),
                                                  "Audio Files (*.wav *.aif *.aiff *.raw *.wav *.caf *.flac)"
-                                                 );
+    );
 
     if (filePath.isNull()) {
         qDebug() << "Export audio canceled";
@@ -282,7 +270,7 @@ void MainWindow::onInputAudioPlay() {
     // The pre-emphasis alpha coefficient will be included in this computation, as its impact on the buffer may not
     // be significant enough to modify the buffer checksum alone
     char filename[31];
-    auto checksum = bufferChecksum(inputBuffer);
+    auto checksum = samplesChecksum(inputBuffer->getSamples());
     snprintf(filename, 31, "tmsexpress_render_%x.wav", checksum);
 
     // Only render audio if this particular buffer does not exist
@@ -304,13 +292,15 @@ void MainWindow::onLpcAudioPlay() {
         return;
     }
 
+    synthesizer.synthesize(frameTable);
+
     // Generate checksum of buffer to produce unique temporary filename
     //
     // The pre-emphasis alpha coefficient will be included in this computation, as its impact on the buffer may not
     // be significant enough to modify the buffer checksum alone
     char filename[35];
 
-    uint checksum = (lpcBuffer != nullptr) ? bufferChecksum(lpcBuffer) : 0xdeadc0de;
+    uint checksum = (lpcBuffer != nullptr) ? samplesChecksum(lpcBuffer->getSamples()) : samplesChecksum(synthesizer.samples());
     snprintf(filename, 35, "tmsexpress_lpc_render_%x.wav", checksum);
 
     // Only render audio if this particular buffer does not exist
@@ -359,7 +349,6 @@ void MainWindow::onPostProcEdit() {
     configureUiState();
 
     if (isBitstreamLoaded()) {
-        synthesizer.reset();
         performPostProc();
 
         drawPlots();
@@ -370,19 +359,19 @@ void MainWindow::onPostProcEdit() {
 //                              Metadata
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Compute checksum of an AudioBuffer's samples to uniquely identify it
+/// Compute checksum of a vector of floating-point samples to uniquely identify it
 ///
 /// \note   The checksum is used to generate a unique filename, which is stored temporarily to facilitate playback of
-///         rendered audio. In addition to the samples from the buffer, this checksum also incorporates the pre-emphasis
+///         rendered audio. In addition to the samples from the vector, this checksum also incorporates the pre-emphasis
 ///         filter coefficients of both the input audio and synthesized bitstream buffers, as applying the small
 ///         pre-emphasis filter to floating point samples may not impact the checksum.
 ///
-/// \param buffer AudioBuffer of which to compute checksum
+/// \param samples Samples of which to compute checksum
 /// \return Checksum
-unsigned int MainWindow::bufferChecksum(AudioBuffer *buffer) {
-    auto bufferSize = int(buffer->size());
+unsigned int MainWindow::samplesChecksum(std::vector<float> samples) {
+    auto bufferSize = int(samples.size());
     auto checksumBuffer = (float *) malloc(sizeof(float) * (bufferSize + 1));
-    memccpy(checksumBuffer, buffer->getSamples().data(), bufferSize, sizeof(float));
+    memccpy(checksumBuffer, samples.data(), bufferSize, sizeof(float));
     checksumBuffer[bufferSize] = char(lpcPreemph() + pitchPreemph());
 
     auto checksum = CRC::Calculate(checksumBuffer, sizeof(float), CRC::CRC_32());
