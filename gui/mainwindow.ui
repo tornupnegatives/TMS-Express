@@ -59,7 +59,7 @@
         <property name="minimumSize">
          <size>
           <width>1000</width>
-          <height>280</height>
+          <height>270</height>
          </size>
         </property>
         <property name="maximumSize">
@@ -143,6 +143,9 @@
              <property name="text">
               <string>Lowpass filter (Hz)</string>
              </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
            <item row="1" column="0" colspan="2">
@@ -219,31 +222,10 @@
            <property name="bottomMargin">
             <number>5</number>
            </property>
-           <item row="4" column="1">
-            <widget class="QLineEdit" name="lpcHpfLine">
+           <item row="4" column="0">
+            <widget class="QCheckBox" name="lpcHpfEnable">
              <property name="text">
-              <string>100</string>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="1">
-            <widget class="QLineEdit" name="lpcPreemphLine">
-             <property name="text">
-              <string>0.9375</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QCheckBox" name="lpcLpfEnable">
-             <property name="text">
-              <string>Lowpass filter cutoff (Hz)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLineEdit" name="lpcWindowWidthLine">
-             <property name="text">
-              <string>25.0</string>
+              <string>Highpass filter cutoff (Hz)</string>
              </property>
             </widget>
            </item>
@@ -254,35 +236,7 @@
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
-            <widget class="QLineEdit" name="lpcLpfLine">
-             <property name="text">
-              <string>800</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QCheckBox" name="lpcHpfEnable">
-             <property name="text">
-              <string>Highpass filter cutoff (Hz)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>LPC Analysis</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="Line" name="line_6">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="0">
+           <item row="10" column="0">
             <spacer name="verticalSpacer_4">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -295,10 +249,34 @@
              </property>
             </spacer>
            </item>
-           <item row="9" column="0">
-            <widget class="QLabel" name="label_3">
+           <item row="6" column="1">
+            <widget class="QLineEdit" name="lpcPreemphLine">
              <property name="text">
-              <string>Max voiced gain (dB)</string>
+              <string>0.9375</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QCheckBox" name="lpcPreemphEnable">
+             <property name="text">
+              <string>Pre-emphasis filter coefficient</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLineEdit" name="lpcLpfLine">
+             <property name="text">
+              <string>800</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QCheckBox" name="lpcLpfEnable">
+             <property name="text">
+              <string>Lowpass filter cutoff (Hz)</string>
              </property>
             </widget>
            </item>
@@ -309,38 +287,31 @@
              </property>
             </widget>
            </item>
-           <item row="6" column="0">
-            <widget class="QCheckBox" name="lpcPreemphEnable">
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="lpcWindowWidthLine">
              <property name="text">
-              <string>Pre-emphasis filter coefficient</string>
+              <string>25.0</string>
              </property>
             </widget>
            </item>
-           <item row="9" column="1">
-            <widget class="QLineEdit" name="lpcMaxVoicedGainLine">
-             <property name="text">
-              <string>37.5</string>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="0">
-            <widget class="QLabel" name="label_4">
-             <property name="text">
-              <string>Min voiced gain (dB)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="0" colspan="2">
-            <widget class="Line" name="line_4">
+           <item row="1" column="0" colspan="2">
+            <widget class="Line" name="line_6">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
             </widget>
            </item>
-           <item row="10" column="1">
-            <widget class="QLineEdit" name="lpcMaxUnvoicedGainLine">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_7">
              <property name="text">
-              <string>37.5</string>
+              <string>LPC Analysis</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="lpcHpfLine">
+             <property name="text">
+              <string>100</string>
              </property>
             </widget>
            </item>
@@ -355,37 +326,17 @@
          </item>
          <item>
           <layout class="QGridLayout" name="gridLayout">
+           <item row="10" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Max voiced gain (dB)</string>
+             </property>
+            </widget>
+           </item>
            <item row="9" column="0">
-            <widget class="QCheckBox" name="checkBox">
+            <widget class="QCheckBox" name="postGainShiftEnable">
              <property name="text">
               <string>Gain shift</string>
-             </property>
-            </widget>
-           </item>
-           <item row="9" column="1">
-            <widget class="QSlider" name="horizontalSlider">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::TicksBelow</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QSlider" name="horizontalSlider_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::TicksBelow</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QCheckBox" name="postPitchInterpEnable">
-             <property name="text">
-              <string>Pitch interpolation</string>
              </property>
             </widget>
            </item>
@@ -396,10 +347,20 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="Line" name="line_8">
+           <item row="7" column="0">
+            <widget class="QCheckBox" name="postRepeatFramesEnable">
+             <property name="text">
+              <string>Repeat frames</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QSlider" name="postFixedPitchSlider">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
              </property>
             </widget>
            </item>
@@ -410,31 +371,7 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QRadioButton" name="radioButton">
-             <property name="text">
-              <string>Pitch shift</string>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="0" colspan="2">
-            <widget class="Line" name="line_10">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QSlider" name="horizontalSlider_3">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::TicksBelow</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="0">
+           <item row="12" column="0">
             <spacer name="verticalSpacer_5">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -447,17 +384,84 @@
              </property>
             </spacer>
            </item>
-           <item row="7" column="0">
-            <widget class="QCheckBox" name="postRepeatFramesEnable">
-             <property name="text">
-              <string>Repeat frames</string>
+           <item row="2" column="1">
+            <widget class="QSlider" name="postPitchShiftSlider">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0" colspan="2">
+            <widget class="Line" name="line_10">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
              </property>
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QRadioButton" name="radioButton_2">
+            <widget class="QCheckBox" name="postPitchOverrideEnable">
              <property name="text">
               <string>Fixed pitch</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoExclusive">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="1">
+            <widget class="QLineEdit" name="lpcMaxVoicedGainLine">
+             <property name="text">
+              <string>37.5</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QCheckBox" name="postPitchShiftEnable">
+             <property name="text">
+              <string>Pitch shift</string>
+             </property>
+             <property name="autoRepeat">
+              <bool>false</bool>
+             </property>
+             <property name="autoExclusive">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="Line" name="line_8">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="1">
+            <widget class="QSlider" name="postGainShiftSlider">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Max unvoiced gain (dB)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="1">
+            <widget class="QLineEdit" name="lpcMaxUnvoicedGainLine">
+             <property name="text">
+              <string>37.5</string>
              </property>
             </widget>
            </item>
@@ -516,7 +520,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>12</height>
+          <height>16</height>
          </size>
         </property>
         <property name="text">
@@ -594,7 +598,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>12</height>
+          <height>16</height>
          </size>
         </property>
         <property name="text">

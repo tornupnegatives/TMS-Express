@@ -81,6 +81,7 @@ namespace Tms5220CodingTable {
     const int nKCoeffs = 10;
 
     const int gainWidth = 4;
+    const int rmsWidth = 16;
     const int pitchWidth = 6;
     const int voicingWidth = 1;
     const int chirpWidth = 41;

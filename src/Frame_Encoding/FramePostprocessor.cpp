@@ -19,10 +19,34 @@
 /// \param maxVoicedGainDB Max audio gain for voiced (vowel) segments (in decibels)
 /// \param maxUnvoicedGainDB Max audio gain for unvoiced (consonant) segments (in decibels)
 FramePostprocessor::FramePostprocessor(std::vector<Frame> *frames, float maxVoicedGainDB, float maxUnvoicedGainDB) {
-    frameData = frames;
+    originalFrameTable = std::vector<Frame>(frames->begin(), frames->end());
+    frameTable = frames;
     maxUnvoicedGain = maxUnvoicedGainDB;
     maxVoicedGain = maxVoicedGainDB;
 }
+///////////////////////////////////////////////////////////////////////////////
+//                          Getters & Setters
+///////////////////////////////////////////////////////////////////////////////
+
+float FramePostprocessor::getMaxUnvoicedGainDB() const {
+    return maxUnvoicedGain;
+}
+
+void FramePostprocessor::setMaxUnvoicedGainDB(float gainDB) {
+    maxUnvoicedGain = gainDB;
+}
+
+float FramePostprocessor::getMaxVoicedGainDB() const {
+    return maxVoicedGain;
+}
+
+void FramePostprocessor::setMaxVoicedGainDB(float gainDB) {
+    maxVoicedGain = gainDB;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                          Frame Table Manipulations
+///////////////////////////////////////////////////////////////////////////////
 
 /// Identify frames which are similar to their neighbor and mark them as repeated
 ///
@@ -34,9 +58,9 @@ FramePostprocessor::FramePostprocessor(std::vector<Frame> *frames, float maxVoic
 int FramePostprocessor::detectRepeatFrames() {
     int nRepeatFrames = 0;
 
-    for (int i = 1; i < frameData->size(); i++) {
-        Frame previousFrame = frameData->at(i - 1);
-        Frame &frame = frameData->at(i);
+    for (int i = 1; i < frameTable->size(); i++) {
+        Frame previousFrame = frameTable->at(i - 1);
+        Frame &frame = frameTable->at(i);
 
         if (frame.isSilent() || previousFrame.isSilent()) {
             continue;
@@ -65,6 +89,34 @@ void FramePostprocessor::normalizeGain() {
     normalizeGain(false);
 }
 
+/// Normalize gain of either all voiced or all unvoiced frames
+///
+/// \param normalizeVoicedFrames Whether to operate on voiced or unvoiced frames
+void FramePostprocessor::normalizeGain(bool normalizeVoicedFrames) {
+    // Compute the max gain value for a Frame category
+    float maxGain = 0.0f;
+    for (const Frame &frame : *frameTable) {
+        bool isVoiced = frame.isVoiced();
+        float gain = frame.getGain();
+
+        if (isVoiced == normalizeVoicedFrames && gain > maxGain) {
+            maxGain = gain;
+        }
+    }
+
+    // Apply scaling factor to improve naturalness of perceived volume
+    float scale = (normalizeVoicedFrames ? maxVoicedGain : maxUnvoicedGain) / maxGain;
+    for (Frame &frame : *frameTable) {
+        bool isVoiced = frame.isVoiced();
+        float gain = frame.getGain();
+
+        if (isVoiced == normalizeVoicedFrames) {
+            float scaledGain = gain * scale;
+            frame.setGain(scaledGain);
+        }
+    }
+}
+
 /// Shift gain by an integer offset in the coding table
 ///
 /// \note   Following LPC analysis, changing the gain of audio is as simple as selecting a new index of the energy
@@ -75,50 +127,81 @@ void FramePostprocessor::shiftGain(int offset) {
         return;
     }
 
-    for (Frame &frame : *frameData) {
+    for (Frame &frame : *frameTable) {
         int quantizedGain = frame.quantizedGain();
-
-        // If the Frame is silent, do nothing
-        if (quantizedGain == 0) {
-            continue;
-        }
+        int change = quantizedGain + offset;
 
         // If the shifted gain would exceed the maximum representable gain of the coding table, let it "hit the
-        // ceiling." However, because overuse of the largest gain parameter may destabilize the synthesized signal,
-        // the shifted gain is ceiling-ed to the penultimate coding table index
-        if (quantizedGain + offset >= Tms5220CodingTable::rms.size()) {
-            frame.setGain(int(Tms5220CodingTable::rms.size() - 2));
+        // ceiling." Overuse of the largest gain parameter may destabilize the synthesized signal
+        if (change >= Tms5220CodingTable::rms.size()) {
+            frame.setGain(*Tms5220CodingTable::rms.end());
 
-        } else if (quantizedGain > 0) {
-            frame.setGain(quantizedGain + offset);
+        } else if (change < 0) {
+            frame.setGain(0);
+
+        } else {
+            frame.setGain(Tms5220CodingTable::rms.at(offset));
         }
     }
 }
 
-/// Normalize gain of either all voiced or all unvoiced frames
-///
-/// \param normalizeVoicedFrames Whether to operate on voiced or unvoiced frames
-void FramePostprocessor::normalizeGain(bool normalizeVoicedFrames) {
-    // Compute the max gain value for a Frame category
-    float maxGain = 0.0f;
-    for (const Frame &frame : *frameData) {
-        bool isVoiced = frame.isVoiced();
-        float gain = frame.getGain();
+/// Shift pitch by an integer offset in the coding table
+void FramePostprocessor::shiftPitch(int offset) {
+    if (!offset) {
+        return;
+    }
 
-        if (isVoiced == normalizeVoicedFrames && gain > maxGain) {
-            maxGain = gain;
+    for (Frame &frame : *frameTable) {
+        int quantizedPitch = frame.quantizedPitch();
+        int change = quantizedPitch + offset;
+
+        // If the Frame is silent, do nothing
+        if (frame.isSilent()) {
+            continue;
+        }
+
+        // If the shifted gain would exceed the maximum representable gain of the coding table, let it "hit the
+        // ceiling." Overuse of the largest gain parameter may destabilize the synthesized signal
+        if (change >= Tms5220CodingTable::pitch.size()) {
+            frame.setPitch(int(*Tms5220CodingTable::pitch.end()));
+
+        } else if (change < 0) {
+            frame.setPitch(0);
+
+        } else {
+            frame.setPitch(int(Tms5220CodingTable::pitch.at(change)));
         }
     }
 
-    // Apply scaling factor to improve naturalness of percieved volume
-    float scale = (normalizeVoicedFrames ? maxVoicedGain : maxUnvoicedGain) / maxGain;
-    for (Frame &frame : *frameData) {
-        bool isVoiced = frame.isVoiced();
-        float gain = frame.getGain();
+}
 
-        if (isVoiced == normalizeVoicedFrames) {
-            float scaledGain = gain * scale;
-            frame.setGain(scaledGain);
+/// Set the pitch of all non-silent frames to an index of the coding table
+void FramePostprocessor::overridePitch(int index) {
+    for (Frame &frame : *frameTable) {
+        if (!frame.isSilent()) {
+            if (index >= Tms5220CodingTable::pitch.size()) {
+                frame.setPitch(int(*Tms5220CodingTable::pitch.end()));
+
+            } else {
+                frame.setPitch(int(Tms5220CodingTable::pitch.at(index)));
+            }
         }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                              Utility
+///////////////////////////////////////////////////////////////////////////////
+
+/// Restore frame table to its initialization state
+///
+/// \note This function will NOT reset voiced or unvoiced limits
+void FramePostprocessor::reset() {
+    for (int i = 0; i < frameTable->size(); i++) {
+        auto &frame = frameTable->at(i);
+        auto originalFrame = originalFrameTable.at(i);
+
+        frame.setGain(originalFrame.getGain());
+        frame.setPitch(originalFrame.getPitch());
     }
 }

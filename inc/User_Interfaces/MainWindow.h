@@ -70,6 +70,7 @@ private:
     AudioFilter filter = AudioFilter();
     PitchEstimator pitchEstimator = PitchEstimator(8000);
     LinearPredictor linearPredictor = LinearPredictor();
+    FramePostprocessor framePostprocessor = FramePostprocessor(&frameTable);
 
     // UI helpers
     void configureUiSlots();
@@ -101,6 +102,10 @@ private:
     float lpcPreemph();
     float lpcMaxUnvoicedGain();
     float lpcMaxVoicedGain();
+
+    int postPitchShift();
+    int postPitchOverride();
+    int postGainShift();
 };
 
 #endif //TMS_EXPRESS_MAINWINDOW_H

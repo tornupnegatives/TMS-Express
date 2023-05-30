@@ -18,7 +18,7 @@ public:
 
     // Import functions
     size_t importFromAscii(const std::string &path);
-    //int importFromEmbedded(std::string path) {};
+    //size_t importFromEmbedded(std::string path);
     //int importFromJson(std::string path) {};
 
     // Serialization

@@ -5,6 +5,7 @@
 #include "Audio/AudioBuffer.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FramePostprocessor.h"
+#include "Frame_Encoding/Tms5220CodingTable.h"
 #include "LPC_Analysis/Autocorrelator.h"
 #include "User_Interfaces/AudioWaveform.h"
 #include "User_Interfaces/MainWindow.h"
@@ -41,14 +42,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     configureUiSlots();
     configureUiState();
-
-    // Enable default lowpass filter for pitch estimation
-    ui->pitchLpfEnable->setChecked(true);
-    ui->pitchLpfLine->setText("800");
-
-    // Enable initial pre-emphasis filter for LPC analysis
-    ui->lpcPreemphEnable->setChecked(true);
-
 }
 
 /// Free pointers associated with UI
@@ -100,19 +93,34 @@ void MainWindow::configureUiSlots() {
     connect(ui->lpcMaxVoicedGainLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
 
     // Control panel (Frame Post-Processor)
-    //connect(ui->postPitchOffsetToggle, &QRadioButton::clicked, this, &MainWindow::onPostProcEdit);
-    //connect(ui->postPitchOffsetLine, &QLineEdit::editingFinished, this, &MainWindow::onPostProcEdit);
-    //connect(ui->postPitchOverrideToggle, &QRadioButton::clicked, this, &MainWindow::onPostProcEdit);
-    //connect(ui->postPitchOffsetLine, &QLineEdit::editingFinished, this, &MainWindow::onPostProcEdit);
+    connect(ui->postPitchShiftEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
+    connect(ui->postPitchShiftSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
+    connect(ui->postPitchOverrideEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
+    connect(ui->postFixedPitchSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
     connect(ui->postPitchInterpEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
     connect(ui->postRepeatFramesEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
+    connect(ui->postGainShiftEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
+    connect(ui->postGainShiftSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
+
+    // Set slider ranges
+    ui->postPitchShiftSlider->setMinimum(-64);
+    ui->postPitchShiftSlider->setMaximum(64);
+    ui->postPitchShiftSlider->setTickInterval(8);
+
+    ui->postFixedPitchSlider->setMinimum(0);
+    ui->postFixedPitchSlider->setMaximum(64);
+    ui->postFixedPitchSlider->setTickInterval(16);
+
+    ui->postGainShiftSlider->setMinimum(-16);
+    ui->postGainShiftSlider->setMaximum(16);
+    ui->postFixedPitchSlider->setTickInterval(1);
 }
 
 /// Toggle UI elements based on the state of the application
 void MainWindow::configureUiState() {
     // Get UI state
-    auto disableAudioDependentObject = !isAudioFileLoaded();
-    auto disableBitstreamDependentObject = !isBitstreamLoaded();
+    auto disableAudioDependentObject = inputBuffer == nullptr;
+    auto disableBitstreamDependentObject = frameTable.empty();
 
     auto disablePitchControl = disableAudioDependentObject;
     auto disableLpcControl = disableBitstreamDependentObject;
@@ -139,32 +147,32 @@ void MainWindow::configureUiState() {
     ui->lpcMaxUnvoicedGainLine->setDisabled(disableLpcControl);
     ui->lpcMaxVoicedGainLine->setDisabled(disableLpcControl);
 
-    //ui->postPitchOffsetToggle->setDisabled(disableLpcControl || !ui->postPitchOverrideToggle->isChecked());
-    //ui->postPitchOverrideToggle->setDisabled(disableLpcControl || !ui->postPitchOffsetToggle->isChecked());
-    ui->postPitchInterpEnable->setDisabled(disableLpcControl);
-    ui->postRepeatFramesEnable->setDisabled(disableLpcControl);
+    ui->postPitchShiftEnable->setDisabled(disableBitstreamDependentObject);
+    ui->postPitchShiftSlider->setDisabled(disableBitstreamDependentObject || !ui->postPitchShiftEnable->isChecked());
+    ui->postPitchOverrideEnable->setDisabled(disableBitstreamDependentObject);
+    ui->postFixedPitchSlider->setDisabled(disableBitstreamDependentObject || !ui->postPitchOverrideEnable->isChecked());
+    ui->postPitchInterpEnable->setDisabled(disableBitstreamDependentObject);
+    ui->postRepeatFramesEnable->setDisabled(disableBitstreamDependentObject);
+    ui->postRepeatFramesEnable->setDisabled(disableBitstreamDependentObject);
+    ui->postGainShiftEnable->setDisabled(disableBitstreamDependentObject);
+    ui->postGainShiftSlider->setDisabled(disableBitstreamDependentObject || !ui->postGainShiftEnable->isChecked());
 
-    // Allow un-checking of radio buttons
-    /*
-    if (ui->postPitchOffsetToggle->isEnabled() && ui->postPitchOffsetToggle->isChecked() && ui->postPitchOffsetToggle->isDown()) {
-        ui->postPitchOffsetToggle->setChecked(false);
-    }
-
-    if (ui->postPitchOverrideToggle->isEnabled() && ui->postPitchOverrideToggle->isChecked() && ui->postPitchOverrideToggle->isDown()) {
-        ui->postPitchOverrideToggle->setChecked(false);
-    }
-     */
+    // Ensure post-pitch manipulation checkboxes are exclusive
+    ui->postPitchShiftEnable->setCheckable(!ui->postPitchOverrideEnable->isChecked());
+    ui->postPitchOverrideEnable->setCheckable(!ui->postPitchShiftEnable->isChecked());
+    ui->postPitchInterpEnable->setCheckable(!ui->postPitchOverrideEnable->isChecked());
 }
 
 /// Draw the input and output signal waveforms, along with an abstract representation of their associated pitch data
 void MainWindow::drawPlots() {
-    if (isAudioFileLoaded()) {
+    if (inputBuffer != nullptr) {
         inputWaveform->plotSamples(inputBuffer->getSamples());
         inputWaveform->plotPitch(pitchFrqTable);
     }
 
-    if (isBitstreamLoaded()) {
-        lpcWaveform->plotSamples(synthesizer.samples());
+    if (!frameTable.empty()) {
+        auto samples = synthesizer.synthesize(frameTable);
+        lpcWaveform->plotSamples(samples);
 
         auto framePitchTable = std::vector<float>(frameTable.size());
         for (int i = 0; i < frameTable.size(); i++)
@@ -193,16 +201,15 @@ void MainWindow::onOpenFile() {
 
     // Import audio file
     if (filePath.endsWith(".wav", Qt::CaseInsensitive)) {
-        if (isAudioFileLoaded()) {
-            delete inputBuffer;
-            delete lpcBuffer;
-        }
-
+        delete inputBuffer;
         inputBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
+
+        delete lpcBuffer;
         lpcBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
 
         performPitchAnalysis();
         performLpcAnalysis();
+        framePostprocessor = FramePostprocessor(&frameTable);
         performPostProc();
 
         configureUiState();
@@ -210,11 +217,9 @@ void MainWindow::onOpenFile() {
         return;
     }
 
-    if (filePath.endsWith(".lpc", Qt::CaseInsensitive)) {
-        if (isAudioFileLoaded()) {
-            delete inputBuffer;
-            delete lpcBuffer;
-        }
+    if (filePath.endsWith(".lpc", Qt::CaseInsensitive) || filePath.endsWith(".h", Qt::CaseInsensitive) || filePath.endsWith(".json", Qt::CaseInsensitive)) {
+        delete inputBuffer;
+        delete lpcBuffer;
 
         frameTable.clear();
 
@@ -260,7 +265,7 @@ void MainWindow::onExportAudio() {
 
 /// Play contents of input buffer
 void MainWindow::onInputAudioPlay() {
-    if (!isAudioFileLoaded()) {
+    if (inputBuffer == nullptr) {
         qDebug() << "Requested play, but input buffer is null";
         return;
     }
@@ -288,7 +293,7 @@ void MainWindow::onInputAudioPlay() {
 
 /// Play synthesized bitstream audio
 void MainWindow::onLpcAudioPlay() {
-    if (!isBitstreamLoaded()) {
+    if (frameTable.empty()) {
         return;
     }
 
@@ -320,9 +325,7 @@ void MainWindow::onLpcAudioPlay() {
 void MainWindow::onPitchParamEdit() {
     configureUiState();
 
-    if (isAudioFileLoaded()) {
-        inputBuffer->reset();
-
+    if (inputBuffer != nullptr) {
         performPitchAnalysis();
         performLpcAnalysis();
 
@@ -334,9 +337,7 @@ void MainWindow::onPitchParamEdit() {
 void MainWindow::onLpcParamEdit() {
     configureUiState();
 
-    if (isBitstreamLoaded()) {
-        lpcBuffer->reset();
-
+    if (lpcBuffer != nullptr) {
         performLpcAnalysis();
         performPostProc();
 
@@ -348,7 +349,7 @@ void MainWindow::onLpcParamEdit() {
 void MainWindow::onPostProcEdit() {
     configureUiState();
 
-    if (isBitstreamLoaded()) {
+    if (!frameTable.empty()) {
         performPostProc();
 
         drawPlots();
@@ -399,12 +400,13 @@ bool MainWindow::isBitstreamLoaded() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                              Data Maniuplation
+//                              Data Manipulation
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Apply filters to input buffer and perform pitch analysis to populate the pitch tables
 void MainWindow::performPitchAnalysis() {
     // Clear tables
+    inputBuffer->reset();
     pitchPeriodTable.clear();
     pitchFrqTable.clear();
 
@@ -440,6 +442,7 @@ void MainWindow::performPitchAnalysis() {
 ///         frame tables must share segment boundaries
 void MainWindow::performLpcAnalysis() {
     // Clear tables
+    lpcBuffer->reset();
     frameTable.clear();
 
     // Re-trigger pitch analysis if window width has changed
@@ -453,14 +456,17 @@ void MainWindow::performLpcAnalysis() {
 
     // Pre-process
     if (ui->lpcHpfEnable->isChecked()) {
+        qDebug() << "HPF";
         filter.highpass(*lpcBuffer, lpcHpfCutoff());
     }
 
     if (ui->lpcLpfEnable->isChecked()) {
+        qDebug() << "LPF";
         filter.lowpass(*lpcBuffer, lpcLpfCutoff());
     }
 
     if (ui->lpcPreemphEnable->isChecked()) {
+        qDebug() << "PEF";
         filter.preEmphasis(*lpcBuffer, lpcPreemph());
     }
 
@@ -476,16 +482,37 @@ void MainWindow::performLpcAnalysis() {
 
         frameTable.emplace_back(pitchPeriod, isVoiced, gain, coeffs);
     }
+
+    framePostprocessor = FramePostprocessor(&frameTable);
 }
 
 /// Perform post-processing on and synthesize bitstream from frame table
 void MainWindow::performPostProc() {
-    auto framePostProcessor = FramePostprocessor(&frameTable, lpcMaxVoicedGain(), lpcMaxUnvoicedGain());
-    framePostProcessor.normalizeGain();
+    // Clear tables
+    framePostprocessor.reset();
+
+    // Re-configure post-processor
+    framePostprocessor.setMaxUnvoicedGainDB(lpcMaxUnvoicedGain());
+    framePostprocessor.setMaxVoicedGainDB(lpcMaxVoicedGain());
+
+    // The gain will always be normalized to produce natural-sounding results
+    framePostprocessor.normalizeGain();
+
+    // Perform either a pitch shift or a fixed-pitch offset
+    if (ui->postPitchShiftEnable->isChecked()) {
+        framePostprocessor.shiftPitch(postPitchShift());
+
+    } else if (ui->postPitchOverrideEnable->isChecked()) {
+        framePostprocessor.overridePitch(postPitchOverride());
+    }
 
     if (ui->postRepeatFramesEnable->isChecked()) {
-        auto nRepeatFrames = framePostProcessor.detectRepeatFrames();
+        auto nRepeatFrames = framePostprocessor.detectRepeatFrames();
         qDebug() << "Detected " << nRepeatFrames << " repeat frames";
+    }
+
+    if (ui->postGainShiftEnable->isChecked()) {
+        framePostprocessor.shiftGain(postGainShift());
     }
 
     synthesizer.synthesize(frameTable);
@@ -567,4 +594,16 @@ float MainWindow::lpcMaxUnvoicedGain() {
 
 float MainWindow::lpcMaxVoicedGain() {
     return ui->lpcMaxVoicedGainLine->text().toFloat();
+}
+
+int MainWindow::postPitchShift() {
+    return -ui->postPitchShiftSlider->value();
+}
+
+int MainWindow::postPitchOverride() {
+    return -ui->postFixedPitchSlider->value();
+}
+
+int MainWindow::postGainShift() {
+    return ui->postGainShiftSlider->value();
 }
