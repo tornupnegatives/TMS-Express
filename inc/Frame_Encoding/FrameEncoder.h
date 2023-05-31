@@ -4,6 +4,7 @@
 #define TMS_EXPRESS_FRAMEENCODER_H
 
 #include "Frame.h"
+#include <cstddef>
 #include <string>
 #include <vector>
 

@@ -1,6 +1,9 @@
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
+
 #include <gtest/gtest.h>
+
+#include <cstddef>
 #include <vector>
 
 // The hex stream should, at minimum, contain a StopFrame
