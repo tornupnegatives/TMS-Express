@@ -140,7 +140,7 @@ void FramePostprocessor::shiftGain(int offset) {
             frame.setGain(0);
 
         } else {
-            frame.setGain(Tms5220CodingTable::rms.at(offset));
+            frame.setGain(Tms5220CodingTable::rms.at(change));
         }
     }
 }
@@ -201,7 +201,6 @@ void FramePostprocessor::reset() {
         auto &frame = frameTable->at(i);
         auto originalFrame = originalFrameTable.at(i);
 
-        frame.setGain(originalFrame.getGain());
-        frame.setPitch(originalFrame.getPitch());
+        frame = originalFrame;
     }
 }

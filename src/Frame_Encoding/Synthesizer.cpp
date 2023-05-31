@@ -109,7 +109,7 @@ bool Synthesizer::updateSynthTable(Frame frame) {
             synthK4 = k4[coeffs[3]];
 
             // Voiced-only parameters
-            if (fpclassify(synthPeriod) != FP_ZERO) {
+            if (std::fpclassify(synthPeriod) != FP_ZERO) {
                 synthK5 = k5[coeffs[4]];
                 synthK6 = k6[coeffs[5]];
                 synthK7 = k7[coeffs[6]];
@@ -136,7 +136,7 @@ bool Synthesizer::updateNoiseGenerator() {
 /// \return Newly synthesized sample
 float Synthesizer::updateLatticeFilter() {
     // Generate voiced sample
-    if (fpclassify(synthPeriod) != FP_ZERO) {
+    if (std::fpclassify(synthPeriod) != FP_ZERO) {
         if (float(periodCounter) < synthPeriod) {
             periodCounter++;
         } else {
@@ -155,7 +155,7 @@ float Synthesizer::updateLatticeFilter() {
     }
 
     // Push new data through lattice filter
-    if (fpclassify(synthPeriod) != FP_ZERO) {
+    if (std::fpclassify(synthPeriod) != FP_ZERO) {
         u0 -= (synthK10 * x9) + (synthK9 * x8);
         x9 = x8 + (synthK9 * u0);
 

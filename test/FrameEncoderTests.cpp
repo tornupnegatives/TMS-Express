@@ -45,7 +45,7 @@ TEST(FrameEncoderTests, AsciiSilentFrame) {
 }
 
 // A voiced Frame will produce 50 data bits. The output will also contain 4 stop bits. The Frame is "flattened" into a
-// binary string representing its contents, which is then sliced into bytes. Each byte is then reversed, as the TMS5100
+// binary string representing its contents, which is then sliced into binary. Each byte is then reversed, as the TMS5100
 // Voice Synthesis Memory units which normally feed data into the TMS5220 send byte-wise data LSB first
 TEST(FrameEncoderTests, VoicedFrame) {
     auto voicedFrame = Frame(38, true, 56.850773,

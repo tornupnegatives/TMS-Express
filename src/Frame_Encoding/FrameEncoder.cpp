@@ -28,7 +28,7 @@ FrameEncoder::FrameEncoder(bool includeHexPrefix, char separator) {
     shouldIncludeHexPrefix = includeHexPrefix;
     byteSeparator = separator;
     frames = std::vector<Frame>();
-    bytes = std::vector<std::string>(1, "");
+    binary = std::vector<std::string>(1, "");
 }
 
 /// Create a new Frame Encoder and populate it with frames
@@ -37,7 +37,7 @@ FrameEncoder::FrameEncoder(bool includeHexPrefix, char separator) {
 /// \param includeHexPrefix Whether or not to include '0x' before hex bytes
 /// \param separator Character with which to separate hex bytes
 FrameEncoder::FrameEncoder(const std::vector<Frame> &initialFrames, bool includeHexPrefix, char separator) {
-    bytes = std::vector<std::string>(1, "");
+    binary = std::vector<std::string>(1, "");
     byteSeparator = separator;
     frames = std::vector<Frame>();
     shouldIncludeHexPrefix = includeHexPrefix;
@@ -59,17 +59,17 @@ void FrameEncoder::append(Frame frame) {
     auto bin = frame.toBinary();
 
     // Check to see if the previous byte is incomplete (contains less than 8 characters), and fill it if so
-    auto emptyBitsInLastByte = 8 - bytes.back().size();
+    auto emptyBitsInLastByte = 8 - binary.back().size();
     if (emptyBitsInLastByte != 0) {
-        bytes.back() += bin.substr(0, emptyBitsInLastByte);
+        binary.back() += bin.substr(0, emptyBitsInLastByte);
         bin.erase(0, emptyBitsInLastByte);
     }
 
-    // Segment the rest of the binary frame into bytes. The final byte will likely be incomplete, but that will be
+    // Segment the rest of the binary frame into binary. The final byte will likely be incomplete, but that will be
     // addressed either in a subsequent call to append() or during hex stream generation
     while (!bin.empty()) {
         auto byte = bin.substr(0, 8);
-        bytes.push_back(byte);
+        binary.push_back(byte);
 
         bin.erase(0, 8);
     }
@@ -119,13 +119,13 @@ std::string FrameEncoder::toHex(bool shouldAppendStopFrame) {
     }
 
     // Pad final byte with zeros
-    auto emptyBitsInLastByte = 8 - bytes.back().size();
+    auto emptyBitsInLastByte = 8 - binary.back().size();
     if (emptyBitsInLastByte != 0) {
-        bytes.back() += std::string(emptyBitsInLastByte, '0');
+        binary.back() += std::string(emptyBitsInLastByte, '0');
     }
 
     // Reverse each byte and convert to hex
-    for (auto byte: bytes) {
+    for (auto byte: binary) {
         std::reverse(byte.begin(), byte.end());
         hexStream += byteToHex(byte) + byteSeparator;
     }
@@ -134,6 +134,32 @@ std::string FrameEncoder::toHex(bool shouldAppendStopFrame) {
     hexStream.erase(hexStream.end() - 1);
 
     return hexStream;
+}
+
+/// Serialize frame data to a vector of raw bytes
+///
+/// \return Frame table data represented as bytes
+std::vector<std::byte> FrameEncoder::toBin(bool shouldAppendStopFrame) {
+    auto bytes = std::vector<std::byte>();
+
+    if (shouldAppendStopFrame) {
+        appendStopFrame();
+    }
+
+    // Pad final byte with zeros
+    auto emptyBitsInLastByte = 8 - binary.back().size();
+    if (emptyBitsInLastByte != 0) {
+        binary.back() += std::string(emptyBitsInLastByte, '0');
+    }
+
+    // Reverse each byte and convert to hex
+    for (auto byte: binary) {
+        std::reverse(byte.begin(), byte.end());
+        auto data = std::byte(std::stoul(byteToHex(byte), nullptr, 16));
+        bytes.push_back(data);
+    }
+
+    return bytes;
 }
 
 /// Serialize the Frame data to a JSON object
@@ -163,9 +189,9 @@ void FrameEncoder::appendStopFrame() {
     auto bin = std::string("1111");
 
     // Check to see if the previous byte is incomplete (contains less than 8 characters), and fill it if so
-    auto emptyBitsInLastByte = 8 - bytes.back().size();
+    auto emptyBitsInLastByte = 8 - binary.back().size();
     if (emptyBitsInLastByte != 0) {
-        bytes.back() += bin.substr(0, emptyBitsInLastByte);
+        binary.back() += bin.substr(0, emptyBitsInLastByte);
         bin.erase(0, emptyBitsInLastByte);
     }
 
@@ -173,7 +199,7 @@ void FrameEncoder::appendStopFrame() {
     // addressed either in a subsequent call to append() or during hex stream generation
     while (!bin.empty()) {
         auto byte = bin.substr(0, 8);
-        bytes.push_back(byte);
+        binary.push_back(byte);
 
         bin.erase(0, 8);
     }
@@ -199,8 +225,8 @@ size_t FrameEncoder::parseAsciiBitstream(std::string flatBitstream) {
     std::string buffer;
     flatBitstream.erase(std::remove(flatBitstream.begin(), flatBitstream.end(), ','), flatBitstream.end());
 
-    for (int i = 0; i < flatBitstream.size() - 1; i += 2) {
-        auto substr = flatBitstream.substr(i, 2);
+    for (int i = 0; i < flatBitstream.size() - 1; i += 4) {
+        auto substr = flatBitstream.substr(i, 4);
         std::reverse(substr.begin(), substr.end());
         uint8_t byte = std::stoul(substr, nullptr, 16);
         auto bin = std::bitset<8>(byte);

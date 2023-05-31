@@ -23,6 +23,7 @@ public:
     void shiftGain(int offset);
     void shiftPitch(int offset);
     void overridePitch(int index);
+    // TODO: void interpolatePitch();
 
     // Utility
     void reset();
