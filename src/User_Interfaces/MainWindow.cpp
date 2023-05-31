@@ -17,6 +17,9 @@
 #include <QMediaPlayer>
 #include <QtMultimedia/QAudioOutput>
 
+#include <fstream>
+#include <iostream>
+
 /// Setup the main window of the application
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     // Load compiled .gui file
@@ -97,10 +100,10 @@ void MainWindow::configureUiSlots() {
     connect(ui->postPitchShiftSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
     connect(ui->postPitchOverrideEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
     connect(ui->postFixedPitchSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
-    connect(ui->postPitchInterpEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
     connect(ui->postRepeatFramesEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
     connect(ui->postGainShiftEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
     connect(ui->postGainShiftSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
+    connect(ui->postGainNormalizeEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
 
     // Set slider ranges
     ui->postPitchShiftSlider->setMinimum(-64);
@@ -151,7 +154,6 @@ void MainWindow::configureUiState() {
     ui->postPitchShiftSlider->setDisabled(disableBitstreamDependentObject || !ui->postPitchShiftEnable->isChecked());
     ui->postPitchOverrideEnable->setDisabled(disableBitstreamDependentObject);
     ui->postFixedPitchSlider->setDisabled(disableBitstreamDependentObject || !ui->postPitchOverrideEnable->isChecked());
-    ui->postPitchInterpEnable->setDisabled(disableBitstreamDependentObject);
     ui->postRepeatFramesEnable->setDisabled(disableBitstreamDependentObject);
     ui->postRepeatFramesEnable->setDisabled(disableBitstreamDependentObject);
     ui->postGainShiftEnable->setDisabled(disableBitstreamDependentObject);
@@ -160,14 +162,12 @@ void MainWindow::configureUiState() {
     // Ensure post-pitch manipulation checkboxes are exclusive
     ui->postPitchShiftEnable->setCheckable(!ui->postPitchOverrideEnable->isChecked());
     ui->postPitchOverrideEnable->setCheckable(!ui->postPitchShiftEnable->isChecked());
-    ui->postPitchInterpEnable->setCheckable(!ui->postPitchOverrideEnable->isChecked());
 }
 
 /// Draw the input and output signal waveforms, along with an abstract representation of their associated pitch data
 void MainWindow::drawPlots() {
     if (inputBuffer != nullptr) {
         inputWaveform->plotSamples(inputBuffer->getSamples());
-        inputWaveform->plotPitch(pitchFrqTable);
     }
 
     if (!frameTable.empty()) {
@@ -189,8 +189,9 @@ void MainWindow::drawPlots() {
 void MainWindow::onOpenFile() {
     auto filePath = QFileDialog::getOpenFileName(this, "Open file",
                                                  QDir::homePath(),
-                                                 "WAV Audio (*.wav);;" \
-                                                 "Bitstream (*.lpc *.h *.json)"
+                                                 "Audio Files (*.wav *.aif *.aiff *.raw *.wav *.caf *.flac);;" \
+                                                 "ASCII Bitstream (*.lpc);;" \
+                                                 "Binary Bitstream (*.bin)"
     );
 
     // Do nothing if user cancels request
@@ -199,12 +200,26 @@ void MainWindow::onOpenFile() {
         return;
     }
 
+    if (inputBuffer != nullptr) {
+        delete inputBuffer;
+        inputBuffer = nullptr;
+    }
+
+    if (lpcBuffer != nullptr) {
+        delete lpcBuffer;
+        lpcBuffer = nullptr;
+    }
+
+    frameTable.clear();
+    pitchPeriodTable.clear();
+    pitchFrqTable.clear();
+
     // Import audio file
     if (filePath.endsWith(".wav", Qt::CaseInsensitive)) {
-        delete inputBuffer;
-        inputBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
+        // Enable gain normalization by default
+        ui->postGainNormalizeEnable->setChecked(true);
 
-        delete lpcBuffer;
+        inputBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
         lpcBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
 
         performPitchAnalysis();
@@ -217,13 +232,12 @@ void MainWindow::onOpenFile() {
         return;
     }
 
-    if (filePath.endsWith(".lpc", Qt::CaseInsensitive) || filePath.endsWith(".h", Qt::CaseInsensitive) || filePath.endsWith(".json", Qt::CaseInsensitive)) {
-        delete inputBuffer;
-        delete lpcBuffer;
-
-        frameTable.clear();
+    if (filePath.endsWith(".lpc", Qt::CaseInsensitive) || filePath.endsWith(".bin", Qt::CaseInsensitive)) {
+        // Disable gain normalization to preserve original bitstream gain
+        ui->postGainNormalizeEnable->setChecked(false);
 
         performBitstreamParsing(filePath.toStdString());
+        framePostprocessor = FramePostprocessor(&frameTable);
         performPostProc();
 
         configureUiState();
@@ -236,7 +250,8 @@ void MainWindow::onOpenFile() {
 void MainWindow::onSaveBitstream() {
     auto filePath = QFileDialog::getSaveFileName(this, "Save bitstream",
                                                  QDir::homePath(),
-                                                 "Bitstream Files (*.lpc *.h *.json)"
+                                                 "ASCII Bitstream (*.lpc);;" \
+                                                 "Binary Bitstream (*.bin)"
     );
 
     if (filePath.isNull()) {
@@ -381,24 +396,6 @@ unsigned int MainWindow::samplesChecksum(std::vector<float> samples) {
     return checksum;
 }
 
-/// Return whether an audio file has been loaded from the disk
-///
-/// \note If an audio file has been loaded, a bitstream has also been generated and synthesized
-///
-/// \return Whether an audio file has been loaded from the disk
-bool MainWindow::isAudioFileLoaded() {
-    return (inputBuffer != nullptr);
-}
-
-/// Return whether a bitstream file has been loaded from the disk
-///
-/// \warning A bitstream file having been loaded does not mean that the input and LPC buffers are not null
-///
-/// \return Whether an audio file has been loaded from the disk
-bool MainWindow::isBitstreamLoaded() {
-    return (!frameTable.empty());
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //                              Data Manipulation
 ///////////////////////////////////////////////////////////////////////////////
@@ -495,8 +492,9 @@ void MainWindow::performPostProc() {
     framePostprocessor.setMaxUnvoicedGainDB(lpcMaxUnvoicedGain());
     framePostprocessor.setMaxVoicedGainDB(lpcMaxVoicedGain());
 
-    // The gain will always be normalized to produce natural-sounding results
-    framePostprocessor.normalizeGain();
+    if (ui->postGainNormalizeEnable->isChecked()) {
+        framePostprocessor.normalizeGain();
+    }
 
     // Perform either a pitch shift or a fixed-pitch offset
     if (ui->postPitchShiftEnable->isChecked()) {
@@ -521,31 +519,38 @@ void MainWindow::performPostProc() {
 /// Import bitstream file from the disk and populate the frame table
 void MainWindow::performBitstreamParsing(const std::string &path) {
     // Determine file extension
-    std::string extension = path.substr(path.size() - 3, 4);
-
-    // Ensure string is lowercase
-    for (char &c : extension) {
-        c = char(std::tolower(c));
-    }
-
+    auto filePath = QString::fromStdString(path);
     auto frameEncoder = FrameEncoder();
 
-    if (extension == "lpc") {
-        frameEncoder.importFromAscii(path);
-    } else if (extension == "h") {
-        //frameEncoder.importFromEmbedded(path);
-    } else if (extension == "json") {
-        //frameEncoder.importFromJson(path);
+    if (filePath.endsWith(".lpc")) {
+        auto frame_count = frameEncoder.importFromAscii(path);
+
     } else {
+        // TODO: Binary parsing
         return;
     }
 
     frameTable = frameEncoder.frameTable();
 }
 
-// TODO: Implement
-void MainWindow::exportBitstream(const std::string &path) {
-    return;
+void MainWindow::exportBitstream(const std::string& path) {
+    auto filePath = QString::fromStdString(path);
+    auto frameEncoder = FrameEncoder(frameTable, true);
+
+    if (filePath.endsWith(".lpc")) {
+        auto hex = frameEncoder.toHex();
+
+        std::ofstream lpcOut;
+        lpcOut.open(path);
+        lpcOut << hex;
+        lpcOut.close();
+
+    } else if (filePath.endsWith(".bin")) {
+        auto bin = frameEncoder.toBin();
+
+        std::ofstream binOut(path, std::ios::out | std::ios::binary);
+        binOut.write((char *)(bin.data()), long(bin.size()));
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

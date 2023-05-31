@@ -85,8 +85,6 @@ private:
     void exportBitstream(const std::string& path);
 
     // Metadata
-    bool isAudioFileLoaded();
-    bool isBitstreamLoaded();
     unsigned int samplesChecksum(std::vector<float> samples);
 
     // UI getters
