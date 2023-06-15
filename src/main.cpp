@@ -3,7 +3,7 @@
 #include "CLI/CLI.hpp"
 #include "Interfaces/BitstreamGenerator.h"
 #include "Interfaces/PathUtils.h"
-#include <experimental/filesystem>
+#include <filesystem>
 #include <string>
 
 int main(int argc, char **argv) {
