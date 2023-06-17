@@ -17,7 +17,7 @@
 /// \param sampleRateHz Sample rate of the audio samples
 /// \param minFrqHz Minimum frequency to search
 /// \param maxFrqHz Maximum frequency to search
-PitchEstimator::PitchEstimator(int sampleRateHz, int minFrqHz, int maxFrqHz) {\
+PitchEstimator::PitchEstimator(int sampleRateHz, int minFrqHz, int maxFrqHz) {
     maxPeriod = sampleRateHz / minFrqHz;
     minPeriod = sampleRateHz / maxFrqHz;
     sampleRate = sampleRateHz;
@@ -32,6 +32,11 @@ int PitchEstimator::getMinPeriod() const {
     return minPeriod;
 }
 
+/// Return the minimum pitch frequency (in Hertz) to search
+int PitchEstimator::getMinFrq() const {
+    return sampleRate / maxPeriod;
+}
+
 /// Set the minimum pitch period (in samples) to search
 ///
 /// \note Setting a minimum pitch period may reduce the computation time of pitch estimation
@@ -44,6 +49,11 @@ void PitchEstimator::setMinPeriod(int maxFrqHz) {
 /// Return the maximum pitch period (in samples) to search
 int PitchEstimator::getMaxPeriod() const {
     return maxPeriod;
+}
+
+/// Return the maximum pitch frequency (in Hertz) to search
+int PitchEstimator::getMaxFrq() const {
+    return sampleRate / minPeriod;
 }
 
 /// Set the maximum pitch period (in samples) to search

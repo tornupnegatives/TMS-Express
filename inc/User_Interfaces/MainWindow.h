@@ -12,17 +12,16 @@
 #include "Frame_Encoding/Synthesizer.h"
 #include "LPC_Analysis/PitchEstimator.h"
 #include "LPC_Analysis/LinearPredictor.h"
-#include "User_Interfaces/AudioWaveform.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelPostView.h"
 
 #include <QMainWindow>
 #include <QMediaPlayer>
 #include <QtMultimedia/QAudioOutput>
 
 #include <vector>
-
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
@@ -47,14 +46,26 @@ public slots:
     void onPostProcEdit();
 
 private:
+    ControlPanelPitchView *pitchControl;
+    ControlPanelLpcView *lpcControl;
+    ControlPanelPostView *postControl;
+
+    QAction *actionExport;
+    QAction *actionOpen;
+    QAction *actionSave;
+
+
+
+
     // Qt modules
-    Ui::MainWindow *ui;
+    //Ui::MainWindow *ui;
+    QWidget *centralWidget;
     QMediaPlayer *player;
     QAudioOutput *audioOutput;
 
     // Custom Qt widgets
-    AudioWaveform *inputWaveform;
-    AudioWaveform *lpcWaveform;
+    AudioWaveformView *inputWaveform;
+    AudioWaveformView *lpcWaveform;
 
     // Audio buffers
     AudioBuffer *inputBuffer;
@@ -86,24 +97,6 @@ private:
 
     // Metadata
     unsigned int samplesChecksum(std::vector<float> samples);
-
-    // UI getters
-    int pitchHpfCutoff();
-    int pitchLpfCutoff();
-    float pitchPreemph();
-    int pitchMinFrq();
-    int pitchMaxFrq();
-
-    float lpcWindowWidth();
-    int lpcHpfCutoff();
-    int lpcLpfCutoff();
-    float lpcPreemph();
-    float lpcMaxUnvoicedGain();
-    float lpcMaxVoicedGain();
-
-    int postPitchShift();
-    int postPitchOverride();
-    int postGainShift();
 };
 
 #endif //TMS_EXPRESS_MAINWINDOW_H

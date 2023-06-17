@@ -12,9 +12,11 @@ public:
 
     // Getters & setters
     [[nodiscard]] int getMaxPeriod() const;
+    int getMaxFrq() const;
     void setMaxPeriod(int minFrqHz);
 
     [[nodiscard]] int getMinPeriod() const;
+    int getMinFrq() const;
     void setMinPeriod(int maxFrqHz);
 
     // Estimator functions

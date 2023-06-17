@@ -7,11 +7,13 @@
 #include "Frame_Encoding/FramePostprocessor.h"
 #include "Frame_Encoding/Tms5220CodingTable.h"
 #include "LPC_Analysis/Autocorrelator.h"
-#include "User_Interfaces/AudioWaveform.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
 #include "User_Interfaces/MainWindow.h"
+#include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelPostView.h"
 
 #include "CRC.h"
-#include "../../gui/ui_mainwindow.h"
 
 #include <QFileDialog>
 #include <QMediaPlayer>
@@ -21,20 +23,62 @@
 #include <iostream>
 
 /// Setup the main window of the application
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
-    // Load compiled .gui file
-    ui->setupUi(this);
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+    setMinimumSize(1024, 700);
+    centralWidget = new QWidget(this);
+
+    // Menu Bar
+    actionExport = new QAction(this);
+    actionExport->setText("Export");
+    actionExport->setShortcut(QKeySequence("Ctrl+E"));
+
+    actionOpen = new QAction(this);
+    actionOpen->setText("Open");
+    actionOpen->setShortcut(QKeySequence("Ctrl+O"));
+
+    actionSave = new QAction(this);
+    actionSave->setText("Save");
+    actionSave->setShortcut(QKeySequence("Ctrl+S"));
+
+    auto menubar = new QMenuBar(this);
+    auto menuFile = new QMenu(menubar);
+    menuFile->setTitle("File");
+    setMenuBar(menubar);
+
+    menubar->addAction(menuFile->menuAction());
+    menuFile->addAction(actionOpen);
+    menuFile->addAction(actionSave);
+    menuFile->addAction(actionExport);
+
+    // Control panel
+    auto mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setObjectName("MainWindow::MainLayout");
+
+    auto controlPanelGroup = new QGroupBox("Control Panel");
+    controlPanelGroup->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    auto controlPanelLayout = new QHBoxLayout(controlPanelGroup);
+
+    pitchControl = new ControlPanelPitchView();
+    lpcControl = new ControlPanelLpcView();
+    postControl = new ControlPanelPostView();
+
+    controlPanelLayout->addWidget(pitchControl);
+    controlPanelLayout->addWidget(lpcControl);
+    controlPanelLayout->addWidget(postControl);
+
+    mainLayout->addWidget(controlPanelGroup);
+
+    // Waveforms
+    inputWaveform = new AudioWaveformView("Input Signal", 750, 150);
+    mainLayout->addWidget(inputWaveform);
+
+    lpcWaveform = new AudioWaveformView("Synthesized Signal", 750, 150);
+    mainLayout->addWidget(lpcWaveform);
+
+    setCentralWidget(centralWidget);
 
     player = new QMediaPlayer(this);
     audioOutput = new QAudioOutput(this);
-
-    inputWaveform = new AudioWaveform();
-    ui->inputWaveformLayout->insertWidget(1, inputWaveform);
-    inputWaveform->show();
-
-    lpcWaveform = new AudioWaveform();
-    ui->outputWaveformLayout->insertWidget(1, lpcWaveform);
-    lpcWaveform->show();
 
     inputBuffer = nullptr;
     lpcBuffer = nullptr;
@@ -66,45 +110,22 @@ MainWindow::~MainWindow() {
 /// Connect UI elements to member functions
 void MainWindow::configureUiSlots() {
     // Menu bar
-    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::onOpenFile);
-    connect(ui->actionSave, &QAction::triggered, this, &MainWindow::onSaveBitstream);
-    connect(ui->actionExport, &QAction::triggered, this, &MainWindow::onExportAudio);
+    connect(actionOpen, &QAction::triggered, this, &MainWindow::onOpenFile);
+    connect(actionSave, &QAction::triggered, this, &MainWindow::onSaveBitstream);
+    connect(actionExport, &QAction::triggered, this, &MainWindow::onExportAudio);
+
+    // Control panels
+    connect(pitchControl, &ControlPanelPitchView::signalStateChanged, this, &MainWindow::onPitchParamEdit);
+    connect(lpcControl, &ControlPanelLpcView::signalStateChanged, this, &MainWindow::onLpcParamEdit);
+    connect(postControl, &ControlPanelPostView::signalStateChanged, this, &MainWindow::onPostProcEdit);
 
     // Play buttons
-    connect(ui->inputAudioPlay, &QPushButton::pressed, this, &MainWindow::onInputAudioPlay);
-    connect(ui->lpcAudioPlay, &QPushButton::pressed, this, &MainWindow::onLpcAudioPlay);
+    connect(inputWaveform, &AudioWaveformView::signalPlayButtonPressed, this, &MainWindow::onInputAudioPlay);
+    connect(lpcWaveform, &AudioWaveformView::signalPlayButtonPressed, this, &MainWindow::onLpcAudioPlay);
 
-    // Control panel (Pitch Estimator)
-    connect(ui->pitchHpfEnable, &QCheckBox::stateChanged, this, &MainWindow::onPitchParamEdit);
-    connect(ui->pitchHpfLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
-    connect(ui->pitchLpfEnable, &QCheckBox::stateChanged, this, &MainWindow::onPitchParamEdit);
-    connect(ui->pitchLpfLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
-    connect(ui->pitchPreemphEnable, &QCheckBox::stateChanged, this, &MainWindow::onPitchParamEdit);
-    connect(ui->pitchPreemphLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
-    connect(ui->pitchMaxFrqLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
-    connect(ui->pitchMinFrqLine, &QLineEdit::editingFinished, this, &MainWindow::onPitchParamEdit);
 
-    // Control panel (Linear Predictor)
-    connect(ui->lpcWindowWidthLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
-    connect(ui->lpcHpfEnable, &QCheckBox::stateChanged, this, &MainWindow::onLpcParamEdit);
-    connect(ui->lpcHpfLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
-    connect(ui->lpcLpfEnable, &QCheckBox::stateChanged, this, &MainWindow::onLpcParamEdit);
-    connect(ui->lpcLpfLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
-    connect(ui->lpcPreemphEnable, &QCheckBox::stateChanged, this, &MainWindow::onLpcParamEdit);
-    connect(ui->lpcPreemphLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
-    connect(ui->lpcMaxUnvoicedGainLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
-    connect(ui->lpcMaxVoicedGainLine, &QLineEdit::editingFinished, this, &MainWindow::onLpcParamEdit);
 
-    // Control panel (Frame Post-Processor)
-    connect(ui->postPitchShiftEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
-    connect(ui->postPitchShiftSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
-    connect(ui->postPitchOverrideEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
-    connect(ui->postFixedPitchSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
-    connect(ui->postRepeatFramesEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
-    connect(ui->postGainShiftEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
-    connect(ui->postGainShiftSlider, &QSlider::sliderReleased, this, &MainWindow::onPostProcEdit);
-    connect(ui->postGainNormalizeEnable, &QCheckBox::stateChanged, this, &MainWindow::onPostProcEdit);
-
+    /*
     // Set slider ranges
     ui->postPitchShiftSlider->setMinimum(-64);
     ui->postPitchShiftSlider->setMaximum(64);
@@ -117,18 +138,22 @@ void MainWindow::configureUiSlots() {
     ui->postGainShiftSlider->setMinimum(-16);
     ui->postGainShiftSlider->setMaximum(16);
     ui->postFixedPitchSlider->setTickInterval(1);
+     */
 }
 
 /// Toggle UI elements based on the state of the application
 void MainWindow::configureUiState() {
     // Get UI state
-    auto disableAudioDependentObject = inputBuffer == nullptr;
+    auto disableAudioDependentObject = (inputBuffer == nullptr);
     auto disableBitstreamDependentObject = frameTable.empty();
 
-    auto disablePitchControl = disableAudioDependentObject;
-    auto disableLpcControl = disableBitstreamDependentObject;
+    // Control panels
+    pitchControl->setDisabled(disableAudioDependentObject);
+    lpcControl->setDisabled(disableAudioDependentObject);
+    postControl->setDisabled(disableBitstreamDependentObject);
 
     // Menu bar
+    /*
     ui->actionSave->setDisabled(disableAudioDependentObject);
     ui->actionExport->setDisabled(disableAudioDependentObject);
 
@@ -162,6 +187,8 @@ void MainWindow::configureUiState() {
     // Ensure post-pitch manipulation checkboxes are exclusive
     ui->postPitchShiftEnable->setCheckable(!ui->postPitchOverrideEnable->isChecked());
     ui->postPitchOverrideEnable->setCheckable(!ui->postPitchShiftEnable->isChecked());
+*/
+
 }
 
 /// Draw the input and output signal waveforms, along with an abstract representation of their associated pitch data
@@ -176,9 +203,10 @@ void MainWindow::drawPlots() {
 
         auto framePitchTable = std::vector<float>(frameTable.size());
         for (int i = 0; i < frameTable.size(); i++)
-            framePitchTable[i] = (8000.0f / float(frameTable[i].quantizedPitch())) / float(pitchMaxFrq());
+            // TODO: Parameterize
+            framePitchTable[i] = (8000.0f / float(frameTable[i].quantizedPitch())) / float(pitchEstimator.getMaxFrq());
 
-        lpcWaveform->plotPitch(framePitchTable);
+            lpcWaveform->plotPitch(framePitchTable);
     }
 }
 
@@ -217,10 +245,10 @@ void MainWindow::onOpenFile() {
     // Import audio file
     if (filePath.endsWith(".wav", Qt::CaseInsensitive)) {
         // Enable gain normalization by default
-        ui->postGainNormalizeEnable->setChecked(true);
+        //ui->postGainNormalizeEnable->setChecked(true);
 
-        inputBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
-        lpcBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcWindowWidth());
+        inputBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcControl->analysisWindowWidth());
+        lpcBuffer = new AudioBuffer(filePath.toStdString(), 8000, lpcControl->analysisWindowWidth());
 
         performPitchAnalysis();
         performLpcAnalysis();
@@ -234,7 +262,7 @@ void MainWindow::onOpenFile() {
 
     if (filePath.endsWith(".lpc", Qt::CaseInsensitive) || filePath.endsWith(".bin", Qt::CaseInsensitive)) {
         // Disable gain normalization to preserve original bitstream gain
-        ui->postGainNormalizeEnable->setChecked(false);
+        //ui->postGainNormalizeEnable->setChecked(false);
 
         performBitstreamParsing(filePath.toStdString());
         framePostprocessor = FramePostprocessor(&frameTable);
@@ -388,7 +416,7 @@ unsigned int MainWindow::samplesChecksum(std::vector<float> samples) {
     auto bufferSize = int(samples.size());
     auto checksumBuffer = (float *) malloc(sizeof(float) * (bufferSize + 1));
     memccpy(checksumBuffer, samples.data(), bufferSize, sizeof(float));
-    checksumBuffer[bufferSize] = char(lpcPreemph() + pitchPreemph());
+    checksumBuffer[bufferSize] = char(lpcControl->preemphAlpha() + pitchControl->preemphAlpha());
 
     auto checksum = CRC::Calculate(checksumBuffer, sizeof(float), CRC::CRC_32());
 
@@ -408,25 +436,26 @@ void MainWindow::performPitchAnalysis() {
     pitchFrqTable.clear();
 
     // Pre-process
-    if (ui->pitchHpfEnable->isChecked()) {
-        filter.highpass(*inputBuffer, pitchHpfCutoff());
+    if (pitchControl->hpfEnabled()) {
+        filter.highpass(*inputBuffer, pitchControl->hpfCutoff());
     }
 
-    if (ui->pitchLpfEnable->isChecked()) {
-        filter.lowpass(*inputBuffer, pitchLpfCutoff());
+    if (pitchControl->lpfEnabled()) {
+        filter.lowpass(*inputBuffer, pitchControl->lpfCutoff());
     }
 
-    if (ui->pitchPreemphEnable->isChecked()) {
-        filter.preEmphasis(*inputBuffer, pitchPreemph());
+    if (pitchControl->preemphEnabled()) {
+        filter.preEmphasis(*inputBuffer, pitchControl->preemphAlpha());
     }
 
-    pitchEstimator.setMaxPeriod(pitchMinFrq());
-    pitchEstimator.setMinPeriod(pitchMaxFrq());
+    pitchEstimator.setMaxPeriod(pitchControl->minPitchFrq());
+    pitchEstimator.setMinPeriod(pitchControl->maxPitchFrq());
 
     for (const auto &segment : inputBuffer->segments()) {
         auto acf = Autocorrelator::process(segment);
         auto pitchPeriod = pitchEstimator.estimatePeriod(acf);
-        auto pitchFrq = pitchEstimator.estimateFrequency(acf) / float(pitchMaxFrq());
+        // TODO: Parameterize
+        auto pitchFrq = pitchEstimator.estimateFrequency(acf) / float(pitchEstimator.getMaxFrq());
 
         pitchPeriodTable.push_back(pitchPeriod);
         pitchFrqTable.push_back(pitchFrq);
@@ -443,28 +472,28 @@ void MainWindow::performLpcAnalysis() {
     frameTable.clear();
 
     // Re-trigger pitch analysis if window width has changed
-    if (lpcWindowWidth() != inputBuffer->getWindowWidth()) {
-        inputBuffer->setWindowWidth(lpcWindowWidth());
-        lpcBuffer->setWindowWidth(lpcWindowWidth());
+    if (lpcControl->analysisWindowWidth() != inputBuffer->getWindowWidth()) {
+        inputBuffer->setWindowWidth(lpcControl->analysisWindowWidth());
+        lpcBuffer->setWindowWidth(lpcControl->analysisWindowWidth());
 
         qDebug() << "Adjusting window width for pitch and LPC buffers";
         performPitchAnalysis();
     }
 
     // Pre-process
-    if (ui->lpcHpfEnable->isChecked()) {
+    if (lpcControl->hpfEnabled()) {
         qDebug() << "HPF";
-        filter.highpass(*lpcBuffer, lpcHpfCutoff());
+        filter.highpass(*lpcBuffer, lpcControl->hpfCutoff());
     }
 
-    if (ui->lpcLpfEnable->isChecked()) {
+    if (lpcControl->lpfEnabled()) {
         qDebug() << "LPF";
-        filter.lowpass(*lpcBuffer, lpcLpfCutoff());
+        filter.lowpass(*lpcBuffer, lpcControl->lpfCutoff());
     }
 
-    if (ui->lpcPreemphEnable->isChecked()) {
+    if (lpcControl->preemphEnabled()) {
         qDebug() << "PEF";
-        filter.preEmphasis(*lpcBuffer, lpcPreemph());
+        filter.preEmphasis(*lpcBuffer, lpcControl->preemphAlpha());
     }
 
     for (int i = 0; i < lpcBuffer->size(); i++) {
@@ -489,28 +518,28 @@ void MainWindow::performPostProc() {
     framePostprocessor.reset();
 
     // Re-configure post-processor
-    framePostprocessor.setMaxUnvoicedGainDB(lpcMaxUnvoicedGain());
-    framePostprocessor.setMaxVoicedGainDB(lpcMaxVoicedGain());
+    framePostprocessor.setMaxUnvoicedGainDB(postControl->maxUnvoicedGain());
+    framePostprocessor.setMaxVoicedGainDB(postControl->maxVoicedGain());
 
-    if (ui->postGainNormalizeEnable->isChecked()) {
+    if (postControl->gainNormalizationEnabled()) {
         framePostprocessor.normalizeGain();
     }
 
     // Perform either a pitch shift or a fixed-pitch offset
-    if (ui->postPitchShiftEnable->isChecked()) {
-        framePostprocessor.shiftPitch(postPitchShift());
+    if (postControl->pitchShiftEnabled()) {
+        framePostprocessor.shiftPitch(postControl->pitchShift());
 
-    } else if (ui->postPitchOverrideEnable->isChecked()) {
-        framePostprocessor.overridePitch(postPitchOverride());
+    } else if (postControl->pitchOverrideEnabled()) {
+        framePostprocessor.overridePitch(postControl->pitchOverride());
     }
 
-    if (ui->postRepeatFramesEnable->isChecked()) {
+    if (postControl->repeatFramesEnabled()) {
         auto nRepeatFrames = framePostprocessor.detectRepeatFrames();
         qDebug() << "Detected " << nRepeatFrames << " repeat frames";
     }
 
-    if (ui->postGainShiftEnable->isChecked()) {
-        framePostprocessor.shiftGain(postGainShift());
+    if (postControl->gainShiftEnabled()) {
+        framePostprocessor.shiftGain(postControl->gainShift());
     }
 
     synthesizer.synthesize(frameTable);
@@ -551,64 +580,4 @@ void MainWindow::exportBitstream(const std::string& path) {
         std::ofstream binOut(path, std::ios::out | std::ios::binary);
         binOut.write((char *)(bin.data()), long(bin.size()));
     }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//                              UI Getters
-///////////////////////////////////////////////////////////////////////////////
-
-int MainWindow::pitchHpfCutoff() {
-    return ui->pitchHpfLine->text().toInt();
-}
-
-int MainWindow::pitchLpfCutoff() {
-    return ui->pitchLpfLine->text().toInt();
-}
-
-float MainWindow::pitchPreemph() {
-    return ui->pitchPreemphLine->text().toFloat();
-}
-
-int MainWindow::pitchMinFrq() {
-    return ui->pitchMinFrqLine->text().toInt();
-}
-
-int MainWindow::pitchMaxFrq() {
-    return ui->pitchMaxFrqLine->text().toInt();
-}
-
-float MainWindow::lpcWindowWidth() {
-    return ui->lpcWindowWidthLine->text().toFloat();
-}
-
-int MainWindow::lpcHpfCutoff() {
-    return ui->lpcHpfLine->text().toInt();
-}
-
-int MainWindow::lpcLpfCutoff() {
-    return ui->lpcLpfLine->text().toInt();
-}
-
-float MainWindow::lpcPreemph() {
-    return ui->pitchPreemphLine->text().toFloat();
-}
-
-float MainWindow::lpcMaxUnvoicedGain() {
-    return ui->lpcMaxUnvoicedGainLine->text().toFloat();
-}
-
-float MainWindow::lpcMaxVoicedGain() {
-    return ui->lpcMaxVoicedGainLine->text().toFloat();
-}
-
-int MainWindow::postPitchShift() {
-    return -ui->postPitchShiftSlider->value();
-}
-
-int MainWindow::postPitchOverride() {
-    return -ui->postFixedPitchSlider->value();
-}
-
-int MainWindow::postGainShift() {
-    return ui->postGainShiftSlider->value();
 }

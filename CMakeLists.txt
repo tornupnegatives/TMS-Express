@@ -47,12 +47,16 @@ add_executable(${PROJECT_NAME}
         inc/User_Interfaces/MainWindow.h
         src/User_Interfaces/MainWindow.cpp
 
-        inc/User_Interfaces/AudioWaveform.h
-        src/User_Interfaces/AudioWaveform.cpp
+        inc/User_Interfaces/Audio_Waveform/AudioWaveform.h
+        src/User_Interfaces/Audio_Waveform/AudioWaveform.cpp
+        inc/User_Interfaces/Control_Panels/ControlPanelPitchView.h
+        src/User_Interfaces/Control_Panels/ControlPanelPitchView.cpp
+        inc/User_Interfaces/Control_Panels/ControlPanelLpcView.h
+        src/User_Interfaces/Control_Panels/ControlPanelLpcView.cpp
 
         gui/mainwindow.ui
         src/main.cpp
-        )
+        inc/User_Interfaces/Control_Panels/ControlPanelPostView.h src/User_Interfaces/Control_Panels/ControlPanelPostView.cpp inc/User_Interfaces/Audio_Waveform/AudioWaveformView.h src/User_Interfaces/Audio_Waveform/AudioWaveformView.cpp src/User_Interfaces/Audio_Waveform/AudioWaveformView.cpp)
 
 #  ====================================
 #              DYNAMIC LIBS
