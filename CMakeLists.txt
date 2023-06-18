@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
         src/Frame_Encoding/Frame.cpp
         src/Frame_Encoding/FrameEncoder.cpp
         src/Frame_Encoding/FramePostprocessor.cpp
+        src/Frame_Encoding/Synthesizer.cpp
 
         src/Bitstream_Generation/BitstreamGenerator.cpp
         src/Bitstream_Generation/PathUtils.cpp
@@ -46,10 +47,24 @@ add_executable(${PROJECT_NAME}
         inc/User_Interfaces/MainWindow.h
         src/User_Interfaces/MainWindow.cpp
 
-        inc/User_Interfaces/AudioWaveform.h
-        src/User_Interfaces/AudioWaveform.cpp
+        inc/User_Interfaces/Audio_Waveform/AudioWaveform.h
+        src/User_Interfaces/Audio_Waveform/AudioWaveform.cpp
 
-        gui/mainwindow.ui
+        inc/User_Interfaces/Audio_Waveform/AudioWaveformView.h
+        src/User_Interfaces/Audio_Waveform/AudioWaveformView.cpp
+
+        inc/User_Interfaces/Control_Panels/ControlPanelView.h
+        src/User_Interfaces/Control_Panels/ControlPanelView.cpp
+
+        inc/User_Interfaces/Control_Panels/ControlPanelPitchView.h
+        src/User_Interfaces/Control_Panels/ControlPanelPitchView.cpp
+
+        inc/User_Interfaces/Control_Panels/ControlPanelLpcView.h
+        src/User_Interfaces/Control_Panels/ControlPanelLpcView.cpp
+
+        inc/User_Interfaces/Control_Panels/ControlPanelPostView.h
+        src/User_Interfaces/Control_Panels/ControlPanelPostView.cpp
+
         src/main.cpp
         )
 

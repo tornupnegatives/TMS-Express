@@ -4,9 +4,13 @@
 #define TMS_EXPRESS_AUDIOWAVEFORM_H
 
 #include <QWidget>
+#include <QtWidgets>
+
+#include <string>
 #include <vector>
 
 class AudioWaveform : public QWidget {
+    Q_OBJECT
 public:
     explicit AudioWaveform(QWidget *parent = nullptr);
 

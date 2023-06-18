@@ -10,15 +10,27 @@ class FramePostprocessor {
 public:
     explicit FramePostprocessor(std::vector<Frame> *frames, float maxVoicedGainDB = 37.5, float maxUnvoicedGainDB = 37.5);
 
-    void detectRepeatFrames();
+    // Getters & setters
+    float getMaxUnvoicedGainDB() const;
+    void setMaxUnvoicedGainDB(float gainDB);
+
+    float getMaxVoicedGainDB() const;
+    void setMaxVoicedGainDB(float gainDB);
+
+    // Frame table manipulation
+    int detectRepeatFrames();
     void normalizeGain();
     void shiftGain(int offset);
+    void shiftPitch(int offset);
+    void overridePitch(int index);
+    // TODO: void interpolatePitch();
 
-    // TODO: Implement in v2.0.0
-    //void setFixedPitch(int freqHz);
+    // Utility
+    void reset();
 
 private:
-    std::vector<Frame> *frameData;
+    std::vector<Frame> originalFrameTable;
+    std::vector<Frame> *frameTable;
     float maxUnvoicedGain;
     float maxVoicedGain;
 

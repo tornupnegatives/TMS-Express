@@ -7,11 +7,13 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "User_Interfaces/AudioWaveform.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveform.h"
 
 #include <QPainter>
 #include <QWidget>
+#include <QtWidgets>
 
+#include <string>
 #include <vector>
 
 /// Create a new Audio Waveform plot
@@ -22,8 +24,8 @@ AudioWaveform::AudioWaveform(QWidget *parent) : QWidget(parent) {
     setAutoFillBackground(true);
     setPalette(pal);
 
-    samples = std::vector<float>();
-    pitchTable = std::vector<float>();
+    samples = {};
+    pitchTable = {};
 }
 
 /// Plot audio samples

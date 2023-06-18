@@ -13,9 +13,10 @@
 #include <sndfile.hh>
 
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
-/// Import audio samples for segmentation
+/// Create an audio buffer from an existing audio file
 ///
 /// \param path Path to audio file
 /// \param targetSampleRateHz Rate at which to sample audio (in Hertz)
@@ -51,6 +52,22 @@ AudioBuffer::AudioBuffer(const std::string &path, int targetSampleRateHz, float 
     }
 
     // Initialize parameters which depend on window width
+    nSegments = 0;
+    originalSamples = samples;
+    samplesPerSegment = 0;
+
+    setWindowWidth(windowWidthMs);
+}
+
+/// Create an audio buffer from raw samples
+///
+/// \param pcmSamples Floating point audio samples
+/// \param sampleRate Sample rate of buffer (in Hertz)
+/// \param windowWidthMs Segmentation window width (in milliseconds)
+AudioBuffer::AudioBuffer(std::vector<float> pcmSamples, int sampleRate, float windowWidthMs) {
+    sampleRateHz = sampleRate;
+    samples = std::move(pcmSamples);
+
     nSegments = 0;
     originalSamples = samples;
     samplesPerSegment = 0;
