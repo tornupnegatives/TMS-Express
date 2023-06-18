@@ -26,7 +26,6 @@ public:
     float preemphAlpha();
 
 private:
-    QLabel *analysisWindowLabel;
     QLineEdit *analysisWindowLine;
     QCheckBox *hpfCheckbox;
     QLineEdit *hpfLine;

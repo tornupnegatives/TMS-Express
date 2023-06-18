@@ -12,7 +12,6 @@ class ControlPanelView: public QWidget {
 Q_OBJECT
 public:
     ControlPanelView(const std::string &panelTitle, QWidget *parent = nullptr);
-    ~ControlPanelView() noexcept;
 
     virtual void reset() = 0;
     virtual void configureSlots() = 0;
@@ -25,7 +24,6 @@ signals:
 
 protected:
     QGridLayout *grid;
-    QLabel *title;
 };
 
 #endif //TMS_EXPRESS_CONTROLPANELVIEW_H

@@ -31,12 +31,6 @@ AudioWaveformView::AudioWaveformView(std::string title, uint baseWidth, uint bas
     connect(playButton, &QPushButton::released, this, &AudioWaveformView::onPlayButtonPressed);
 }
 
-AudioWaveformView::~AudioWaveformView() noexcept {
-    delete rowsLayout;
-    delete waveform;
-    delete playButton;
-}
-
 void AudioWaveformView::plotPitch(const std::vector<float> &_pitchTable) {
     waveform->plotPitch(_pitchTable);
 }

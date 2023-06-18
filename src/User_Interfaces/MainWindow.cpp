@@ -111,15 +111,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
 /// Free pointers associated with UI
 MainWindow::~MainWindow() {
-    delete mainLayout;
-    delete menuBar;
-
-    delete player;
-    delete audioOutput;
-
-    delete inputWaveform;
-    delete lpcWaveform;
-
     delete inputBuffer;
     delete lpcBuffer;
 }
