@@ -35,9 +35,6 @@ ControlPanelLpcView::ControlPanelLpcView(QWidget *parent): ControlPanelView("LPC
 
     grid->addWidget(preemphCheckbox, row, 0);
     grid->addWidget(preemphLine, row, 1);
-
-    configureSlots();
-    reset();
 }
 
 void ControlPanelLpcView::configureSlots() {
