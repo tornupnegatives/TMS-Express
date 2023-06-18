@@ -14,6 +14,7 @@ class AudioWaveformView: public QWidget {
     Q_OBJECT
 public:
     AudioWaveformView(std::string title, uint baseWidth, uint baseHeight, QWidget *parent = nullptr);
+    ~AudioWaveformView() noexcept;
 
     void plotPitch(const std::vector<float>& _pitchTable);
     void plotSamples(const std::vector<float>& _samples);

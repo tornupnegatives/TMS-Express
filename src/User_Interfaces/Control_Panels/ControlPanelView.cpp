@@ -20,13 +20,18 @@ ControlPanelView::ControlPanelView(const std::string &panelTitle, QWidget *paren
     grid = new QGridLayout(this);
     title = new QLabel(panelTitle.c_str(), this);
 
-    auto separator = new QFrame();
+    auto separator = new QFrame(this);
     separator->setFrameShape(QFrame::HLine);
 
     grid->addWidget(title, 0, 0);
     grid->addWidget(separator, 1, 0, 1, 2);
 
     setLayout(grid);
+}
+
+ControlPanelView::~ControlPanelView() noexcept {
+    delete grid;
+    delete title;
 }
 
 /// Notify the application manger that a control has been modified

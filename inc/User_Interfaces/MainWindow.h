@@ -63,6 +63,9 @@ private:
     ControlPanelLpcView *lpcControl;
     ControlPanelPostView *postControl;
 
+    // Menu bar
+    QMenuBar *menuBar;
+
     QAction *actionExport;
     QAction *actionOpen;
     QAction *actionSave;
