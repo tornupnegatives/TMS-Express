@@ -1,43 +1,31 @@
-//
-// Created by Joseph Bellahcen on 6/1/23.
-//
+// Author: Joseph Bellahcen <joeclb@icloud.com>
 
 #ifndef TMS_EXPRESS_CONTROLPANELLPCVIEW_H
 #define TMS_EXPRESS_CONTROLPANELLPCVIEW_H
 
+#include "User_Interfaces/Control_Panels/ControlPanelView.h"
+
 #include <QWidget>
 #include <QtWidgets>
-#include <string>
 
-class ControlPanelLpcView: public QWidget {
+class ControlPanelLpcView: public ControlPanelView {
 Q_OBJECT
 public:
     explicit ControlPanelLpcView(QWidget *parent = nullptr);
 
-    void reset();
+    void reset() override;
+    void configureSlots() override;
 
+    // Getters
     float analysisWindowWidth();
-
     bool hpfEnabled();
     int hpfCutoff();
-
     bool lpfEnabled();
     int lpfCutoff();
-
     bool preemphEnabled();
     float preemphAlpha();
 
-public slots:
-    void slotStateChanged();
-
-signals:
-    void signalStateChanged();
-
 private:
-    QGridLayout *grid;
-    QLabel *title;
-    QFrame *line1;
-
     QLabel *analysisWindowLabel;
     QLineEdit *analysisWindowLine;
     QCheckBox *hpfCheckbox;

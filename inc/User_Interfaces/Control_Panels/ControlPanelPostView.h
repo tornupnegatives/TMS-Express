@@ -1,49 +1,34 @@
-//
-// Created by Joseph Bellahcen on 6/3/23.
-//
+// Author: Joseph Bellahcen <joeclb@icloud.com>
 
 #ifndef TMS_EXPRESS_CONTROLPANELPOSTVIEW_H
 #define TMS_EXPRESS_CONTROLPANELPOSTVIEW_H
 
+#include "User_Interfaces/Control_Panels/ControlPanelView.h"
+
 #include <QWidget>
 #include <QtWidgets>
 
-class ControlPanelPostView: public QWidget {
+class ControlPanelPostView: public ControlPanelView {
 Q_OBJECT
 public:
     explicit ControlPanelPostView(QWidget *parent = nullptr);
 
-    void reset(bool enableGainNormalization = true);
+    void reset() override;
+    void configureSlots() override;
 
+    // Getters
     bool pitchShiftEnabled();
     int pitchShift();
-
     bool pitchOverrideEnabled();
     int pitchOverride();
-
     bool repeatFramesEnabled();
-
     bool gainShiftEnabled();
     int gainShift();
-
     bool gainNormalizationEnabled();
-
     float maxUnvoicedGain();
     float maxVoicedGain();
 
-public slots:
-    void slotStateChanged();
-
-signals:
-    void signalStateChanged();
-
 private:
-    QGridLayout *grid;
-    QLabel *title;
-    QFrame *line1;
-    QFrame *line2;
-    QFrame *line3;
-
     QCheckBox *pitchShiftCheckbox;
     QSlider *pitchShiftSlider;
     QCheckBox *pitchOverrideCheckbox;

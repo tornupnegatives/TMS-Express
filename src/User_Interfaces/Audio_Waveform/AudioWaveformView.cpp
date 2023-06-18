@@ -10,19 +10,22 @@ AudioWaveformView::AudioWaveformView(std::string title, uint baseWidth, uint bas
     setMinimumSize(baseWidth, baseHeight);
 
     rowsLayout = new QVBoxLayout(this);
-    auto label = new QLabel(title.c_str());
-    label->setMaximumHeight(16);
+    auto label = new QLabel(title.c_str(), this);
+    label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     rowsLayout->addWidget(label);
 
     rowsLayout->setContentsMargins(0, 0, 0, 0); // Set margins to 0
     rowsLayout->setSpacing(10); // Set spacing to 10 pixels
 
-    waveform = new AudioWaveform();
-    waveform->setMinimumSize(baseWidth * 0.75, baseHeight * 0.75);
+    waveform = new AudioWaveform(this);
+    waveform->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     rowsLayout->addWidget(waveform);
 
-    playButton = new QPushButton("Play");
-    playButton->setMaximumWidth(64);
+    playButton = new QPushButton("Play", this);
+    playButton->setFixedWidth(64);
+    playButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+
     rowsLayout->addWidget(playButton);
 
     connect(playButton, &QPushButton::released, this, &AudioWaveformView::onPlayButtonPressed);

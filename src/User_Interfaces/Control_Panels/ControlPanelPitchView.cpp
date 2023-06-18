@@ -1,22 +1,18 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class: ControlPanelPitchView
 //
-// Created by Joseph Bellahcen on 6/1/23.
+// Description: The ControlPanelPitchView contains parameters which guide pitch analysis
 //
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelView.h"
 #include <QWidget>
 #include <QtWidgets>
 
-ControlPanelPitchView::ControlPanelPitchView(QWidget *parent) {
-    // Initialize UI elements
-    setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-
-    grid = new QGridLayout(parent);
-    grid->setSizeConstraint(QLayout::SetMinimumSize);
-
-    title = new QLabel("Pitch Analysis");
-    line1 = new QFrame();
-    line1->setFrameShape(QFrame::HLine);
-    line2 = new QFrame();
+ControlPanelPitchView::ControlPanelPitchView(QWidget *parent): ControlPanelView("Pitch Analysis", parent) {
+    auto line2 = new QFrame(this);
     line2->setFrameShape(QFrame::HLine);
 
     hpfCheckbox = new QCheckBox("Highpass filter (Hz)", this);
@@ -30,36 +26,38 @@ ControlPanelPitchView::ControlPanelPitchView(QWidget *parent) {
     minPitchLabel = new QLabel("Min pitch (Hz)", this);
     minPitchLine = new QLineEdit("50", this);
 
-    // Configure slots
-    connect(hpfCheckbox, &QCheckBox::released, this, &ControlPanelPitchView::slotStateChanged);
-    connect(hpfLine, &QLineEdit::editingFinished, this, &ControlPanelPitchView::slotStateChanged);
-    connect(lpfCheckbox, &QCheckBox::released, this, &ControlPanelPitchView::slotStateChanged);
-    connect(lpfLine, &QLineEdit::editingFinished, this, &ControlPanelPitchView::slotStateChanged);
-    connect(preemphCheckbox, &QCheckBox::released, this, &ControlPanelPitchView::slotStateChanged);
-    connect(preemphLine, &QLineEdit::editingFinished, this, &ControlPanelPitchView::slotStateChanged);
-    connect(maxPitchLine, &QLineEdit::editingFinished, this, &ControlPanelPitchView::slotStateChanged);
-    connect(minPitchLine, &QLineEdit::editingFinished, this, &ControlPanelPitchView::slotStateChanged);
+    auto row = grid->rowCount();
 
-    // Construct layout
-    grid->addWidget(title, 0, 0);
-    grid->addWidget(line1, 1, 0, 1, 2);
+    grid->addWidget(hpfCheckbox, row, 0);
+    grid->addWidget(hpfLine, row++, 1);
 
-    grid->addWidget(hpfCheckbox, 2, 0);
-    grid->addWidget(hpfLine, 2, 1);
-    grid->addWidget(lpfCheckbox, 3, 0);
-    grid->addWidget(lpfLine, 3, 1);
-    grid->addWidget(preemphCheckbox, 4, 0);
-    grid->addWidget(preemphLine, 4, 1);
-    grid->addWidget(line2, 5, 0, 1, 2);
+    grid->addWidget(lpfCheckbox, row, 0);
+    grid->addWidget(lpfLine, row++, 1);
+
+    grid->addWidget(preemphCheckbox, row, 0);
+    grid->addWidget(preemphLine, row++, 1);
+
+    grid->addWidget(line2, row++, 0, 1, 2);
     
-    grid->addWidget(maxPitchLabel, 6, 0);
-    grid->addWidget(maxPitchLine, 6, 1);
-    grid->addWidget(minPitchLabel, 7, 0);
-    grid->addWidget(minPitchLine, 7, 1);
+    grid->addWidget(maxPitchLabel, row, 0);
+    grid->addWidget(maxPitchLine, row++, 1);
 
-    setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    setLayout(grid);
+    grid->addWidget(minPitchLabel, row, 0);
+    grid->addWidget(minPitchLine, row, 1);
+
+    configureSlots();
     reset();
+}
+
+void ControlPanelPitchView::configureSlots() {
+    connect(hpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
+    connect(hpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
+    connect(lpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
+    connect(lpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
+    connect(preemphCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
+    connect(preemphLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
+    connect(maxPitchLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
+    connect(minPitchLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
 }
 
 void ControlPanelPitchView::reset() {
@@ -106,8 +104,4 @@ int ControlPanelPitchView::maxPitchFrq() {
 
 int ControlPanelPitchView::minPitchFrq() {
     return minPitchLine->text().toInt();
-}
-
-void ControlPanelPitchView::slotStateChanged() {
-    emit signalStateChanged();
 }

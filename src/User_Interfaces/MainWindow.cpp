@@ -1,11 +1,13 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class: MainWindow
 //
-// Created by Joseph Bellahcen on 5/1/23.
+// Description: The GUI frontend of TMS Express
 //
+// Author: Joseph Bellahcen <joeclb@icloud.com>
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Audio/AudioBuffer.h"
-#include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FramePostprocessor.h"
-#include "Frame_Encoding/Tms5220CodingTable.h"
 #include "LPC_Analysis/Autocorrelator.h"
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
 #include "User_Interfaces/MainWindow.h"
@@ -24,8 +26,51 @@
 
 /// Setup the main window of the application
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-    setMinimumSize(1024, 700);
-    centralWidget = new QWidget(this);
+    // Set the minimum requirements for window dimensions and margins
+    setMinimumSize(TMS_EXPRESS_WINDOW_MIN_WIDTH, TMS_EXPRESS_WINDOW_MIN_HEIGHT);
+    setContentsMargins(TMS_EXPRESS_WINDOW_MARGINS, TMS_EXPRESS_WINDOW_MARGINS, TMS_EXPRESS_WINDOW_MARGINS, TMS_EXPRESS_WINDOW_MARGINS);
+
+    // The main widget will hold all contents of the Main Window
+    mainWidget = new QWidget(this);
+    setCentralWidget(mainWidget);
+
+    // The main layout separates the main widget into rows
+    mainLayout = new QVBoxLayout(mainWidget);
+
+    // The control panel group holds a horizontal layout, and each column is occupied by a control panel
+    controlPanelGroup = new QGroupBox("Control Panel", this);
+
+    // The control panel layout must never be allowed to become smaller than its contents
+    controlPanelLayout = new QHBoxLayout(controlPanelGroup);
+    controlPanelLayout->setSizeConstraint(QLayout::SetMinimumSize);
+
+    pitchControl = new ControlPanelPitchView(this);
+    pitchControl->configureSlots();
+    pitchControl->reset();
+
+    lpcControl = new ControlPanelLpcView(this);
+    lpcControl->configureSlots();
+    lpcControl->reset();
+
+    postControl = new ControlPanelPostView(this);
+    postControl->configureSlots();
+    postControl->reset();
+
+    controlPanelLayout->addWidget(pitchControl);
+    controlPanelLayout->addWidget(lpcControl);
+    controlPanelLayout->addWidget(postControl);
+    mainLayout->addWidget(controlPanelGroup);
+
+    // The main layouts final two rows are occupied by waveforms
+    inputWaveform = new AudioWaveformView("Input Signal", 750, 150, this);
+    lpcWaveform = new AudioWaveformView("Synthesized Signal", 750, 150, this);
+
+    // The waveforms may be
+    inputWaveform->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lpcWaveform->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    mainLayout->addWidget(inputWaveform);
+    mainLayout->addWidget(lpcWaveform);
 
     // Menu Bar
     actionExport = new QAction(this);
@@ -49,33 +94,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     menuFile->addAction(actionOpen);
     menuFile->addAction(actionSave);
     menuFile->addAction(actionExport);
-
-    // Control panel
-    auto mainLayout = new QVBoxLayout(centralWidget);
-    mainLayout->setObjectName("MainWindow::MainLayout");
-
-    auto controlPanelGroup = new QGroupBox("Control Panel");
-    controlPanelGroup->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    auto controlPanelLayout = new QHBoxLayout(controlPanelGroup);
-
-    pitchControl = new ControlPanelPitchView();
-    lpcControl = new ControlPanelLpcView();
-    postControl = new ControlPanelPostView();
-
-    controlPanelLayout->addWidget(pitchControl);
-    controlPanelLayout->addWidget(lpcControl);
-    controlPanelLayout->addWidget(postControl);
-
-    mainLayout->addWidget(controlPanelGroup);
-
-    // Waveforms
-    inputWaveform = new AudioWaveformView("Input Signal", 750, 150);
-    mainLayout->addWidget(inputWaveform);
-
-    lpcWaveform = new AudioWaveformView("Synthesized Signal", 750, 150);
-    mainLayout->addWidget(lpcWaveform);
-
-    setCentralWidget(centralWidget);
 
     player = new QMediaPlayer(this);
     audioOutput = new QAudioOutput(this);
@@ -115,30 +133,13 @@ void MainWindow::configureUiSlots() {
     connect(actionExport, &QAction::triggered, this, &MainWindow::onExportAudio);
 
     // Control panels
-    connect(pitchControl, &ControlPanelPitchView::signalStateChanged, this, &MainWindow::onPitchParamEdit);
-    connect(lpcControl, &ControlPanelLpcView::signalStateChanged, this, &MainWindow::onLpcParamEdit);
-    connect(postControl, &ControlPanelPostView::signalStateChanged, this, &MainWindow::onPostProcEdit);
+    connect(pitchControl, &ControlPanelPitchView::stateChangeSignal, this, &MainWindow::onPitchParamEdit);
+    connect(lpcControl, &ControlPanelLpcView::stateChangeSignal, this, &MainWindow::onLpcParamEdit);
+    connect(postControl, &ControlPanelPostView::stateChangeSignal, this, &MainWindow::onPostProcEdit);
 
     // Play buttons
     connect(inputWaveform, &AudioWaveformView::signalPlayButtonPressed, this, &MainWindow::onInputAudioPlay);
     connect(lpcWaveform, &AudioWaveformView::signalPlayButtonPressed, this, &MainWindow::onLpcAudioPlay);
-
-
-
-    /*
-    // Set slider ranges
-    ui->postPitchShiftSlider->setMinimum(-64);
-    ui->postPitchShiftSlider->setMaximum(64);
-    ui->postPitchShiftSlider->setTickInterval(8);
-
-    ui->postFixedPitchSlider->setMinimum(0);
-    ui->postFixedPitchSlider->setMaximum(64);
-    ui->postFixedPitchSlider->setTickInterval(16);
-
-    ui->postGainShiftSlider->setMinimum(-16);
-    ui->postGainShiftSlider->setMaximum(16);
-    ui->postFixedPitchSlider->setTickInterval(1);
-     */
 }
 
 /// Toggle UI elements based on the state of the application
@@ -147,54 +148,23 @@ void MainWindow::configureUiState() {
     auto disableAudioDependentObject = (inputBuffer == nullptr);
     auto disableBitstreamDependentObject = frameTable.empty();
 
+    // Menu bar
+    actionSave->setDisabled(disableAudioDependentObject);
+    actionSave->setDisabled(disableBitstreamDependentObject);
+    actionExport->setDisabled(disableAudioDependentObject);
+
     // Control panels
     pitchControl->setDisabled(disableAudioDependentObject);
     lpcControl->setDisabled(disableAudioDependentObject);
     postControl->setDisabled(disableBitstreamDependentObject);
-
-    // Menu bar
-    /*
-    ui->actionSave->setDisabled(disableAudioDependentObject);
-    ui->actionExport->setDisabled(disableAudioDependentObject);
-
-    // Play buttons
-    ui->inputAudioPlay->setDisabled(disableAudioDependentObject);
-    ui->lpcAudioPlay->setDisabled(disableBitstreamDependentObject);
-
-    // Control panel
-    ui->pitchHpfLine->setDisabled(disablePitchControl || !ui->pitchHpfEnable->isChecked());
-    ui->pitchLpfLine->setDisabled(disablePitchControl || !ui->pitchLpfEnable->isChecked());
-    ui->pitchPreemphLine->setDisabled(disablePitchControl || !ui->pitchPreemphEnable->isChecked());
-    ui->pitchMaxFrqLine->setDisabled(disablePitchControl);
-    ui->pitchMinFrqLine->setDisabled(disablePitchControl);
-
-    ui->lpcWindowWidthLine->setDisabled(disableLpcControl);
-    ui->lpcHpfLine->setDisabled(disableLpcControl || !ui->lpcHpfEnable->isChecked());
-    ui->lpcLpfLine->setDisabled(disableLpcControl || !ui->lpcLpfEnable->isChecked());
-    ui->lpcPreemphLine->setDisabled(disableLpcControl || !ui->lpcPreemphEnable->isChecked());
-    ui->lpcMaxUnvoicedGainLine->setDisabled(disableLpcControl);
-    ui->lpcMaxVoicedGainLine->setDisabled(disableLpcControl);
-
-    ui->postPitchShiftEnable->setDisabled(disableBitstreamDependentObject);
-    ui->postPitchShiftSlider->setDisabled(disableBitstreamDependentObject || !ui->postPitchShiftEnable->isChecked());
-    ui->postPitchOverrideEnable->setDisabled(disableBitstreamDependentObject);
-    ui->postFixedPitchSlider->setDisabled(disableBitstreamDependentObject || !ui->postPitchOverrideEnable->isChecked());
-    ui->postRepeatFramesEnable->setDisabled(disableBitstreamDependentObject);
-    ui->postRepeatFramesEnable->setDisabled(disableBitstreamDependentObject);
-    ui->postGainShiftEnable->setDisabled(disableBitstreamDependentObject);
-    ui->postGainShiftSlider->setDisabled(disableBitstreamDependentObject || !ui->postGainShiftEnable->isChecked());
-
-    // Ensure post-pitch manipulation checkboxes are exclusive
-    ui->postPitchShiftEnable->setCheckable(!ui->postPitchOverrideEnable->isChecked());
-    ui->postPitchOverrideEnable->setCheckable(!ui->postPitchShiftEnable->isChecked());
-*/
-
 }
 
 /// Draw the input and output signal waveforms, along with an abstract representation of their associated pitch data
 void MainWindow::drawPlots() {
     if (inputBuffer != nullptr) {
         inputWaveform->plotSamples(inputBuffer->getSamples());
+    } else {
+        inputWaveform->plotSamples({});
     }
 
     if (!frameTable.empty()) {
@@ -207,6 +177,8 @@ void MainWindow::drawPlots() {
             framePitchTable[i] = (8000.0f / float(frameTable[i].quantizedPitch())) / float(pitchEstimator.getMaxFrq());
 
             lpcWaveform->plotPitch(framePitchTable);
+    } else {
+        lpcWaveform->plotSamples({});
     }
 }
 

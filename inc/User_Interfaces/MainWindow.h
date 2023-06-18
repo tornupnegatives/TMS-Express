@@ -23,6 +23,11 @@
 
 #include <vector>
 
+#define TMS_EXPRESS_WINDOW_MIN_WIDTH    1000
+#define TMS_EXPRESS_WINDOW_MIN_HEIGHT   800
+#define TMS_EXPRESS_WINDOW_MARGINS      5
+#define TMS_EXPRESS_AUDIO_SAMPLE_RATE   8000
+
 class MainWindow : public QMainWindow
 {
 Q_OBJECT
@@ -46,6 +51,14 @@ public slots:
     void onPostProcEdit();
 
 private:
+    // Layouts
+    QWidget *mainWidget;
+    QVBoxLayout *mainLayout;
+
+    QGroupBox *controlPanelGroup;
+    QHBoxLayout *controlPanelLayout;
+
+    // Control panels
     ControlPanelPitchView *pitchControl;
     ControlPanelLpcView *lpcControl;
     ControlPanelPostView *postControl;
@@ -59,7 +72,7 @@ private:
 
     // Qt modules
     //Ui::MainWindow *ui;
-    QWidget *centralWidget;
+
     QMediaPlayer *player;
     QAudioOutput *audioOutput;
 
@@ -79,7 +92,7 @@ private:
     // Analysis objects
     Synthesizer synthesizer = Synthesizer();
     AudioFilter filter = AudioFilter();
-    PitchEstimator pitchEstimator = PitchEstimator(8000);
+    PitchEstimator pitchEstimator = PitchEstimator(TMS_EXPRESS_AUDIO_SAMPLE_RATE);
     LinearPredictor linearPredictor = LinearPredictor();
     FramePostprocessor framePostprocessor = FramePostprocessor(&frameTable);
 
