@@ -68,9 +68,6 @@ ControlPanelPostView::ControlPanelPostView(QWidget *parent): ControlPanelView("P
 
     grid->addWidget(maxVoicedGainLabel, row, 0);
     grid->addWidget(maxVoicedGainLine, row, 1);
-
-    configureSlots();
-    reset();
 }
 
 void ControlPanelPostView::configureSlots() {

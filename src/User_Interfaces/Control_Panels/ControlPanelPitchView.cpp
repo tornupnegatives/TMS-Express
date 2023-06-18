@@ -44,9 +44,6 @@ ControlPanelPitchView::ControlPanelPitchView(QWidget *parent): ControlPanelView(
 
     grid->addWidget(minPitchLabel, row, 0);
     grid->addWidget(minPitchLine, row, 1);
-
-    configureSlots();
-    reset();
 }
 
 void ControlPanelPitchView::configureSlots() {
