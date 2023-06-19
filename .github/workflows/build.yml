@@ -51,5 +51,21 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
       
+    - name: Create Binary Archive
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          zip -r "${{github.workspace}}/build-linux.zip" "${{github.workspace}}/build"
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          zip -r "${{github.workspace}}/build-macos.zip" "${{github.workspace}}/build"
+        else
+          echo "$RUNNER_OS not supported"
+          exit 1
+        fi
+      shell: bash
+
     - name: Release
       uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ${{github.workspace}}/build-linux.zip
+          ${{github.workspace}}/build-macos.zip
