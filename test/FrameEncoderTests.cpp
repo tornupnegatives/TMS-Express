@@ -17,7 +17,7 @@ TEST(FrameEncoderTests, StopFrame) {
 TEST(FrameEncoderTests, AsciiStopFrame) {
     auto frameEncoder = FrameEncoder();
 
-    frameEncoder.parseAsciiBitstream("0f");
+    frameEncoder.parseAsciiBitstream("0x0f");
 
     auto hex = frameEncoder.toHex();
     EXPECT_EQ(hex, "0f");
@@ -41,7 +41,7 @@ TEST(FrameEncoderTests, SilentFrame) {
 
 TEST(FrameEncoderTests, AsciiSilentFrame) {
     auto frameEncoder = FrameEncoder();
-    frameEncoder.parseAsciiBitstream("f0");
+    frameEncoder.parseAsciiBitstream("0xf0");
 
     auto hex = frameEncoder.toHex();
     EXPECT_EQ(hex, "f0");
@@ -64,7 +64,7 @@ TEST(FrameEncoderTests, VoicedFrame) {
 
 TEST(FrameEncoderTests, AsciiVoicedFrame) {
     auto frameEncoder = FrameEncoder();
-    frameEncoder.parseAsciiBitstream("c8,88,4f,25,ce,ab,3c");
+    frameEncoder.parseAsciiBitstream("0xc8,0x88,0x4f,0x25,0xce,0xab,0x3c");
 
     auto bin = frameEncoder.toHex();
     EXPECT_EQ(bin, "c8,88,4f,25,ce,ab,3c");
@@ -85,7 +85,7 @@ TEST(FrameEncoderTests, UnvoicedFrame) {
 
 TEST(FrameEncoderTests, AsciiUnvoicedFrame) {
     auto frameEncoder = FrameEncoder();
-    frameEncoder.parseAsciiBitstream("08,88,4f,e5,01");
+    frameEncoder.parseAsciiBitstream("0x08,0x88,0x4f,0xe5,0x01");
 
     auto bin = frameEncoder.toHex();
     EXPECT_EQ(bin, "08,88,4f,e5,01");
@@ -118,7 +118,7 @@ TEST(FrameEncoderTests, MixtureOfFrames) {
 
 TEST(FrameEncoderTests, AsciiMixtureOfFrames) {
     auto frameEncoder = FrameEncoder();
-    frameEncoder.parseAsciiBitstream("c0,8c,a4,5b,e2,bc,0a,33,92,6e,89,f3,2a,08,88,4f,e5,01");
+    frameEncoder.parseAsciiBitstream("0xc0,0x8c,0xa4,0x5b,0xe2,0xbc,0x0a,0x33,0x92,0x6e,0x89,0xf3,0x2a,0x08,0x88,0x4f,0xe5,0x01");
 
     auto bin = frameEncoder.toHex();
     EXPECT_EQ(bin, "c0,8c,a4,5b,e2,bc,0a,33,92,6e,89,f3,2a,08,88,4f,e5,01");
