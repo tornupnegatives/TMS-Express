@@ -85,12 +85,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     actionSave->setText("Save");
     actionSave->setShortcut(QKeySequence("Ctrl+S"));
 
-    auto menubar = new QMenuBar(this);
-    auto menuFile = new QMenu(menubar);
+    menuBar = new QMenuBar(this);
+    auto menuFile = new QMenu(menuBar);
     menuFile->setTitle("File");
-    setMenuBar(menubar);
+    setMenuBar(menuBar);
 
-    menubar->addAction(menuFile->menuAction());
+    menuBar->addAction(menuFile->menuAction());
     menuFile->addAction(actionOpen);
     menuFile->addAction(actionSave);
     menuFile->addAction(actionExport);
@@ -111,12 +111,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
 /// Free pointers associated with UI
 MainWindow::~MainWindow() {
-    delete player;
-    delete audioOutput;
-
-    delete inputWaveform;
-    delete lpcWaveform;
-
     delete inputBuffer;
     delete lpcBuffer;
 }

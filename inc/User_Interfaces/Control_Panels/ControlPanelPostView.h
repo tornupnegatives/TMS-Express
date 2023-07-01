@@ -37,9 +37,7 @@ private:
     QCheckBox *gainShiftCheckbox;
     QSlider *gainShiftSlider;
     QCheckBox *gainNormalizationCheckbox;
-    QLabel *maxUnvoicedGainLabel;
     QLineEdit *maxUnvoicedGainLine;
-    QLabel *maxVoicedGainLabel;
     QLineEdit *maxVoicedGainLine;
 };
 

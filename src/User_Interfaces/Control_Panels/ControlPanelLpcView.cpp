@@ -13,7 +13,7 @@
 #include <QtWidgets>
 
 ControlPanelLpcView::ControlPanelLpcView(QWidget *parent): ControlPanelView("LPC Analysis", parent)  {
-    analysisWindowLabel = new QLabel("Analysis window (ms)", this);
+    auto analysisWindowLabel = new QLabel("Analysis window (ms)", this);
     analysisWindowLine = new QLineEdit("25.0", this);
     hpfCheckbox = new QCheckBox("Highpass filter (Hz)", this);
     hpfLine = new QLineEdit("100", this);

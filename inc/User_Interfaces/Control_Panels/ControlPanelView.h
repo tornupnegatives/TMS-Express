@@ -24,7 +24,6 @@ signals:
 
 protected:
     QGridLayout *grid;
-    QLabel *title;
 };
 
 #endif //TMS_EXPRESS_CONTROLPANELVIEW_H

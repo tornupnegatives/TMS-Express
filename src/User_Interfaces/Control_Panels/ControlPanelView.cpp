@@ -18,9 +18,9 @@
 /// \param parent Parent QWidget
 ControlPanelView::ControlPanelView(const std::string &panelTitle, QWidget *parent): QWidget(parent) {
     grid = new QGridLayout(this);
-    title = new QLabel(panelTitle.c_str(), this);
 
-    auto separator = new QFrame();
+    auto title = new QLabel(panelTitle.c_str(), this);
+    auto separator = new QFrame(this);
     separator->setFrameShape(QFrame::HLine);
 
     grid->addWidget(title, 0, 0);

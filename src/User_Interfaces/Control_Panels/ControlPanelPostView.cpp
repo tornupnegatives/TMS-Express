@@ -28,9 +28,9 @@ ControlPanelPostView::ControlPanelPostView(QWidget *parent): ControlPanelView("P
     gainShiftCheckbox = new QCheckBox("Gain shift", this);
     gainShiftSlider = new QSlider(Qt::Horizontal, this);
     gainNormalizationCheckbox = new QCheckBox("Gain normalization", this);
-    maxUnvoicedGainLabel = new QLabel("Max unvoiced gain (dB)", this);
+    auto maxUnvoicedGainLabel = new QLabel("Max unvoiced gain (dB)", this);
     maxUnvoicedGainLine = new QLineEdit("37.5", this);
-    maxVoicedGainLabel = new QLabel("Max voiced gain (dB)", this);
+    auto maxVoicedGainLabel = new QLabel("Max voiced gain (dB)", this);
     maxVoicedGainLine = new QLineEdit("37.5", this);
 
     // Setup sliders based on TMS5220 coding table
