@@ -54,7 +54,6 @@ private:
     // Layouts
     QWidget *mainWidget;
     QVBoxLayout *mainLayout;
-
     QGroupBox *controlPanelGroup;
     QHBoxLayout *controlPanelLayout;
 
@@ -65,17 +64,11 @@ private:
 
     // Menu bar
     QMenuBar *menuBar;
-
     QAction *actionExport;
     QAction *actionOpen;
     QAction *actionSave;
 
-
-
-
-    // Qt modules
-    //Ui::MainWindow *ui;
-
+    // Multimedia
     QMediaPlayer *player;
     QAudioOutput *audioOutput;
 
@@ -84,8 +77,8 @@ private:
     AudioWaveformView *lpcWaveform;
 
     // Audio buffers
-    AudioBuffer *inputBuffer;
-    AudioBuffer *lpcBuffer;
+    AudioBuffer inputBuffer;
+    AudioBuffer lpcBuffer;
 
     // Data tables
     std::vector<Frame> frameTable;

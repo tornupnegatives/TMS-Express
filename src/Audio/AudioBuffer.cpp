@@ -75,6 +75,19 @@ AudioBuffer::AudioBuffer(std::vector<float> pcmSamples, int sampleRate, float wi
     setWindowWidth(windowWidthMs);
 }
 
+/// Initialize an empty Audio Buffer
+///
+/// \param sampleRate Target sample rate of buffer (in Hertz)
+/// \param windowWidthMs Segmentation window width (in milliseconds)
+AudioBuffer::AudioBuffer(int sampleRate, float windowWidthMs) {
+    nSegments = 0;
+    originalSamples = samples = {};
+    sampleRateHz = sampleRate;
+    samplesPerSegment = 0;
+
+    setWindowWidth(windowWidthMs);
+}
+
 /// Create a deep copy of an existing audio buffer
 ///
 /// \param buffer Original AudioBuffer to copy
@@ -100,11 +113,19 @@ std::vector<float> AudioBuffer::getSamples() {
 ///
 /// \param newSamples Samples to be copied into buffer
 void AudioBuffer::setSamples(const std::vector<float> &newSamples) {
-    if (newSamples.size() != samples.size()) {
+    // If the Audio Buffer is empty, allow the user to set the samples with a
+    // vector of any size. Otherwise, the new samples must be the same size as
+    // the original samples
+    if (!isEmpty() && (newSamples.size() != samples.size())) {
         throw std::length_error("Unsupported buffer write: new size must equal old size");
     }
 
     samples = newSamples;
+
+    // If the Audio Buffer was empty, determine the segmentation bounds
+    if (isEmpty()) {
+        setWindowWidth(getWindowWidth());
+    }
 }
 
 /// Return window width (in number of samples)
@@ -144,6 +165,10 @@ std::vector<float> AudioBuffer::segment(int i) {
         throw std::range_error("Segment index out of bounds");
     }
 
+    if (isEmpty()) {
+        throw std::runtime_error("Cannot segment empty buffer");
+    }
+
     auto offset = int(samplesPerSegment);
     auto start = samples.begin() + (i * offset);
     auto end = start + offset;
@@ -171,6 +196,11 @@ size_t AudioBuffer::size() const {
     return nSegments;
 }
 
+/// Return whether or not the Audio Buffer contains samples
+bool AudioBuffer::isEmpty() const {
+    return samples.empty();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //                       Public Utility Functions
 ///////////////////////////////////////////////////////////////////////////////
@@ -179,6 +209,11 @@ size_t AudioBuffer::size() const {
 ///
 /// \param path Path to new audio file
 void AudioBuffer::render(const std::string &path) {
+    // Throw error if buffer is empty
+    if (isEmpty()) {
+        throw std::runtime_error("Cannot render empty buffer");
+    }
+    
     // Construct 8kHz mono audio file handle
     auto metadata = SF_INFO();
 
@@ -191,7 +226,6 @@ void AudioBuffer::render(const std::string &path) {
     auto sndfile = sf_open(path.c_str(), SFM_WRITE, &metadata);
     sf_writef_float(sndfile, samples.data(), sf_count_t(samples.size()));
     sf_close(sndfile);
-
 }
 
 /// Restore buffer to its initialization state
