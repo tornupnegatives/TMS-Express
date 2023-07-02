@@ -75,6 +75,19 @@ AudioBuffer::AudioBuffer(std::vector<float> pcmSamples, int sampleRate, float wi
     setWindowWidth(windowWidthMs);
 }
 
+/// Initialize an empty Audio Buffer
+///
+/// \param sampleRate Target sample rate of buffer (in Hertz)
+/// \param windowWidthMs Segmentation window width (in milliseconds)
+AudioBuffer::AudioBuffer(int sampleRate, float windowWidthMs) {
+    nSegments = 0;
+    originalSamples = samples = {};
+    sampleRateHz = sampleRate;
+    samplesPerSegment = 0;
+
+    setWindowWidth(windowWidthMs);
+}
+
 /// Create a deep copy of an existing audio buffer
 ///
 /// \param buffer Original AudioBuffer to copy
@@ -169,6 +182,11 @@ size_t AudioBuffer::segmentSize() const {
 /// Return number of total audio segments
 size_t AudioBuffer::size() const {
     return nSegments;
+}
+
+/// Return whether or not the Audio Buffer contains samples
+bool AudioBuffer::isEmpty() const {
+    return samples.empty();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -10,6 +10,7 @@ class AudioBuffer {
 public:
     explicit AudioBuffer(const std::string &path, int targetSampleRateHz = 8000, float windowWidthMs = 25.0f);
     explicit AudioBuffer(std::vector<float> pcmSamples, int sampleRate = 8000, float windowWidthMs = 25.0f);
+    AudioBuffer(int sampleRate = 8000, float windowWidthMs = 25.0f);
     AudioBuffer(const AudioBuffer &buffer);
 
     // Getters & setters
@@ -25,6 +26,7 @@ public:
     std::vector<std::vector<float>> segments();
     [[nodiscard]] size_t segmentSize() const;
     [[nodiscard]] size_t size() const;
+    bool isEmpty() const;
     
     // Utility
     void render(const std::string &path);

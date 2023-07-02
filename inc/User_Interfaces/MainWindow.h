@@ -77,8 +77,8 @@ private:
     AudioWaveformView *lpcWaveform;
 
     // Audio buffers
-    AudioBuffer *inputBuffer;
-    AudioBuffer *lpcBuffer;
+    AudioBuffer inputBuffer;
+    AudioBuffer lpcBuffer;
 
     // Data tables
     std::vector<Frame> frameTable;
