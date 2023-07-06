@@ -14,7 +14,7 @@
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostprocessor.h"
-#include "LPC_Analysis/Autocorrelator.h"
+#include "LPC_Analysis/Autocorrelation.h"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
 
@@ -122,8 +122,8 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
         preprocessor.hammingWindow(lpcSegment);
 
         // Compute the autocorrelation of each segment, which serves as the basis of all analysis
-        auto lpcAcf = Autocorrelator::process(lpcSegment);
-        auto pitchAcf = Autocorrelator::process(pitchSegment);
+        auto lpcAcf = tms_express::Autocorrelation(lpcSegment);
+        auto pitchAcf = tms_express::Autocorrelation(pitchSegment);
 
         // Extract LPC reflector coefficients and compute the predictor gain
         auto coeffs = linearPredictor.reflectorCoefficients(lpcAcf);

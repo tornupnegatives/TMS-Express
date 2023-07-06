@@ -27,7 +27,7 @@ add_executable(${PROJECT_NAME}
         src/Audio/AudioBuffer.cpp
         src/Audio/AudioFilter.cpp
 
-        src/LPC_Analysis/Autocorrelator.cpp
+        src/LPC_Analysis/Autocorrelation.cpp
         src/LPC_Analysis/PitchEstimator.cpp
         src/LPC_Analysis/LinearPredictor.cpp
 

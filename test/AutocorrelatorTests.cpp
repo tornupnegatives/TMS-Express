@@ -2,7 +2,7 @@
 // Created by Joseph Bellahcen on 6/1/22.
 //
 
-#include "LPC_Analysis/Autocorrelator.h"
+#include "LPC_Analysis/Autocorrelation.h"
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
@@ -16,7 +16,7 @@ std::vector<float> acfTestSubject() {
         signal.push_back(sample);
     }
 
-    auto acf = Autocorrelator::process(signal);
+    auto acf = tms_express::Autocorrelation(signal);
     return acf;
 }
 

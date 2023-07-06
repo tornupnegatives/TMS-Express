@@ -23,7 +23,7 @@ include_directories(
 )
 
 add_executable(TMS-Test
-        src/LPC_Analysis/Autocorrelator.cpp
+        src/LPC_Analysis/Autocorrelation.cpp
         test/AutocorrelatorTests.cpp
 
         src/Frame_Encoding/Frame.cpp

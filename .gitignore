@@ -39,6 +39,7 @@ build/
 .DS_Store
 
 # IDEs
+.cache/
 .idea/
 .vscode/
 *.user

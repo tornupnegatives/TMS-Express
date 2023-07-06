@@ -8,7 +8,7 @@
 
 #include "Audio/AudioBuffer.h"
 #include "Frame_Encoding/FramePostprocessor.h"
-#include "LPC_Analysis/Autocorrelator.h"
+#include "LPC_Analysis/Autocorrelation.h"
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
 #include "User_Interfaces/MainWindow.h"
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
@@ -410,7 +410,7 @@ void MainWindow::performPitchAnalysis() {
     pitchEstimator.setMinPeriod(pitchControl->maxPitchFrq());
 
     for (const auto &segment : inputBuffer.segments()) {
-        auto acf = Autocorrelator::process(segment);
+        auto acf = tms_express::Autocorrelation(segment);
         auto pitchPeriod = pitchEstimator.estimatePeriod(acf);
         // TODO: Parameterize
         auto pitchFrq = pitchEstimator.estimateFrequency(acf) / float(pitchEstimator.getMaxFrq());
@@ -456,7 +456,7 @@ void MainWindow::performLpcAnalysis() {
 
     for (int i = 0; i < lpcBuffer.size(); i++) {
         auto segment = lpcBuffer.segment(i);
-        auto acf = Autocorrelator::process(segment);
+        auto acf = tms_express::Autocorrelation(segment);
 
         auto coeffs = linearPredictor.reflectorCoefficients(acf);
         auto gain = linearPredictor.gain();
