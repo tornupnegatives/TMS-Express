@@ -14,6 +14,8 @@
 #include <cmath>
 #include <vector>
 
+namespace tms_express {
+
 /// Create a new LPC solver of the given order
 ///
 /// \param modelOrder Order of the LPC model for which to solve (typically 10)
@@ -76,3 +78,5 @@ float LinearPredictor::gain() const {
     float gain = 10.0f * log10f(error / 1e-12f);
     return abs(gain);
 }
+
+};  // namespace tms_express

@@ -12,6 +12,8 @@
 #include <QWidget>
 #include <QtWidgets>
 
+namespace tms_express {
+
 ControlPanelLpcView::ControlPanelLpcView(QWidget *parent): ControlPanelView("LPC Analysis", parent)  {
     auto analysisWindowLabel = new QLabel("Analysis window (ms)", this);
     analysisWindowLine = new QLineEdit("25.0", this);
@@ -84,3 +86,5 @@ bool ControlPanelLpcView::preemphEnabled() {
 float ControlPanelLpcView::preemphAlpha() {
     return preemphLine->text().toFloat();
 }
+
+};  // namespace tms_express

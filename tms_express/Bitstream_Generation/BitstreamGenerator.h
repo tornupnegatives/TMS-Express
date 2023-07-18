@@ -6,6 +6,8 @@
 #include "Frame_Encoding/Frame.h"
 #include <string>
 
+namespace tms_express {
+
 class BitstreamGenerator {
 public:
     typedef enum {ENCODERSTYLE_ASCII, ENCODERSTYLE_C, ENCODERSTYLE_ARDUINO, ENCODERSTYLE_JSON} EncoderStyle;
@@ -34,5 +36,7 @@ private:
     std::vector<Frame> generateFrames(const std::string &inputPath) const;
     std::string formatBitstream(const std::vector<Frame>& frames, const std::string &filename);
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_BITSTREAMGENERATOR_H

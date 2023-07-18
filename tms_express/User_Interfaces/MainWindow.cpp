@@ -6,7 +6,7 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Audio/AudioBuffer.h"
+#include "Audio/AudioBuffer.hpp"
 #include "Frame_Encoding/FramePostprocessor.h"
 #include "LPC_Analysis/Autocorrelation.h"
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
@@ -23,6 +23,8 @@
 
 #include <fstream>
 #include <iostream>
+
+namespace tms_express {
 
 /// Setup the main window of the application
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -137,7 +139,7 @@ void MainWindow::configureUiSlots() {
 /// Toggle UI elements based on the state of the application
 void MainWindow::configureUiState() {
     // Get UI state
-    auto disableAudioDependentObject = (inputBuffer.isEmpty());
+    auto disableAudioDependentObject = (inputBuffer.empty());
     auto disableBitstreamDependentObject = frameTable.empty();
 
     // Menu bar
@@ -188,11 +190,11 @@ void MainWindow::onOpenFile() {
         return;
     }
 
-    if (!inputBuffer.isEmpty()) {
+    if (!inputBuffer.empty()) {
         inputBuffer = AudioBuffer();
     }
 
-    if (!lpcBuffer.isEmpty()) {
+    if (!lpcBuffer.empty()) {
         lpcBuffer = AudioBuffer();
     }
 
@@ -205,8 +207,15 @@ void MainWindow::onOpenFile() {
         // Enable gain normalization by default
         //ui->postGainNormalizeEnable->setChecked(true);
 
-        inputBuffer = AudioBuffer(filePath.toStdString(), 8000, lpcControl->analysisWindowWidth());
-        lpcBuffer = AudioBuffer(filePath.toStdString(), 8000, lpcControl->analysisWindowWidth());
+        auto input_buffer_ptr = AudioBuffer::Create(filePath.toStdString(), 8000, lpcControl->analysisWindowWidth());
+
+        if (input_buffer_ptr == nullptr) {
+            qDebug() << "NULL";
+            return;
+        }
+
+        inputBuffer = input_buffer_ptr->copy();
+        lpcBuffer = input_buffer_ptr->copy();
 
         performPitchAnalysis();
         performLpcAnalysis();
@@ -266,7 +275,7 @@ void MainWindow::onExportAudio() {
 
 /// Play contents of input buffer
 void MainWindow::onInputAudioPlay() {
-    if (inputBuffer.isEmpty()) {
+    if (inputBuffer.empty()) {
         qDebug() << "Requested play, but input buffer is empty";
         return;
     }
@@ -306,7 +315,7 @@ void MainWindow::onLpcAudioPlay() {
     // be significant enough to modify the buffer checksum alone
     char filename[35];
 
-    uint checksum = (!lpcBuffer.isEmpty()) ? samplesChecksum(lpcBuffer.getSamples()) : samplesChecksum(synthesizer.samples());
+    uint checksum = (!lpcBuffer.empty()) ? samplesChecksum(lpcBuffer.getSamples()) : samplesChecksum(synthesizer.samples());
     snprintf(filename, 35, "tmsexpress_lpc_render_%x.wav", checksum);
 
     // Only render audio if this particular buffer does not exist
@@ -326,7 +335,7 @@ void MainWindow::onLpcAudioPlay() {
 void MainWindow::onPitchParamEdit() {
     configureUiState();
 
-    if (!inputBuffer.isEmpty()) {
+    if (!inputBuffer.empty()) {
         performPitchAnalysis();
         performLpcAnalysis();
 
@@ -338,7 +347,7 @@ void MainWindow::onPitchParamEdit() {
 void MainWindow::onLpcParamEdit() {
     configureUiState();
 
-    if (!lpcBuffer.isEmpty()) {
+    if (!lpcBuffer.empty()) {
         performLpcAnalysis();
         performPostProc();
 
@@ -409,7 +418,7 @@ void MainWindow::performPitchAnalysis() {
     pitchEstimator.setMaxPeriod(pitchControl->minPitchFrq());
     pitchEstimator.setMinPeriod(pitchControl->maxPitchFrq());
 
-    for (const auto &segment : inputBuffer.segments()) {
+    for (const auto &segment : inputBuffer.getAllSegments()) {
         auto acf = tms_express::Autocorrelation(segment);
         auto pitchPeriod = pitchEstimator.estimatePeriod(acf);
         // TODO: Parameterize
@@ -430,9 +439,9 @@ void MainWindow::performLpcAnalysis() {
     frameTable.clear();
 
     // Re-trigger pitch analysis if window width has changed
-    if (lpcControl->analysisWindowWidth() != inputBuffer.getWindowWidth()) {
-        inputBuffer.setWindowWidth(lpcControl->analysisWindowWidth());
-        lpcBuffer.setWindowWidth(lpcControl->analysisWindowWidth());
+    if (lpcControl->analysisWindowWidth() != inputBuffer.getWindowWidthMs()) {
+        inputBuffer.setWindowWidthMs(lpcControl->analysisWindowWidth());
+        lpcBuffer.setWindowWidthMs(lpcControl->analysisWindowWidth());
 
         qDebug() << "Adjusting window width for pitch and LPC buffers";
         performPitchAnalysis();
@@ -451,11 +460,12 @@ void MainWindow::performLpcAnalysis() {
 
     if (lpcControl->preemphEnabled()) {
         qDebug() << "PEF";
+        qDebug() << (lpcBuffer.empty());
         filter.preEmphasis(lpcBuffer, lpcControl->preemphAlpha());
     }
 
-    for (int i = 0; i < lpcBuffer.size(); i++) {
-        auto segment = lpcBuffer.segment(i);
+    for (int i = 0; i < lpcBuffer.getNSegments(); i++) {
+        auto segment = lpcBuffer.getSegment(i);
         auto acf = tms_express::Autocorrelation(segment);
 
         auto coeffs = linearPredictor.reflectorCoefficients(acf);
@@ -539,3 +549,5 @@ void MainWindow::exportBitstream(const std::string& path) {
         binOut.write((char *)(bin.data()), long(bin.size()));
     }
 }
+
+};  // namespace tms_express

@@ -3,7 +3,7 @@
 #ifndef TMS_EXPRESS_MAINWINDOW_H
 #define TMS_EXPRESS_MAINWINDOW_H
 
-#include "Audio/AudioBuffer.h"
+#include "Audio/AudioBuffer.hpp"
 #include "Audio/AudioFilter.h"
 #include "Bitstream_Generation/BitstreamGenerator.h"
 #include "Frame_Encoding/Frame.h"
@@ -27,6 +27,8 @@
 #define TMS_EXPRESS_WINDOW_MIN_HEIGHT   800
 #define TMS_EXPRESS_WINDOW_MARGINS      5
 #define TMS_EXPRESS_AUDIO_SAMPLE_RATE   8000
+
+namespace tms_express {
 
 class MainWindow : public QMainWindow
 {
@@ -107,5 +109,7 @@ private:
     // Metadata
     unsigned int samplesChecksum(std::vector<float> samples);
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_MAINWINDOW_H

@@ -1,277 +1,256 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: AudioBuffer
-//
-// Description: The AudioBuffer stores mono audio samples and provides and interface for segmentation. Audio data
-//              may be imported from any format supported by libsndfile and will be resampled during initialization
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "Audio/AudioBuffer.h"
+#include "Audio/AudioBuffer.hpp"
 
-#include <samplerate.h>
-#include <sndfile.hh>
-
-#include <stdexcept>
+#include <memory>
 #include <utility>
 #include <vector>
 
-/// Create an audio buffer from an existing audio file
-///
-/// \param path Path to audio file
-/// \param targetSampleRateHz Rate at which to sample audio (in Hertz)
-/// \param windowWidthMs Segmentation window width (in milliseconds)
-AudioBuffer::AudioBuffer(const std::string &path, int targetSampleRateHz, float windowWidthMs) {
-    // Import audio file via libsndfile
-    auto sndfile = SndfileHandle(path);
+#include <sndfile.hh>
+#include <samplerate.h>
 
-    // TODO: Catch in GUI
-    if (sndfile.error()) {
-        throw std::runtime_error("Unsupported audio format");
+namespace tms_express {
+
+///////////////////////////////////////////////////////////////////////////////
+// Factory Functions //////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<AudioBuffer> AudioBuffer::Create(const std::string &path,
+    int sample_rate_hz, float window_width_ms) {
+    // Attempt to open an audio file via libsndfile, aborting initialization if
+    // the given path does not exist, is invalid, or is not a suported format
+    auto audio_file = SndfileHandle(path);
+
+    if (audio_file.error()) {
+        return nullptr;
     }
 
-    // Extract audio metadata
-    sampleRateHz = sndfile.samplerate();
-    auto nFrames = sndfile.frames();
-    auto nChannels = sndfile.channels();
+    // Import samples from the audio file, then resample and mix
+    auto src_sample_rate_hz = audio_file.samplerate();
+    auto n_frames = audio_file.frames();
+    auto n_channels = audio_file.channels();
+    auto buffer_size = n_frames * n_channels;
 
-    // Store floating-point samples
-    auto bufferSize = nFrames * nChannels;
-    samples = std::vector<float>(bufferSize);
-    sndfile.read(samples.data(), bufferSize);
+    std::vector<float> samples(buffer_size);
+    audio_file.read(samples.data(), buffer_size);
 
-    // Mix to mono
-    if (nChannels != 1) {
-        mixToMono(nChannels);
+    // Resample if needed, and mix to mono
+    if (n_channels != 1) {
+        samples = mixToMono(samples, n_channels);
     }
 
-    // Resample at target rate
-    // TODO: Implement upsampling safeguards
-    if (sndfile.samplerate() != targetSampleRateHz) {
-        resample(targetSampleRateHz);
+    if (src_sample_rate_hz != sample_rate_hz) {
+        samples = resample(samples, src_sample_rate_hz, sample_rate_hz);
     }
 
-    // Initialize parameters which depend on window width
-    nSegments = 0;
-    originalSamples = samples;
-    samplesPerSegment = 0;
+    auto ptr = std::make_shared<AudioBuffer>(
+                AudioBuffer(samples, sample_rate_hz, window_width_ms));
 
-    setWindowWidth(windowWidthMs);
-}
-
-/// Create an audio buffer from raw samples
-///
-/// \param pcmSamples Floating point audio samples
-/// \param sampleRate Sample rate of buffer (in Hertz)
-/// \param windowWidthMs Segmentation window width (in milliseconds)
-AudioBuffer::AudioBuffer(std::vector<float> pcmSamples, int sampleRate, float windowWidthMs) {
-    sampleRateHz = sampleRate;
-    samples = std::move(pcmSamples);
-
-    nSegments = 0;
-    originalSamples = samples;
-    samplesPerSegment = 0;
-
-    setWindowWidth(windowWidthMs);
-}
-
-/// Initialize an empty Audio Buffer
-///
-/// \param sampleRate Target sample rate of buffer (in Hertz)
-/// \param windowWidthMs Segmentation window width (in milliseconds)
-AudioBuffer::AudioBuffer(int sampleRate, float windowWidthMs) {
-    nSegments = 0;
-    originalSamples = samples = {};
-    sampleRateHz = sampleRate;
-    samplesPerSegment = 0;
-
-    setWindowWidth(windowWidthMs);
-}
-
-/// Create a deep copy of an existing audio buffer
-///
-/// \param buffer Original AudioBuffer to copy
-AudioBuffer::AudioBuffer(const AudioBuffer &buffer) {
-    sampleRateHz = buffer.sampleRateHz;
-    samplesPerSegment = buffer.samplesPerSegment;
-    nSegments = buffer.nSegments;
-    samples = std::vector<float>(buffer.samples);
+    return ptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                          Getters & Setters
+// Initializers ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Return flat, unsegmented array of samples
-std::vector<float> AudioBuffer::getSamples() {
-    return samples;
+AudioBuffer::AudioBuffer(std::vector<float> samples, int sample_rate_hz,
+    float window_width_ms) {
+    n_segments_ = 0;
+    n_samples_per_segment_ = 0;
+    sample_rate_hz_ = sample_rate_hz;
+
+    samples_ = samples;
+    original_samples_ = samples_;
+
+    setWindowWidthMs(window_width_ms);
 }
 
-/// Replace samples in buffer
-///
-/// \note Size of newSamples must equal size of buffer
-///
-/// \param newSamples Samples to be copied into buffer
-void AudioBuffer::setSamples(const std::vector<float> &newSamples) {
-    // If the Audio Buffer is empty, allow the user to set the samples with a
-    // vector of any size. Otherwise, the new samples must be the same size as
-    // the original samples
-    if (!isEmpty() && (newSamples.size() != samples.size())) {
-        throw std::length_error("Unsupported buffer write: new size must equal old size");
+AudioBuffer::AudioBuffer(int sample_rate_hz, float window_width_ms) {
+    n_segments_ = 0;
+    n_samples_per_segment_ = 0;
+    sample_rate_hz_ = sample_rate_hz;
+
+    samples_ = original_samples_ = {};
+
+    setWindowWidthMs(window_width_ms);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Accessors //////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+std::vector<float> AudioBuffer::getSamples() const {
+    return samples_;
+}
+
+void AudioBuffer::setSamples(const std::vector<float> &samples) {
+    // If, for some reason, the passed vector is empty, simply clear the buffer
+    if (samples.empty()) {
+        n_segments_ = 0;
+        n_samples_per_segment_ = 0;
+        samples_.clear();
+
+        return;
     }
 
-    samples = newSamples;
+    samples_ = samples;
+    setWindowWidthMs(getWindowWidthMs());
+}
 
-    // If the Audio Buffer was empty, determine the segmentation bounds
-    if (isEmpty()) {
-        setWindowWidth(getWindowWidth());
+float AudioBuffer::getWindowWidthMs() const {
+    float numerator = n_samples_per_segment_;
+    float denominator = sample_rate_hz_ * 1.0e-3;
+
+    return numerator / denominator;
+}
+
+void AudioBuffer::setWindowWidthMs(float window_width_ms) {
+    if (window_width_ms == 0) {
+        n_samples_per_segment_ = 1;
+        n_segments_ = samples_.size();
+        return;
     }
-}
 
-/// Return window width (in number of samples)
-float AudioBuffer::getWindowWidth() const {
-    return float(samplesPerSegment) / float(sampleRateHz * 1.0e-3);
-}
-
-/// Update the window width, modifying segment bounds
-///
-/// \param windowWidthMs Desired window width (in milliseconds)
-void AudioBuffer::setWindowWidth(float windowWidthMs) {
     // Re-compute segment bounds
-    samplesPerSegment = int(float(sampleRateHz) * windowWidthMs * 1e-3);
-    nSegments = samples.size() / samplesPerSegment;
+    n_samples_per_segment_ = sample_rate_hz_ * window_width_ms * 1e-3;
+    n_segments_ = samples_.size() / n_samples_per_segment_;
 
-    // Effectively pad final segment with zeros
-    unsigned int paddedSize = samplesPerSegment * nSegments;
-    if (samples.size() < paddedSize) {
-        samples.resize(paddedSize, 0);
-    } else if (samples.size() > paddedSize) {
-        samples.resize(paddedSize + samplesPerSegment, 0);
+    // Pad final segment with zeros
+    std::vector<float>::size_type padded_size =
+        n_samples_per_segment_ * n_segments_;
+
+    if (samples_.size() < padded_size) {
+        samples_.resize(padded_size, 0);
+
+    } else if (samples_.size() > padded_size) {
+        samples_.resize(padded_size + n_samples_per_segment_, 0);
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                             Const Getters
-///////////////////////////////////////////////////////////////////////////////
-
-/// Return sampling rate of audio
-int AudioBuffer::sampleRate() const {
-    return sampleRateHz;
+int AudioBuffer::getSampleRateHz() const {
+    return sample_rate_hz_;
 }
 
-/// Return ith audio segment
-std::vector<float> AudioBuffer::segment(int i) {
-    if (i >= nSegments) {
-        throw std::range_error("Segment index out of bounds");
+std::vector<float> AudioBuffer::getSegment(int i) const {
+    if (i >= n_segments_ || empty()) {
+        return {};
     }
 
-    if (isEmpty()) {
-        throw std::runtime_error("Cannot segment empty buffer");
-    }
-
-    auto offset = int(samplesPerSegment);
-    auto start = samples.begin() + (i * offset);
+    auto offset = n_samples_per_segment_;
+    auto start = samples_.begin() + (i * offset);
     auto end = start + offset;
 
     return {start, end};
 }
 
-/// Return 2-dimensional array of all segments
-std::vector<std::vector<float>> AudioBuffer::segments() {
-    auto _segments = std::vector<std::vector<float>>();
-    for (int i = 0; i < nSegments; i++) {
-        _segments.push_back(segment(i));
+std::vector<std::vector<float>> AudioBuffer::getAllSegments() const {
+    if (empty()) {
+        return {};
     }
 
-    return _segments;
+    auto segments = std::vector<std::vector<float>>();
+    for (int i = 0; i < n_segments_; i++) {
+        segments.push_back(getSegment(i));
+    }
+
+    return segments;
 }
 
-/// Return number of audio samples in each segment
-size_t AudioBuffer::segmentSize() const {
-    return samplesPerSegment;
+int AudioBuffer::getNSamplesPerSegment() const {
+    return n_samples_per_segment_;
 }
 
-/// Return number of total audio segments
-size_t AudioBuffer::size() const {
-    return nSegments;
-}
-
-/// Return whether or not the Audio Buffer contains samples
-bool AudioBuffer::isEmpty() const {
-    return samples.empty();
+int AudioBuffer::getNSegments() const {
+    return n_segments_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                       Public Utility Functions
+// Metadata ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Export buffer contents to WAV audio file
-///
-/// \param path Path to new audio file
-void AudioBuffer::render(const std::string &path) {
+bool AudioBuffer::empty() const {
+    return samples_.empty();
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Utility ////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
+AudioBuffer AudioBuffer::copy() const {
+    return AudioBuffer(samples_, sample_rate_hz_, getWindowWidthMs());
+}
+
+bool AudioBuffer::render(const std::string &path) const {
     // Throw error if buffer is empty
-    if (isEmpty()) {
-        throw std::runtime_error("Cannot render empty buffer");
+    if (empty()) {
+        return false;
     }
-    
-    // Construct 8kHz mono audio file handle
-    auto metadata = SF_INFO();
 
+    // Construct WAV audio file handle
+    auto metadata = SF_INFO();
     metadata.channels = 1;
-    metadata.frames = sf_count_t(samples.size());
+    metadata.frames = sf_count_t(samples_.size());
     metadata.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-    metadata.samplerate = int(sampleRateHz);
+    metadata.samplerate = sample_rate_hz_;
 
     // Open file
-    auto sndfile = sf_open(path.c_str(), SFM_WRITE, &metadata);
-    sf_writef_float(sndfile, samples.data(), sf_count_t(samples.size()));
-    sf_close(sndfile);
+    // TODO(Joseph Bellahcen) Track number of samples written and return error
+    // if number does not match original buffer size
+    auto audio_file = sf_open(path.c_str(), SFM_WRITE, &metadata);
+    sf_writef_float(audio_file, samples_.data(), sf_count_t(samples_.size()));
+    sf_close(audio_file);
+
+    return true;
 }
 
-/// Restore buffer to its initialization state
-///
-/// \note This function will NOT reset the window width
 void AudioBuffer::reset() {
-    samples = originalSamples;
+    samples_ = original_samples_;
 }
 
-// Mix audio buffer to mono by summing each frame across channels and averaging the result
-void AudioBuffer::mixToMono(int nOriginalChannels) {
-    auto monoSize = samples.size() / nOriginalChannels;
-    auto monoSamples = std::vector<float>(monoSize, 0);
+///////////////////////////////////////////////////////////////////////////////
+// Static Initialization Utilities ////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-    for (int frame = 0; frame < monoSize; frame++) {
-        for (int channel = 0; channel < nOriginalChannels; channel++) {
-            monoSamples[frame] += samples[frame * nOriginalChannels + channel];
+std::vector<float> AudioBuffer::mixToMono(std::vector<float> samples,
+    int n_channels) {
+    int mono_size = samples.size() / n_channels;
+    auto mono_samples = std::vector<float>(mono_size, 0);
+
+    for (int frame = 0; frame < mono_size; frame++) {
+        for (int channel = 0; channel < n_channels; channel++) {
+            mono_samples[frame] += samples[frame * n_channels + channel];
         }
 
-        monoSamples[frame] /= float(nOriginalChannels);
+        mono_samples[frame] /= static_cast<float>(n_channels);
     }
 
-    samples = monoSamples;
+    return mono_samples;
 }
 
 // Resample the audio buffer to the target sample rate
-void AudioBuffer::resample(int targetSampleRateHz) {
+std::vector<float> AudioBuffer::resample(std::vector<float> samples,
+    int src_sample_rate_hz, int target_sample_rate_hz) {
     // Resampler parameters
     // NOTE:    If a future version of this codebase requires
     //          compatibility with stereo audio, compute the
     //          number of frames as: size / (channels * ratio)
     //          and the number of samples as: (frames * channels)
-    double ratio = double(targetSampleRateHz) / double(sampleRateHz);
-    int nFrames = int(double(samples.size()) * ratio);
-    auto resampledBuffer = std::vector<float>(nFrames);
+    double ratio = target_sample_rate_hz / src_sample_rate_hz;
+    auto n_frames = samples.size() * ratio;
+    auto resampled_buffer = std::vector<float>(n_frames);
 
     // Initialize resampler
     auto resampler = SRC_DATA();
     resampler.data_in = samples.data();
-    resampler.input_frames = long(samples.size());
-    resampler.data_out = resampledBuffer.data();
-    resampler.output_frames = nFrames;
+    resampler.input_frames = samples.size();
+    resampler.data_out = resampled_buffer.data();
+    resampler.output_frames = n_frames;
     resampler.src_ratio = ratio;
 
     // Store resampled audio
+    // TODO(Joseph Bellahcen): Check for errors and return empty vector if occur
     src_simple(&resampler, SRC_SINC_BEST_QUALITY, 1);
-    sampleRateHz = targetSampleRateHz;
-    samples = resampledBuffer;
+    return resampled_buffer;
 }
+
+};  // namespace tms_express

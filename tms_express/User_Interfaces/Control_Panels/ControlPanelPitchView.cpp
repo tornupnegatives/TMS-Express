@@ -11,6 +11,8 @@
 #include <QWidget>
 #include <QtWidgets>
 
+namespace tms_express {
+
 ControlPanelPitchView::ControlPanelPitchView(QWidget *parent): ControlPanelView("Pitch Analysis", parent) {
     auto line2 = new QFrame(this);
     line2->setFrameShape(QFrame::HLine);
@@ -102,3 +104,5 @@ int ControlPanelPitchView::maxPitchFrq() {
 int ControlPanelPitchView::minPitchFrq() {
     return minPitchLine->text().toInt();
 }
+
+};  // namespace tms_express

@@ -3,10 +3,12 @@
 #ifndef TMS_EXPRESS_AUDIOFILTER_H
 #define TMS_EXPRESS_AUDIOFILTER_H
 
-#include "AudioBuffer.h"
+#include "AudioBuffer.hpp"
 #include <array>
 #include <string>
 #include <vector>
+
+namespace tms_express {
 
 class AudioFilter {
 public:
@@ -25,5 +27,7 @@ private:
     void applyBiquad(AudioBuffer &buffer);
     void computeCoeffs(FilterMode mode, int cutoffHz);
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_AUDIOFILTER_H

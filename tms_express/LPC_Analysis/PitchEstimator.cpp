@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <vector>
 
+namespace tms_express {
+
 /// Create a new pitch estimator, bounded by the min and max frequencies
 ///
 /// \param sampleRateHz Sample rate of the audio samples
@@ -97,3 +99,5 @@ int PitchEstimator::estimatePeriod(const std::vector<float> &acf) const {
         return period;
     }
 }
+
+};  // namespace tms_express

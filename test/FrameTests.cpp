@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+namespace tms_express {
 
 Frame frameTestSubject() {
     return Frame(38, true, 56.850773, {-0.753234, 0.939525, -0.342255, -0.172317,
@@ -123,3 +124,5 @@ TEST(FrameTests, VoicedFrame) {
     auto k10Bin = bin.substr(47, 3);
     EXPECT_EQ(k10Bin, "100");
 }
+
+};  // namespace tms_express

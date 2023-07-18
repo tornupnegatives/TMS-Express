@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace tms_express {
+
 using std::vector;
 using std::array;
 
@@ -114,5 +116,7 @@ namespace Tms5220CodingTable {
         }
     }
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_TMS5220CODINGTABLE_H

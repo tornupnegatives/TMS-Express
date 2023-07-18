@@ -10,6 +10,8 @@
 
 #include <vector>
 
+namespace tms_express {
+
 class AudioWaveformView: public QWidget {
     Q_OBJECT
 public:
@@ -29,5 +31,7 @@ private:
     AudioWaveform *waveform;
     QPushButton *playButton;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_AUDIOWAVEFORMVIEW_H

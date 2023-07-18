@@ -8,6 +8,8 @@
 #include <QWidget>
 #include <QtWidgets>
 
+namespace tms_express {
+
 class ControlPanelPostView: public ControlPanelView {
 Q_OBJECT
 public:
@@ -40,5 +42,7 @@ private:
     QLineEdit *maxUnvoicedGainLine;
     QLineEdit *maxVoicedGainLine;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_CONTROLPANELPOSTVIEW_H

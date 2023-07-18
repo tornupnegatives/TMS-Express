@@ -13,7 +13,7 @@
 //                  https://github.com/tocisz/talkie.love
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Audio/AudioBuffer.h"
+#include "Audio/AudioBuffer.hpp"
 #include "Frame_Encoding/Synthesizer.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/Tms5220CodingTable.h"
@@ -21,6 +21,8 @@
 #include <cmath>
 #include <string>
 #include <vector>
+
+namespace tms_express {
 
 using namespace Tms5220CodingTable;
 
@@ -192,3 +194,5 @@ float Synthesizer::updateLatticeFilter() {
 std::vector<float> Synthesizer::samples() {
     return synthesizedSamples;
 }
+
+};  // namespace tms_express

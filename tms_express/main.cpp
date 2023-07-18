@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     if (argc == 1) {
         QApplication app(argc, argv);
 
-        MainWindow w;
+        tms_express::MainWindow w;
         w.show();
 
         return app.exec();
@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 
     // Otherwise, use command-line interface
     if (argc > 1) {
-        CommandLineApp cli = CommandLineApp();
+        auto cli = tms_express::CommandLineApp();
         int status = cli.run(argc, argv);
         exit(status);
     }

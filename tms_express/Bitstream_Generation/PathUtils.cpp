@@ -13,6 +13,8 @@
 #include <utility>
 #include <vector>
 
+namespace tms_express {
+
 namespace fs = std::filesystem;
 
 PathUtils::PathUtils(std::string filepath) {
@@ -98,3 +100,5 @@ std::vector<std::string> PathUtils::splitString(const std::string& str, const st
 
     return result;
 }
+
+};  // namespace tms_express

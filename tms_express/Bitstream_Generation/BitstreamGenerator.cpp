@@ -8,7 +8,7 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Audio/AudioBuffer.h"
+#include "Audio/AudioBuffer.hpp"
 #include "Audio/AudioFilter.h"
 #include "Bitstream_Generation/BitstreamGenerator.h"
 #include "Frame_Encoding/Frame.h"
@@ -23,6 +23,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
+namespace tms_express {
 
 BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style,
                                        bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
@@ -83,7 +85,7 @@ void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
 // Generate a bitstream from a single audio file
 std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPath) const {
     // Mix audio to 8kHz mono and store in a segmented buffer
-    auto lpcBuffer = AudioBuffer(inputPath, 8000, windowMs);
+    auto lpcBuffer = *AudioBuffer::Create(inputPath, 8000, windowMs);
 
     // Copy the buffer so that upper and lower vocal tract analysis may occur separately
     auto pitchBuffer = AudioBuffer(lpcBuffer);
@@ -102,8 +104,8 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
     // Only the LPC buffer is queried for metadata, since it will have the same number of samples as the pitch buffer.
     // The sample rate of the buffer is extracted despite being known, as future iterations of TMS Express may support
     // encoding 10kHz/variable sample rate audio for the TMS5200C
-    auto nSegments = lpcBuffer.size();
-    auto sampleRate = lpcBuffer.sampleRate();
+    auto nSegments = lpcBuffer.getNSegments();
+    auto sampleRate = lpcBuffer.getSampleRateHz();
 
     // Initialize analysis objects and data structures
     auto linearPredictor = LinearPredictor();
@@ -112,8 +114,8 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
 
     for (int i = 0; i < nSegments; i++) {
         // Get segment for frame
-        auto pitchSegment = pitchBuffer.segment(i);
-        auto lpcSegment = lpcBuffer.segment(i);
+        auto pitchSegment = pitchBuffer.getSegment(i);
+        auto lpcSegment = lpcBuffer.getSegment(i);
 
         // Apply a window function to the segment to smoothen its boundaries
         //
@@ -182,3 +184,5 @@ std::string BitstreamGenerator::formatBitstream(const std::vector<Frame>& frames
 
     return bitstream;
 }
+
+};  // namespace tms_express

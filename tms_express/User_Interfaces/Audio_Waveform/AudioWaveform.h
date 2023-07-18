@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+namespace tms_express {
+
 class AudioWaveform : public QWidget {
     Q_OBJECT
 public:
@@ -24,5 +26,7 @@ private:
     std::vector<float> pitchTable;
     std::vector<float> samples;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_AUDIOWAVEFORM_H

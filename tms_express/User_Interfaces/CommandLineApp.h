@@ -6,6 +6,8 @@
 #include "Bitstream_Generation/BitstreamGenerator.h"
 #include "CLI11.hpp"
 
+namespace tms_express {
+
 class CommandLineApp : public CLI::App {
 public:
     CommandLineApp();
@@ -32,5 +34,7 @@ private:
 
     void setupEncoder();
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_COMMANDLINEAPP_H

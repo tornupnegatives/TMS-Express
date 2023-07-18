@@ -16,13 +16,15 @@
 #include <cmath>
 #include <vector>
 
+namespace tms_express {
+
 AudioFilter::AudioFilter() = default;
 
 /// Apply Hamming window to buffer
 ///
 /// \param buffer Buffer on which to apply Hamming window
 void AudioFilter::hammingWindow(AudioBuffer &buffer) {
-    for (auto &segment : buffer.segments()) {
+    for (auto &segment : buffer.getAllSegments()) {
         hammingWindow(segment);
     }
 }
@@ -173,3 +175,5 @@ void AudioFilter::computeCoeffs(AudioFilter::FilterMode mode, int cutoffHz) {
     // Normalization coefficient
     coeffs[5] = aCoeff[0];
 }
+
+};  // namespace tms_express

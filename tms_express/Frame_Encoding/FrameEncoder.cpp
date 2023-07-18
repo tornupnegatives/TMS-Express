@@ -21,6 +21,8 @@
 #include <fstream>
 #include <string>
 
+namespace tms_express {
+
 /// Create a new Frame Encoder with an empty frame buffer
 ///
 /// \param includeHexPrefix Whether or not to include '0x' before hex bytes
@@ -315,3 +317,5 @@ size_t FrameEncoder::parseAsciiBitstream(std::string flatBitstream) {
 
     return frames.size();
 }
+
+};  // namespace tms_express

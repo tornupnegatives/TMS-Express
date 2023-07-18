@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+namespace tms_express {
+
 // Compute the autocorrelation of a decaying cosine signal with amplitude 20 and period 50
 std::vector<float> acfTestSubject() {
     auto signal = std::vector<float>();
@@ -42,3 +44,5 @@ TEST(AutocorrelatorTests, AutocorrelationHasLocalMaxAtOriginalSignalPeriod) {
     auto periodIdx = std::distance(acf.begin(), nextMaxElement);
     EXPECT_NEAR(periodIdx, 50, 2);
 }
+
+};  // namespace tms_express

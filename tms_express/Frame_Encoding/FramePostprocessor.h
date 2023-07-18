@@ -6,6 +6,8 @@
 #include "Frame.h"
 #include <vector>
 
+namespace tms_express {
+
 class FramePostprocessor {
 public:
     explicit FramePostprocessor(std::vector<Frame> *frames, float maxVoicedGainDB = 37.5, float maxUnvoicedGainDB = 37.5);
@@ -36,5 +38,7 @@ private:
 
     void normalizeGain(bool normalizeVoicedFrames);
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_FRAMEPOSTPROCESSOR_H

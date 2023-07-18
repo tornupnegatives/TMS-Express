@@ -10,6 +10,8 @@
 
 #include "User_Interfaces/Control_Panels/ControlPanelView.h"
 
+namespace tms_express {
+
 /// Initialize a new Control Panel View
 ///
 /// At minimum, the Control Panel View will have a title with a line below it
@@ -33,3 +35,5 @@ ControlPanelView::ControlPanelView(const std::string &panelTitle, QWidget *paren
 void ControlPanelView::stateChangeSlot() {
     emit stateChangeSignal();
 }
+
+};  // namespace tms_express

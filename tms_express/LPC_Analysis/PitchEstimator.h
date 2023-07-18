@@ -3,8 +3,10 @@
 #ifndef TMS_EXPRESS_PITCHESTIMATOR_H
 #define TMS_EXPRESS_PITCHESTIMATOR_H
 
-#include "Audio/AudioBuffer.h"
+#include "Audio/AudioBuffer.hpp"
 #include <vector>
+
+namespace tms_express {
 
 class PitchEstimator {
 public:
@@ -28,5 +30,7 @@ private:
     int minPeriod;
     int sampleRate;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_PITCHESTIMATOR_H

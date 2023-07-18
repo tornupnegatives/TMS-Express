@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+namespace tms_express {
+
 class Frame {
 public:
     Frame(int pitchPeriod, bool isVoiced, float gainDB, std::vector<float> coeffs);
@@ -53,5 +55,7 @@ private:
     static int closestCodingTableIndexForValue(float value, std::vector<float> codingTableRow);
     static std::string valueToBinary(int value, int bitWidth);
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_FRAME_H

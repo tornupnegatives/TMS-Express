@@ -9,6 +9,8 @@
 #include <QtWidgets>
 #include <string>
 
+namespace tms_express {
+
 class ControlPanelPitchView: public ControlPanelView {
 Q_OBJECT
 public:
@@ -39,5 +41,7 @@ private:
     QLabel *minPitchLabel;
     QLineEdit *minPitchLine;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_CONTROLPANELPITCHVIEW_H

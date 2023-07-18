@@ -6,6 +6,8 @@
 #include <QWidget>
 #include <QtWidgets>
 
+namespace tms_express {
+
 AudioWaveformView::AudioWaveformView(std::string title, uint baseWidth, uint baseHeight, QWidget *parent): QWidget(parent) {
     setMinimumSize(baseWidth, baseHeight);
 
@@ -42,3 +44,5 @@ void AudioWaveformView::plotSamples(const std::vector<float> &_samples) {
 void AudioWaveformView::onPlayButtonPressed() {
     emit signalPlayButtonPressed(true);
 }
+
+};  // namespace tms_express

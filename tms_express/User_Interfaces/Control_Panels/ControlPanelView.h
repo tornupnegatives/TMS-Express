@@ -8,6 +8,8 @@
 
 #include <string>
 
+namespace tms_express {
+
 class ControlPanelView: public QWidget {
 Q_OBJECT
 public:
@@ -25,5 +27,7 @@ signals:
 protected:
     QGridLayout *grid;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_CONTROLPANELVIEW_H

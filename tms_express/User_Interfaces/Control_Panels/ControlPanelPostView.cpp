@@ -12,6 +12,8 @@
 #include <QWidget>
 #include <QtWidgets>
 
+namespace tms_express {
+
 using namespace Tms5220CodingTable;
 
 ControlPanelPostView::ControlPanelPostView(QWidget *parent): ControlPanelView("Post-Processing", parent) {
@@ -137,3 +139,5 @@ float ControlPanelPostView::maxUnvoicedGain() {
 float ControlPanelPostView::maxVoicedGain() {
     return maxVoicedGainLine->text().toFloat();
 }
+
+};  // namespace tms_express

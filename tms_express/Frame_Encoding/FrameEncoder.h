@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+namespace tms_express {
+
 class FrameEncoder {
 public:
     explicit FrameEncoder(bool includeHexPrefix = false, char separator = ',');
@@ -42,5 +44,7 @@ private:
     void appendStopFrame();
     [[nodiscard]] std::string byteToHex(const std::string &byte) const;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_FRAMEENCODER_H

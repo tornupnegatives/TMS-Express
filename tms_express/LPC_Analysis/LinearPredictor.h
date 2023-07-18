@@ -5,6 +5,8 @@
 
 #include <vector>
 
+namespace tms_express {
+
 class LinearPredictor {
 public:
     explicit LinearPredictor(int modelOrder = 10);
@@ -16,5 +18,7 @@ private:
     int order;
     float error;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_LINEARPREDICTOR_H

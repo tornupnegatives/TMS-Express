@@ -13,6 +13,8 @@
 
 #include <vector>
 
+namespace tms_express {
+
 /// Create a new Frame Postprocessor
 ///
 /// \param frames Frames to modify
@@ -204,3 +206,5 @@ void FramePostprocessor::reset() {
         frame = originalFrame;
     }
 }
+
+};  // namespace tms_express

@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <vector>
 
+namespace tms_express {
+
 // The hex stream should, at minimum, contain a StopFrame
 TEST(FrameEncoderTests, StopFrame) {
     auto frameEncoder = FrameEncoder();
@@ -123,3 +125,5 @@ TEST(FrameEncoderTests, AsciiMixtureOfFrames) {
     auto bin = frameEncoder.toHex();
     EXPECT_EQ(bin, "c0,8c,a4,5b,e2,bc,0a,33,92,6e,89,f3,2a,08,88,4f,e5,01");
 }
+
+};  // namespace tms_express

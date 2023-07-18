@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+namespace tms_express {
+
 class Synthesizer {
 public:
     explicit Synthesizer(int sampleRateHz = 8000, float frameRateMs = 25.0f);
@@ -34,5 +36,7 @@ private:
     bool updateNoiseGenerator();
     float updateLatticeFilter();
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_SYNTHESIZER_H

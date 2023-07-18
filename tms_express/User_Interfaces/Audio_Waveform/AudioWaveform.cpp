@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+namespace tms_express {
+
 /// Create a new Audio Waveform plot
 AudioWaveform::AudioWaveform(QWidget *parent) : QWidget(parent) {
     // Set the plot background to true black
@@ -87,3 +89,5 @@ void AudioWaveform::paintEvent(QPaintEvent * event) {
         }
     }
 }
+
+};  // namespace tms_express

@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+namespace tms_express {
+
 class PathUtils {
 public:
     explicit PathUtils(std::string filepath);
@@ -27,5 +29,6 @@ private:
     static std::vector<std::string> splitString(const std::string& str, const std::string& delim);
 };
 
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_PATHUTILS_H

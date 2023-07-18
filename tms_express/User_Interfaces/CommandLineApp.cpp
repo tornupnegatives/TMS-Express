@@ -12,6 +12,8 @@
 
 #include "CLI11.hpp"
 
+namespace tms_express {
+
 /// Setup a CLI11 interface for accessing TMS Express from the command line
 CommandLineApp::CommandLineApp() {
     encoder = add_subcommand("encode", "Convert audio file(s) to TMS5220 bitstream(s)");
@@ -89,3 +91,5 @@ void CommandLineApp::setupEncoder() {
     encoder->add_option("-m,--min-pitch", minPitchFrq, "Min pitch frequency (Hz)");
     encoder->add_option("-o,--output,output", outputPath, "Path to output file")->required();
 }
+
+};  // namespace tms_express

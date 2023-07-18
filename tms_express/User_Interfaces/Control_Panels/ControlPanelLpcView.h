@@ -8,6 +8,8 @@
 #include <QWidget>
 #include <QtWidgets>
 
+namespace tms_express {
+
 class ControlPanelLpcView: public ControlPanelView {
 Q_OBJECT
 public:
@@ -34,5 +36,7 @@ private:
     QCheckBox *preemphCheckbox;
     QLineEdit *preemphLine;
 };
+
+};  // namespace tms_express
 
 #endif //TMS_EXPRESS_CONTROLPANELLPCVIEW_H

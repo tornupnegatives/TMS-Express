@@ -18,6 +18,8 @@
 #include <cmath>
 #include <vector>
 
+namespace tms_express {
+
 using namespace Tms5220CodingTable;
 
 /// Create a new frame
@@ -295,3 +297,5 @@ std::string Frame::valueToBinary(int value, int bitWidth) {
 
     return bin;
 }
+
+};  // namespace tms_express
