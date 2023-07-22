@@ -1,16 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: AudioFilter
-//
-// Description: The Filterer applies filters to audio data to reduce the impact of unnecessary frequency components
-//              on speech signal analysis. The class implements biquadratic highpass and lowpass filters, as well as
-//              a pre-emphasis filter. All filters operate in the time-domain
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-//
-// Acknowledgement: The bi-quadratic filter algorithms come from Robert Bristow-Johnson <robert@audioheads.com>.
-//                  Additional information about digital biquad filters may be found at
-//                  https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
 
 #include "Audio/AudioFilter.hpp"
 
@@ -98,6 +86,11 @@ void AudioFilter::applyBiquad(AudioBuffer &buffer) {
 }
 
 void AudioFilter::computeCoeffs(AudioFilter::FilterMode mode, int cutoff_hz) {
+    // Acknowledgement: The bi-quadratic filter algorithms come from
+    //  Robert Bristow-Johnson <robert@audioheads.com>.
+    //  Additional information about digital biquad filters may be found at
+    //  https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
+
     // Filter-agnostic parameters
     float omega = 2.0f * M_PI * cutoff_hz / 8000.0f;
     float cs = cosf(omega);
