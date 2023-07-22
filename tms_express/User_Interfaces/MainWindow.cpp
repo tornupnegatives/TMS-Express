@@ -404,15 +404,15 @@ void MainWindow::performPitchAnalysis() {
 
     // Pre-process
     if (pitchControl->hpfEnabled()) {
-        filter.highpass(inputBuffer, pitchControl->hpfCutoff());
+        filter.applyHighpass(inputBuffer, pitchControl->hpfCutoff());
     }
 
     if (pitchControl->lpfEnabled()) {
-        filter.lowpass(inputBuffer, pitchControl->lpfCutoff());
+        filter.applyLowpass(inputBuffer, pitchControl->lpfCutoff());
     }
 
     if (pitchControl->preemphEnabled()) {
-        filter.preEmphasis(inputBuffer, pitchControl->preemphAlpha());
+        filter.applyPreEmphasis(inputBuffer, pitchControl->preemphAlpha());
     }
 
     pitchEstimator.setMaxPeriod(pitchControl->minPitchFrq());
@@ -450,18 +450,18 @@ void MainWindow::performLpcAnalysis() {
     // Pre-process
     if (lpcControl->hpfEnabled()) {
         qDebug() << "HPF";
-        filter.highpass(lpcBuffer, lpcControl->hpfCutoff());
+        filter.applyHighpass(lpcBuffer, lpcControl->hpfCutoff());
     }
 
     if (lpcControl->lpfEnabled()) {
         qDebug() << "LPF";
-        filter.lowpass(lpcBuffer, lpcControl->lpfCutoff());
+        filter.applyLowpass(lpcBuffer, lpcControl->lpfCutoff());
     }
 
     if (lpcControl->preemphEnabled()) {
         qDebug() << "PEF";
         qDebug() << (lpcBuffer.empty());
-        filter.preEmphasis(lpcBuffer, lpcControl->preemphAlpha());
+        filter.applyPreEmphasis(lpcBuffer, lpcControl->preemphAlpha());
     }
 
     for (int i = 0; i < lpcBuffer.getNSegments(); i++) {

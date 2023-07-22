@@ -12,71 +12,44 @@
 //                  https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Audio/AudioFilter.h"
+#include "Audio/AudioFilter.hpp"
+
 #include <cmath>
 #include <vector>
 
 namespace tms_express {
 
-AudioFilter::AudioFilter() = default;
-
-/// Apply Hamming window to buffer
-///
-/// \param buffer Buffer on which to apply Hamming window
-void AudioFilter::hammingWindow(AudioBuffer &buffer) {
+void AudioFilter::applyHammingWindow(AudioBuffer &buffer) {
     for (auto &segment : buffer.getAllSegments()) {
-        hammingWindow(segment);
+        applyHammingWindow(segment);
     }
 }
 
-/// Apply Hamming window to audio segment
-///
-/// \note Because speech segments in isolation cannot convey information about the transition between each other,
-///         a windowing function is necessary to smooth their boundaries. This is accomplished by "smearing" the
-///         spectrum of the segments by a known alpha value. For the Hamming Window, which is preferred for speech
-///         signal analysis, this smearing coefficient alpha=0.54
-///
-/// \param segment Segment on which to apply Hamming window
-void AudioFilter::hammingWindow(std::vector<float> &segment) {
+void AudioFilter::applyHammingWindow(std::vector<float> &segment) {
     auto size = segment.size();
 
     for (int i = 0; i < size; i++) {
-        float theta = 2.0f * float(M_PI) * float(i) / float(size);
-        // TODO: Make smearing coefficient alpha configurable
+        float theta = 2.0f * M_PI * i / size;
+        // TODO(Joseph Bellahcen): Make smearing coefficient alpha configurable
         float window = 0.54f - 0.46f * cosf(theta);
         segment[i] *= window;
     }
 }
 
-/// Apply time-domain highpass filter to buffer
-///
-/// \param buffer Buffer to filter
-/// \param cutoffHz Highpass filter cutoff (in Hertz)
-void AudioFilter::highpass(AudioBuffer &buffer, int cutoffHz) {
-    computeCoeffs(HPF, cutoffHz);
+void AudioFilter::applyHighpass(AudioBuffer &buffer, int cutoff_hz) {
+    computeCoeffs(HPF, cutoff_hz);
     applyBiquad(buffer);
 }
 
-/// Apply time-domain lowpass filter to buffer
-///
-/// \param buffer Buffer to filter
-/// \param cutoffHz Lowpass filter cutoff (in Hertz)
-void AudioFilter::lowpass(AudioBuffer &buffer, int cutoffHz) {
-    computeCoeffs(LPF, cutoffHz);
+void AudioFilter::applyLowpass(AudioBuffer &buffer, int cutoff_hz) {
+    computeCoeffs(LPF, cutoff_hz);
     applyBiquad(buffer);
 }
 
-/// Apply a time-domain pre-emphasis filter to the samples
-///
-/// \note   During LPC analysis, a pre-emphasis filter balances the signal spectrum by augmenting high-frequencies.
-///         This is undesirable for pitch estimation, but may improve the accuracy of linear prediction
-///
-/// \param buffer Buffer to filter
-/// \param alpha Pre-emphasis coefficient (typically, alpha = 15/16)
-void AudioFilter::preEmphasis(AudioBuffer &buffer, float alpha) {
+void AudioFilter::applyPreEmphasis(AudioBuffer &buffer, float alpha) {
     // Initialize filtered buffer
-    std::vector<float> samples = buffer.getSamples();
-    std::vector<float> filteredSamples = std::vector<float>();
+    auto samples = buffer.getSamples();
+    auto filteredSamples = std::vector<float>();
 
     float previous = samples[0];
     filteredSamples.push_back(previous);
@@ -84,17 +57,14 @@ void AudioFilter::preEmphasis(AudioBuffer &buffer, float alpha) {
     // Apply filter
     // y(t) = x(t) - a * x(t-1)
     for (int i = 1; i < samples.size(); i++) {
-        float preEmphasized = samples[i] - alpha * samples[i - 1];
-        filteredSamples.push_back(preEmphasized);
+        auto new_sample = samples[i] - alpha * samples[i - 1];
+        filteredSamples.push_back(new_sample);
     }
 
     // Store filtered samples
     buffer.setSamples(filteredSamples);
 }
 
-/// Apply biquad filter coefficients to buffer
-///
-/// \param buffer Buffer to filter
 void AudioFilter::applyBiquad(AudioBuffer &buffer) {
     // Rename coefficients for readability
     float k0 = coeffs[0];
@@ -111,7 +81,8 @@ void AudioFilter::applyBiquad(AudioBuffer &buffer) {
 
     // Apply filter
     for (float &sample : samples) {
-        float result = (k0 * sample) + (k1 * x1) + (k2 * x2) - (k3 * y1) - (k4 * y2);
+        float result = (k0 * sample) + (k1 * x1) +
+                        (k2 * x2) - (k3 * y1)- (k4 * y2);
         result /= normalizationCoeff;
 
         x2 = x1;
@@ -126,15 +97,9 @@ void AudioFilter::applyBiquad(AudioBuffer &buffer) {
     buffer.setSamples(samples);
 }
 
-/// Determine the biquadratic filter coefficients
-///
-/// \param coeffs Destination array (5-wide) to store coefficients
-/// \param mode Filter mode (HPF or LPF)
-/// \param cutoffHz Filter cutoff (in Hertz)
-/// \return Normalization coefficient
-void AudioFilter::computeCoeffs(AudioFilter::FilterMode mode, int cutoffHz) {
+void AudioFilter::computeCoeffs(AudioFilter::FilterMode mode, int cutoff_hz) {
     // Filter-agnostic parameters
-    float omega = 2.0f * float(M_PI) * float(cutoffHz) / 8000.0f;
+    float omega = 2.0f * M_PI * cutoff_hz / 8000.0f;
     float cs = cosf(omega);
     float sn = sinf(omega);
     float alpha = sn / (2.0f * 0.707f);

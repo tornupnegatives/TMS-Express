@@ -4,7 +4,7 @@
 #define TMS_EXPRESS_MAINWINDOW_H
 
 #include "Audio/AudioBuffer.hpp"
-#include "Audio/AudioFilter.h"
+#include "Audio/AudioFilter.hpp"
 #include "Bitstream_Generation/BitstreamGenerator.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"

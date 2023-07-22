@@ -112,13 +112,6 @@ class AudioBuffer {
     [[deprecated]] void reset();
 
  private:
-    int n_segments_;
-    int n_samples_per_segment_;
-    int sample_rate_hz_;
-    std::vector<float> samples_;
-
-    std::vector<float> original_samples_;
-
     ///////////////////////////////////////////////////////////////////////////
     // Static Initialization Utilities ////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
@@ -137,6 +130,16 @@ class AudioBuffer {
     /// @return Resampled vectors at the target sample rate
     static std::vector<float> resample(std::vector<float> samples,
         int src_sample_rate_hz, int target_sample_rate_hz);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Members                         ////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    int n_segments_;
+    int n_samples_per_segment_;
+    int sample_rate_hz_;
+    std::vector<float> samples_;
+    std::vector<float> original_samples_;
 };
 
 };  //  namespace tms_express

@@ -9,7 +9,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Audio/AudioBuffer.hpp"
-#include "Audio/AudioFilter.h"
+#include "Audio/AudioFilter.hpp"
 #include "Bitstream_Generation/BitstreamGenerator.h"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
@@ -95,9 +95,9 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
     // The pitch buffer will ONLY be lowpass-filtered, as pitch is a low-frequency component of the signal. Neither
     // highpass filtering nor preemphasis, which exaggerate high-frequency components, will improve pitch estimation
     auto preprocessor = AudioFilter();
-    preprocessor.preEmphasis(lpcBuffer, preemphasisAlpha);
-    preprocessor.highpass(lpcBuffer, highpassHz);
-    preprocessor.lowpass(pitchBuffer, lowpassHz);
+    preprocessor.applyPreEmphasis(lpcBuffer, preemphasisAlpha);
+    preprocessor.applyHighpass(lpcBuffer, highpassHz);
+    preprocessor.applyLowpass(pitchBuffer, lowpassHz);
 
     // Extract buffer metadata
     //
@@ -121,7 +121,7 @@ std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPa
         //
         // Because information about the transition between adjacent frames is lost during segmentation, a window will
         // help produce smoother results
-        preprocessor.hammingWindow(lpcSegment);
+        preprocessor.applyHammingWindow(lpcSegment);
 
         // Compute the autocorrelation of each segment, which serves as the basis of all analysis
         auto lpcAcf = tms_express::Autocorrelation(lpcSegment);
