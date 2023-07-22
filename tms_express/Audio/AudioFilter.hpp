@@ -11,10 +11,9 @@
 
 namespace tms_express {
 
+/// @brief Implements various digital filters for processing audio samples
 class AudioFilter {
  public:
-    AudioFilter() = default;
-
     /// @brief Applies Hamming window to entire buffer
     /// @param buffer Audio Buffer to apply window to
     void applyHammingWindow(AudioBuffer &buffer);
