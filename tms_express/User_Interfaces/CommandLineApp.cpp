@@ -7,7 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Bitstream_Generation/BitstreamGenerator.hpp"
-#include "Bitstream_Generation/PathUtils.h"
+#include "Bitstream_Generation/PathUtils.hpp"
 #include "User_Interfaces/CommandLineApp.h"
 
 #include "CLI11.hpp"
@@ -35,12 +35,12 @@ int CommandLineApp::run(int argc, char** argv) {
         auto input = PathUtils(inputPath);
         auto output = PathUtils(outputPath);
 
-        if (!input.fileExists()) {
+        if (!input.exists()) {
             std::cerr << "Input file does not exist or is empty" << std::endl;
             return 1;
         }
 
-        if (input.isDirectory() && !bitstreamFormat && (!output.isDirectory() && output.fileExists())) {
+        if (input.isDirectory() && !bitstreamFormat && (!output.isDirectory() && output.exists())) {
             std::cerr << "Batch mode requires a directory for ASCII bitstreams" << std::endl;
             return 0;
         }

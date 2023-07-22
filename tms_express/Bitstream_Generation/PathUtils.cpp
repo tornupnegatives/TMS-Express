@@ -1,13 +1,7 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: PathUtils
-//
-// Description: The PathUtils class provides basic file metadata. It can crawl directories for files as well as isolate
-//              filenames from other path components
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "Bitstream_Generation/PathUtils.h"
+#include "Bitstream_Generation/PathUtils.hpp"
+
 #include <filesystem>
 #include <string>
 #include <utility>
@@ -15,21 +9,21 @@
 
 namespace tms_express {
 
-namespace fs = std::filesystem;
-
-PathUtils::PathUtils(std::string filepath) {
+PathUtils::PathUtils(const std::string &filepath) {
     // Gather file metadata
-    srcPath = std::move(filepath);
-    exists = fs::exists(srcPath);
-    fileIsDirectory = fs::is_directory(srcPath);
+    exists_ = std::filesystem::exists(filepath);
+    is_directory_ = std::filesystem::is_directory(filepath);
 
     // Traverse directory (if applicable)
     paths = std::vector<std::string>();
-    if (!fileIsDirectory) {
-        paths.push_back(srcPath);
+
+    if (!is_directory_) {
+        paths.push_back(filepath);
+
     } else {
-        for (const auto& dirEntry : fs::directory_iterator(srcPath)) {
-            auto path = dirEntry.path().string();
+        auto iterator = std::filesystem::directory_iterator(filepath);
+        for (const auto& entry : iterator) {
+            auto path = entry.path().string();
             paths.push_back(path);
         }
     }
@@ -42,58 +36,47 @@ PathUtils::PathUtils(std::string filepath) {
     }
 }
 
-// Check if file exists
-bool PathUtils::fileExists() const {
-    return exists;
+bool PathUtils::exists() const {
+    return exists_;
 }
 
-// Check if file is directory
 bool PathUtils::isDirectory() const {
-    return fileIsDirectory;
+    return is_directory_;
 }
 
-// Get vector of paths pointed to by file
-//
-// Returns vector with a single element if the file is not a directory
-std::vector<std::string> PathUtils::getPaths() {
+
+std::vector<std::string> PathUtils::getPaths() const {
     return paths;
 }
 
-// Return vector of filenames residing at path
-//
-//Returns vector with a single element if the file is not a directory
-std::vector<std::string> PathUtils::getFilenames() {
+std::vector<std::string> PathUtils::getFilenames() const {
     return filenames;
 }
 
-// Isolate filename from other path components, including extensions
 std::string PathUtils::extractFilenameFromPath(const std::string &path) {
     // Get the lowest element in the path hierarchy
-    auto fullFilename = splitString(path, "/").back();
+    auto filename_with_extension = splitString(path, "/").back();
 
     // Remove the extension
-    auto filename = splitString(fullFilename, ".").at(0);
+    auto filename = splitString(filename_with_extension, ".").at(0);
 
     return filename;
 }
 
-// Split string at delimiter into vector of substrings
-//
-// Does not include delimiter in substrings
-std::vector<std::string> PathUtils::splitString(const std::string& str, const std::string& delim) {
+std::vector<std::string> PathUtils::splitString(const std::string& str,
+    const std::string& delim) {
     auto result = std::vector<std::string>();
+    auto delim_size = delim.length();
 
-    int delimSize = int(delim.length());
-
-    int start = 0;
-    int end = int(str.find(delim));
+    auto start = 0;
+    auto end = str.find(delim);
 
     while (end != std::string::npos) {
         auto substr = str.substr(start, end - start);
         result.push_back(substr);
 
-        start = end + delimSize;
-        end = int(str.find(delim, start));
+        start = end + delim_size;
+        end = str.find(delim, start);
     }
 
     result.push_back(str.substr(start, end - start));
