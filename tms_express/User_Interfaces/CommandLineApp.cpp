@@ -6,7 +6,7 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Bitstream_Generation/BitstreamGenerator.h"
+#include "Bitstream_Generation/BitstreamGenerator.hpp"
 #include "Bitstream_Generation/PathUtils.h"
 #include "User_Interfaces/CommandLineApp.h"
 

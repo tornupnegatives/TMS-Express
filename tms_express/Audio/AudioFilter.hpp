@@ -16,11 +16,11 @@ class AudioFilter {
  public:
     /// @brief Applies Hamming window to entire buffer
     /// @param buffer Audio Buffer to apply window to
-    void applyHammingWindow(AudioBuffer &buffer);
+    void applyHammingWindow(AudioBuffer &buffer) const;
 
     /// @brief Applies Hamming window to segment of samples
     /// @param buffer Segment vector to apply window to
-    void applyHammingWindow(std::vector<float> &segment);
+    void applyHammingWindow(std::vector<float> &segment) const;
 
     /// @brief Applies highpass filter to entire buffer
     /// @param buffer Audio Buffer to apply filter to
@@ -35,16 +35,16 @@ class AudioFilter {
     /// @brief Applies pre-emphasis filter to entire buffer
     /// @param buffer Audio Buffer to apply filter to
     /// @param alpha Pre-emphasis coefficient (usually 0.9375)
-    void applyPreEmphasis(AudioBuffer &buffer, float alpha = 0.9375);
+    void applyPreEmphasis(AudioBuffer &buffer, float alpha = 0.9375) const;
 
  private:
     /// @brief Last-used filter mode
     /// @note The Filter Mode is stored to prevent unnecessary re-calculation
     ///         of filter coefficients
-    typedef enum FilterMode {HPF, LPF} FilterMode;
+    enum FilterMode {HPF, LPF};
 
     /// @brief Bi-quadratic filter coefficients
-    std::array<float, 6> coeffs{0, 0, 0, 0, 0, 0};
+    std::array<float, 6> coeffs_{0, 0, 0, 0, 0, 0};
 
     /// @brief Applies bi-quadratic filter coefficients to entire Buffer
     /// @param buffer Audio Buffer to apply filter to

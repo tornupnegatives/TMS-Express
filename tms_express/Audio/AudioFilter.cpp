@@ -7,13 +7,13 @@
 
 namespace tms_express {
 
-void AudioFilter::applyHammingWindow(AudioBuffer &buffer) {
+void AudioFilter::applyHammingWindow(AudioBuffer &buffer) const {
     for (auto &segment : buffer.getAllSegments()) {
         applyHammingWindow(segment);
     }
 }
 
-void AudioFilter::applyHammingWindow(std::vector<float> &segment) {
+void AudioFilter::applyHammingWindow(std::vector<float> &segment) const {
     auto size = segment.size();
 
     for (int i = 0; i < size; i++) {
@@ -34,7 +34,7 @@ void AudioFilter::applyLowpass(AudioBuffer &buffer, int cutoff_hz) {
     applyBiquad(buffer);
 }
 
-void AudioFilter::applyPreEmphasis(AudioBuffer &buffer, float alpha) {
+void AudioFilter::applyPreEmphasis(AudioBuffer &buffer, float alpha) const {
     // Initialize filtered buffer
     auto samples = buffer.getSamples();
     auto filteredSamples = std::vector<float>();
@@ -55,12 +55,12 @@ void AudioFilter::applyPreEmphasis(AudioBuffer &buffer, float alpha) {
 
 void AudioFilter::applyBiquad(AudioBuffer &buffer) {
     // Rename coefficients for readability
-    float k0 = coeffs[0];
-    float k1 = coeffs[1];
-    float k2 = coeffs[2];
-    float k3 = coeffs[3];
-    float k4 = coeffs[4];
-    float normalizationCoeff = coeffs[5];
+    float k0 = coeffs_[0];
+    float k1 = coeffs_[1];
+    float k2 = coeffs_[2];
+    float k3 = coeffs_[3];
+    float k4 = coeffs_[4];
+    float normalizationCoeff = coeffs_[5];
 
     // Initialize filtered buffer
     std::vector<float> samples = buffer.getSamples();
@@ -124,14 +124,14 @@ void AudioFilter::computeCoeffs(AudioFilter::FilterMode mode, int cutoff_hz) {
     }
 
     // Filter coefficients
-    coeffs[0] = bCoeff[0];
-    coeffs[1] = bCoeff[1];
-    coeffs[2] = bCoeff[2];
-    coeffs[3] = aCoeff[1];
-    coeffs[4] = aCoeff[2];
+    coeffs_[0] = bCoeff[0];
+    coeffs_[1] = bCoeff[1];
+    coeffs_[2] = bCoeff[2];
+    coeffs_[3] = aCoeff[1];
+    coeffs_[4] = aCoeff[2];
 
     // Normalization coefficient
-    coeffs[5] = aCoeff[0];
+    coeffs_[5] = aCoeff[0];
 }
 
 };  // namespace tms_express

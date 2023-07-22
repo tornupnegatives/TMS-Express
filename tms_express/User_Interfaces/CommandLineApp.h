@@ -3,7 +3,7 @@
 #ifndef TMS_EXPRESS_COMMANDLINEAPP_H
 #define TMS_EXPRESS_COMMANDLINEAPP_H
 
-#include "Bitstream_Generation/BitstreamGenerator.h"
+#include "Bitstream_Generation/BitstreamGenerator.hpp"
 #include "CLI11.hpp"
 
 namespace tms_express {

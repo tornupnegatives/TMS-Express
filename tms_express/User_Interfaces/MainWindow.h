@@ -5,7 +5,7 @@
 
 #include "Audio/AudioBuffer.hpp"
 #include "Audio/AudioFilter.hpp"
-#include "Bitstream_Generation/BitstreamGenerator.h"
+#include "Bitstream_Generation/BitstreamGenerator.hpp"
 #include "Frame_Encoding/Frame.h"
 #include "Frame_Encoding/FrameEncoder.h"
 #include "Frame_Encoding/FramePostprocessor.h"

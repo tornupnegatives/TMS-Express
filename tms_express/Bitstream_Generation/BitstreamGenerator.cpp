@@ -1,22 +1,6 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: BitstreamGenerator
-//
-// Description: The BitstreamGenerator encapsulates the core functionality of TMS Express in a user-accessible
-//              interface. Given an audio file or directory thereof, it will perform LPC analysis and create a bitstream
-//              file in the desired format
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "Audio/AudioBuffer.hpp"
-#include "Audio/AudioFilter.hpp"
-#include "Bitstream_Generation/BitstreamGenerator.h"
-#include "Frame_Encoding/Frame.h"
-#include "Frame_Encoding/FrameEncoder.h"
-#include "Frame_Encoding/FramePostprocessor.h"
-#include "LPC_Analysis/Autocorrelation.h"
-#include "LPC_Analysis/LinearPredictor.h"
-#include "LPC_Analysis/PitchEstimator.h"
+#include "Bitstream_Generation/BitstreamGenerator.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -24,56 +8,79 @@
 #include <string>
 #include <vector>
 
+#include "Audio/AudioBuffer.hpp"
+#include "Audio/AudioFilter.hpp"
+#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/FrameEncoder.h"
+#include "Frame_Encoding/FramePostprocessor.h"
+#include "LPC_Analysis/Autocorrelation.h"
+#include "LPC_Analysis/LinearPredictor.h"
+#include "LPC_Analysis/PitchEstimator.h"
+
 namespace tms_express {
 
-BitstreamGenerator::BitstreamGenerator(float windowMs, int highpassHz, int lowpassHz, float preemphasis, EncoderStyle style,
-                                       bool includeStopFrame, int gainShift, float maxVoicedDb, float maxUnvoicedDb, bool detectRepeats,
-                                       int maxHz, int minHz) : windowMs(windowMs), highpassHz(highpassHz), lowpassHz(lowpassHz),
-                                         preemphasisAlpha(preemphasis), style(style),
-                                         includeStopFrame(includeStopFrame), gainShift(gainShift),
-                                         maxVoicedDB(maxVoicedDb), maxUnvoicedDB(maxUnvoicedDb),
-                                         detectRepeats(detectRepeats), maxHz(maxHz), minHz(minHz) {}
+BitstreamGenerator::BitstreamGenerator(float window_width_ms,
+    int highpass_cutoff_hz, int lowpass_cutoff_hz, float pre_emphasis_alpha,
+    EncoderStyle style, bool include_stop_frame, int gain_shift,
+    float max_voiced_gain_db, float max_unvoiced_gain_db,
+    bool detect_repeat_frames, int max_pitch_hz, int min_pitch_hz) {
 
-// Encode a single audio file
-void BitstreamGenerator::encode(const std::string &inputPath, const std::string &inputFilename,
-                                const std::string &outputPath) {
+    window_width_ms_ = window_width_ms;
+    highpass_cutoff_hz_ = highpass_cutoff_hz;
+    lowpass_cutoff_hz_ = lowpass_cutoff_hz;
+    pre_emphasis_alpha_ = pre_emphasis_alpha;
+    style_ = style;
+    include_stop_frame_ = include_stop_frame;
+    gain_shift_ = gain_shift;
+    main_voiced_gain_db_ = max_voiced_gain_db;
+    max_unvoiced_gain_db_ = max_unvoiced_gain_db;
+    detect_repeat_frames_ = detect_repeat_frames;
+    max_pitch_hz_ = max_pitch_hz;
+    min_pitch_hz_ = min_pitch_hz;
+}
+
+void BitstreamGenerator::encode(const std::string &audio_input_path,
+    const std::string &bitstream_name, const std::string &output_path) const {
     // Perform LPC analysis and convert audio data to a bitstream
-    auto frames = generateFrames(inputPath);
-    auto bitstream = formatBitstream(frames, inputFilename);
+    auto frames = generateFrames(audio_input_path);
+    auto bitstream = serializeFrames(frames, bitstream_name);
 
     // Write bitstream to disk
     std::ofstream lpcOut;
-    lpcOut.open(outputPath);
+    lpcOut.open(output_path);
     lpcOut << bitstream;
     lpcOut.close();
 }
 
-// Encode a batch job into either a single file or a collection of files
-void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
-                                     const std::vector<std::string> &inputFilenames, const std::string &outputPath) {
-    if (style == ENCODERSTYLE_ASCII) {
+void BitstreamGenerator::encodeBatch(
+    const std::vector<std::string> &audio_input_paths,
+    const std::vector<std::string> &bitstream_names,
+    const std::string &output_path) const {
+    std::string in_path, filename;
+
+    if (style_ == ENCODERSTYLE_ASCII) {
         // Create directory to populate with encoded files
-        std::filesystem::create_directory(outputPath);
+        std::filesystem::create_directory(output_path);
 
-        for (int i = 0; i < inputPaths.size(); i++) {
-            const auto& inPath = inputPaths[i];
-            const auto& filename = inputFilenames[i];
+        for (int i = 0; i < audio_input_paths.size(); i++) {
+            in_path = audio_input_paths[i];
+            filename = bitstream_names[i];
 
-            std::filesystem::path outPath = outputPath;
-            outPath /= (filename + ".lpc");
+            std::filesystem::path out_path = output_path;
+            out_path /= (filename + ".lpc");
 
-            encode(inPath, filename, outPath.string());
+            encode(in_path, filename, out_path.string());
         }
     } else {
         std::ofstream lpcOut;
-        lpcOut.open(outputPath);
+        lpcOut.open(output_path);
 
-        for (int i = 0; i < inputPaths.size(); i++) {
-            const auto& inPath = inputPaths[i];
-            const auto& filename = inputFilenames[i];
+        for (int i = 0; i < audio_input_paths.size(); i++) {
+            in_path = audio_input_paths[i];
+            filename = bitstream_names[i];
 
-            auto frames = generateFrames(inPath);
-            auto bitstream = formatBitstream(frames, filename);
+            auto frames = generateFrames(in_path);
+            auto bitstream = serializeFrames(frames, filename);
 
             lpcOut << bitstream << std::endl;
         }
@@ -82,101 +89,114 @@ void BitstreamGenerator::encodeBatch(const std::vector<std::string> &inputPaths,
     }
 }
 
-// Generate a bitstream from a single audio file
-std::vector<Frame> BitstreamGenerator::generateFrames(const std::string &inputPath) const {
+std::vector<Frame> BitstreamGenerator::generateFrames(
+    const std::string &path) const {
     // Mix audio to 8kHz mono and store in a segmented buffer
-    auto lpcBuffer = *AudioBuffer::Create(inputPath, 8000, windowMs);
+    // TODO(Joseph Bellahcen): Handle nullptr
+    auto lpc_buffer = *AudioBuffer::Create(path, 8000, window_width_ms_);
 
-    // Copy the buffer so that upper and lower vocal tract analysis may occur separately
-    auto pitchBuffer = AudioBuffer(lpcBuffer);
+    // Copy the buffer so that upper and lower vocal tract analysis may occur
+    // separately
+    auto pitch_buffer = lpc_buffer.copy();
 
-    // Preprocess the buffers
+    // Apply preprocessing
     //
-    // The pitch buffer will ONLY be lowpass-filtered, as pitch is a low-frequency component of the signal. Neither
-    // highpass filtering nor preemphasis, which exaggerate high-frequency components, will improve pitch estimation
+    // The pitch buffer will ONLY be lowpass-filtered, as pitch is a
+    // low-frequency component of the signal. Neither highpass filtering nor
+    // pre-emphasis, which exaggerate high-frequency components, will improve
+    // pitch estimation
     auto preprocessor = AudioFilter();
-    preprocessor.applyPreEmphasis(lpcBuffer, preemphasisAlpha);
-    preprocessor.applyHighpass(lpcBuffer, highpassHz);
-    preprocessor.applyLowpass(pitchBuffer, lowpassHz);
+    preprocessor.applyPreEmphasis(lpc_buffer, pre_emphasis_alpha_);
+    preprocessor.applyHighpass(lpc_buffer, highpass_cutoff_hz_);
+    preprocessor.applyLowpass(pitch_buffer, lowpass_cutoff_hz_);
 
     // Extract buffer metadata
     //
-    // Only the LPC buffer is queried for metadata, since it will have the same number of samples as the pitch buffer.
-    // The sample rate of the buffer is extracted despite being known, as future iterations of TMS Express may support
-    // encoding 10kHz/variable sample rate audio for the TMS5200C
-    auto nSegments = lpcBuffer.getNSegments();
-    auto sampleRate = lpcBuffer.getSampleRateHz();
+    // Only the LPC buffer is queried for metadata, since it will have the same
+    // number of samples as the pitch buffer. The sample rate of the buffer is
+    // extracted despite being known, as future iterations of TMS Express may
+    // support encoding 10kHz/variable sample rate audio for the TMS5200C
+    auto n_segments = lpc_buffer.getNSegments();
+    auto sample_rate = lpc_buffer.getSampleRateHz();
 
     // Initialize analysis objects and data structures
     auto linearPredictor = LinearPredictor();
-    auto pitchEstimator = PitchEstimator(int(sampleRate), minHz, maxHz);
+    auto pitchEstimator = PitchEstimator(sample_rate, min_pitch_hz_,
+        max_pitch_hz_);
     auto frames = std::vector<Frame>();
 
-    for (int i = 0; i < nSegments; i++) {
+    for (int i = 0; i < n_segments; i++) {
         // Get segment for frame
-        auto pitchSegment = pitchBuffer.getSegment(i);
-        auto lpcSegment = lpcBuffer.getSegment(i);
+        auto pitch_segment = pitch_buffer.getSegment(i);
+        auto lpc_segment = lpc_buffer.getSegment(i);
 
         // Apply a window function to the segment to smoothen its boundaries
         //
-        // Because information about the transition between adjacent frames is lost during segmentation, a window will
-        // help produce smoother results
-        preprocessor.applyHammingWindow(lpcSegment);
+        // Because information about the transition between adjacent frames is
+        // lost during segmentation, a window will help produce smoother results
+        preprocessor.applyHammingWindow(lpc_segment);
 
-        // Compute the autocorrelation of each segment, which serves as the basis of all analysis
-        auto lpcAcf = tms_express::Autocorrelation(lpcSegment);
-        auto pitchAcf = tms_express::Autocorrelation(pitchSegment);
+        // Compute the autocorrelation of each segment, which serves as the
+        // basis of all analysis
+        auto lpc_acf = tms_express::Autocorrelation(lpc_segment);
+        auto pitch_acf = tms_express::Autocorrelation(pitch_segment);
 
         // Extract LPC reflector coefficients and compute the predictor gain
-        auto coeffs = linearPredictor.reflectorCoefficients(lpcAcf);
+        auto coeffs = linearPredictor.reflectorCoefficients(lpc_acf);
         auto gain = linearPredictor.gain();
 
         // Estimate pitch
-        auto pitchPeriod = pitchEstimator.estimatePeriod(pitchAcf);
+        auto pitch_period = pitchEstimator.estimatePeriod(pitch_acf);
 
         // Decide whether the segment is voiced or unvoiced
-        auto segmentIsVoiced = coeffs[0] < 0;
+        auto segment_is_voiced = coeffs[0] < 0;
 
         // Store parameters in a Frame object
-        auto frame = Frame(pitchPeriod, segmentIsVoiced, gain, coeffs);
+        auto frame = Frame(pitch_period, segment_is_voiced, gain, coeffs);
         frames.push_back(frame);
     }
 
-    // Apply preprocessing
-    auto postProcessor = FramePostprocessor(&frames, maxVoicedDB, maxUnvoicedDB);
-    postProcessor.normalizeGain();
-    postProcessor.shiftGain(gainShift);
+    // Apply post-processing
+    auto post_processor = FramePostprocessor(&frames, main_voiced_gain_db_,
+        max_unvoiced_gain_db_);
+    post_processor.normalizeGain();
+    post_processor.shiftGain(gain_shift_);
 
-    if (detectRepeats) {
-        postProcessor.detectRepeatFrames();
+    if (detect_repeat_frames_) {
+        post_processor.detectRepeatFrames();
     }
 
     return frames;
 }
 
-// Format raw bitstream for use in various contexts such as C headers
-std::string BitstreamGenerator::formatBitstream(const std::vector<Frame>& frames, const std::string &filename) {
+std::string BitstreamGenerator::serializeFrames(
+    const std::vector<Frame>& frames, const std::string &filename) const {
     // Encode frames to hex bitstreams
-    auto encoder = FrameEncoder(frames, style != ENCODERSTYLE_ASCII, ',');
+    auto encoder = FrameEncoder(frames, style_ != ENCODERSTYLE_ASCII, ',');
     std::string bitstream;
 
-    // Either export the bitstream as a string for testing or as a C array for embedded development
-    switch(style) {
+    switch (style_) {
         case ENCODERSTYLE_ASCII:
-            bitstream = encoder.toHex(includeStopFrame);
+            bitstream = encoder.toHex(include_stop_frame_);
             break;
+
         case ENCODERSTYLE_C:
-            // C-style bitstreams are headers which contain an integer array of bitstream values
+            // C-style bitstreams are headers which contain a byte array
             // Format: const int bitstream_name [] = {<values>};
-            bitstream = encoder.toHex(includeStopFrame);
+            bitstream = encoder.toHex(include_stop_frame_);
             bitstream = "const int " + filename + "[] = {" + bitstream + "};\n";
             break;
+
         case ENCODERSTYLE_ARDUINO:
-            // Arduino-style bitstreams are C-style bitstreams which include the Arduino header and PROGMEM keyword
-            // Format: extern const uint8_t bitstream_name [] PROGMEM = {<values>};
-            bitstream = encoder.toHex(includeStopFrame);
-            bitstream = "extern const uint8_t " + filename + "[] PROGMEM = {" + bitstream + "};\n";
+            // Arduino-style bitstreams are C-style bitstreams which include the
+            // Arduino header and PROGMEM keyword. This is for compatibility
+            // with the Arduino Talkie library
+            // Format: extern const uint8_t name [] PROGMEM = {<values>};
+            bitstream = encoder.toHex(include_stop_frame_);
+            bitstream = "extern const uint8_t " + filename + "[] PROGMEM = {" +
+                bitstream + "};\n";
             break;
+
         case ENCODERSTYLE_JSON:
             bitstream = encoder.toJSON();
             break;

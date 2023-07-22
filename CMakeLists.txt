@@ -3,7 +3,6 @@
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_compile_options(-Wall -Wextra)
 
 # Run Qt's moc, rcc, and uic tools
 set(CMAKE_AUTOUIC ON)
