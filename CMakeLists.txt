@@ -16,8 +16,8 @@ option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
 #             PROGRAM FILES
 #  ====================================
 include_directories(
+    ${CMAKE_CURRENT_LIST_DIR}
     tms_express
-    lib
 )
 
 add_executable(${PROJECT_NAME}

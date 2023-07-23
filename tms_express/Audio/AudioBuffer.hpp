@@ -98,7 +98,7 @@ class AudioBuffer {
     // Utility ////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
-    /// @brief Creates an independent copy of the Audio Buffer
+    /// @brief  Creates an independent copy of the Audio Buffer
     /// @return New Audio Buffer which is separate from but identical to its
     ///         parent at the time of creation
     AudioBuffer copy() const;
@@ -132,13 +132,25 @@ class AudioBuffer {
         int src_sample_rate_hz, int target_sample_rate_hz);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Members                         ////////////////////////////////////////
+    // Members ////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
-    int n_segments_;
-    int n_samples_per_segment_;
+    /// @brief Sampling rate used to generate or import samples, in Hertz
     int sample_rate_hz_;
+
+    /// @brief Number of segments in Audio Buffer, determined by segmentation
+    ///         window width
+    int n_segments_;
+
+    /// @brief Number of samples in each segment, determined by segmentation
+    ///         window width
+    int n_samples_per_segment_;
+
+    /// @brief Flat (unsegmented) buffer of samples
     std::vector<float> samples_;
+
+    /// @brief Original samples set during initialization
+    // TODO(Joseph Bellahcen): Remove
     std::vector<float> original_samples_;
 };
 

@@ -181,7 +181,7 @@ AudioBuffer AudioBuffer::copy() const {
 }
 
 bool AudioBuffer::render(const std::string &path) const {
-    // Throw error if buffer is empty
+    // Indicate error if buffer is empty
     if (empty()) {
         return false;
     }

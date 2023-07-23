@@ -12,17 +12,17 @@ namespace tms_express {
 //          crawling, file metadata, and path component separation
 class PathUtils {
  public:
+    ///////////////////////////////////////////////////////////////////////////
+    // Initializers ///////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
     /// @brief Creates new Path Utils instance for inspecting given path
     /// @param filepath Path to analyze
     explicit PathUtils(const std::string &filepath);
 
-    /// @brief Checks if path corresponds to existing file or directory
-    /// @return true if file or directory exists at path, false otherwise
-    bool exists() const;
-
-    /// @brief Checks if path corresponds to directory
-    /// @return true if path points to directory, false otherwise
-    bool isDirectory() const;
+    ///////////////////////////////////////////////////////////////////////////
+    // Accessors //////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
     /// @brief Crawls directory at path for files
     /// @return Vector of files in directory
@@ -37,7 +37,23 @@ class PathUtils {
     ///         vector containing filename
     std::vector<std::string> getFilenames() const;
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Metadata ///////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    /// @brief Checks if path corresponds to existing file or directory
+    /// @return true if file or directory exists at path, false otherwise
+    bool exists() const;
+
+    /// @brief Checks if path corresponds to directory
+    /// @return true if path points to directory, false otherwise
+    bool isDirectory() const;
+
  private:
+    ///////////////////////////////////////////////////////////////////////////
+    // Static Helpers /////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
     /// @brief Strips path components and file extension from path string
     /// @param path Path string
     /// @return Filename component of path
@@ -50,6 +66,10 @@ class PathUtils {
     static std::vector<std::string> splitString(const std::string& str,
         const std::string& delim);
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Members ////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
     /// @brief true if file or directory exists at path, false otherwise
     bool exists_;
 
@@ -58,12 +78,12 @@ class PathUtils {
 
     /// @brief Collection of paths at directory if path is directory,
     ///         single-element vector with original path otherwise
-    std::vector<std::string> paths;
+    std::vector<std::string> paths_;
 
     /// @brief Collection of filenames from path directory, excluding
     ///         path components or filename extensions. If path is not
     ///         a directory, hold single filename of original path
-    std::vector<std::string> filenames;
+    std::vector<std::string> filenames_;
 };
 
 };  // namespace tms_express

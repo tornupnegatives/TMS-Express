@@ -9,32 +9,52 @@
 
 namespace tms_express {
 
+///////////////////////////////////////////////////////////////////////////////
+// Initializers ///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
 PathUtils::PathUtils(const std::string &filepath) {
     // Gather file metadata
     exists_ = std::filesystem::exists(filepath);
     is_directory_ = std::filesystem::is_directory(filepath);
 
     // Traverse directory (if applicable)
-    paths = std::vector<std::string>();
+    paths_ = std::vector<std::string>();
 
     if (!is_directory_) {
-        paths.push_back(filepath);
+        paths_.push_back(filepath);
 
     } else {
         auto iterator = std::filesystem::directory_iterator(filepath);
         for (const auto& entry : iterator) {
             auto path = entry.path().string();
-            paths.push_back(path);
+            paths_.push_back(path);
         }
     }
 
     // Extract filenames
-    filenames = std::vector<std::string>();
-    for (const auto& path : paths) {
+    filenames_ = std::vector<std::string>();
+    for (const auto& path : paths_) {
         auto filename = extractFilenameFromPath(path);
-        filenames.push_back(filename);
+        filenames_.push_back(filename);
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Accessors //////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+std::vector<std::string> PathUtils::getPaths() const {
+    return paths_;
+}
+
+std::vector<std::string> PathUtils::getFilenames() const {
+    return filenames_;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Metadata ///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 bool PathUtils::exists() const {
     return exists_;
@@ -44,14 +64,9 @@ bool PathUtils::isDirectory() const {
     return is_directory_;
 }
 
-
-std::vector<std::string> PathUtils::getPaths() const {
-    return paths;
-}
-
-std::vector<std::string> PathUtils::getFilenames() const {
-    return filenames;
-}
+///////////////////////////////////////////////////////////////////////////////
+// Static Helpers /////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 std::string PathUtils::extractFilenameFromPath(const std::string &path) {
     // Get the lowest element in the path hierarchy

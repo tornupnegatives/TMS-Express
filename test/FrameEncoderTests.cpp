@@ -1,4 +1,4 @@
-#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/Frame.hpp"
 #include "Frame_Encoding/FrameEncoder.h"
 
 #include <gtest/gtest.h>

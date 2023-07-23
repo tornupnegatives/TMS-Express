@@ -7,7 +7,7 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/Frame.hpp"
 #include "Frame_Encoding/FramePostprocessor.h"
 #include "Frame_Encoding/Tms5220CodingTable.h"
 

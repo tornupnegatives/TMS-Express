@@ -3,7 +3,7 @@
 #ifndef TMS_EXPRESS_SYNTHESIZER_H
 #define TMS_EXPRESS_SYNTHESIZER_H
 
-#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/Frame.hpp"
 #include <cstdint>
 #include <string>
 #include <vector>

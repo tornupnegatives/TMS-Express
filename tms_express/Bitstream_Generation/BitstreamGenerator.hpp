@@ -6,13 +6,17 @@
 #include <string>
 #include <vector>
 
-#include "Frame_Encoding/Frame.h"
+#include "Frame_Encoding/Frame.hpp"
 
 namespace tms_express {
 
 /// @brief Facilitates IO, preprocessing, analysis, and encoding
 class BitstreamGenerator {
  public:
+    ///////////////////////////////////////////////////////////////////////////
+    // Enums //////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
     /// @brief Defines the format of the bitstream
     enum EncoderStyle {
         /// @brief Bitstream with comma-delimited ASCII hex bytes
@@ -27,6 +31,10 @@ class BitstreamGenerator {
         /// @brief Bitstream as JSON file
         ENCODERSTYLE_JSON
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Initializers ///////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
     /// @brief Creates a new Bitstream Generator with the given configuration
     /// @param window_width_ms Segmentation widnow width, in milliseconds
@@ -48,6 +56,10 @@ class BitstreamGenerator {
         bool include_stop_frame, int gain_shift, float max_voiced_gain_db,
         float max_unvoiced_gain_db, bool detect_repeat_frames,
         int max_pitch_hz, int min_pitch_hz);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Encoding ///////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
     /// @brief Produces bitstream from provided audio file
     /// @param audio_input_path Path to audio file
@@ -74,6 +86,10 @@ class BitstreamGenerator {
         const std::string &output_path) const;
 
  private:
+    ///////////////////////////////////////////////////////////////////////////
+    // Helpers ////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
     /// @brief Converts audio file to sequence of LPC frames which characterize
     ///         the sample within each segmentation window
     /// @param path Path to audio file
@@ -87,17 +103,46 @@ class BitstreamGenerator {
     std::string serializeFrames(const std::vector<Frame>& frames,
         const std::string &filename) const;
 
-    float window_width_ms_;
-    int highpass_cutoff_hz_;
-    int lowpass_cutoff_hz_;
-    float pre_emphasis_alpha_;
+    ///////////////////////////////////////////////////////////////////////////
+    // Members ////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    /// @brief Target bitstream format
     EncoderStyle style_;
+
+    /// @brief Segmentation window width, in milliseconds
+    float window_width_ms_;
+
+    /// @brief Highpass filter cutoff, in Hertz
+    int highpass_cutoff_hz_;
+
+    /// @brief Lowpass filter cutoff, in Hertz
+    int lowpass_cutoff_hz_;
+
+    /// @brief Pre-emphasis filter coefficient
+    float pre_emphasis_alpha_;
+
+    /// @brief true if bitstream should end with explicit stop frame,
+    ///         false otherwise
     bool include_stop_frame_;
+
+    /// @brief Post-processing gain shift, as TMS5220 Coding Table index offset
     int gain_shift_;
+
+    /// @brief Max gain for voiced (vowel) frames, in decibels
     float main_voiced_gain_db_;
+
+    /// @brief Max gain for unvoiced (consonant) frames, in decibels
     float max_unvoiced_gain_db_;
+
+    /// @brief true if bitstream should be "compressed" via detection of similar
+    ///         frames, which are marked a repeats and fully encoded just once
     bool detect_repeat_frames_;
+
+    /// @brief Max pitch frequency, in Hertz
     int max_pitch_hz_;
+
+    /// @brief Min pitch frequency, in Hertz
     int min_pitch_hz_;
 };
 

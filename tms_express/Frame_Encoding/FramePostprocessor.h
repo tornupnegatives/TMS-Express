@@ -3,7 +3,7 @@
 #ifndef TMS_EXPRESS_FRAMEPOSTPROCESSOR_H
 #define TMS_EXPRESS_FRAMEPOSTPROCESSOR_H
 
-#include "Frame.h"
+#include "Frame.hpp"
 #include <vector>
 
 namespace tms_express {
