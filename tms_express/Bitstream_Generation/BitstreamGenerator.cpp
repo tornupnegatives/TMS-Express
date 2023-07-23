@@ -11,7 +11,7 @@
 #include "Audio/AudioBuffer.hpp"
 #include "Audio/AudioFilter.hpp"
 #include "Frame_Encoding/Frame.hpp"
-#include "Frame_Encoding/FrameEncoder.h"
+#include "Frame_Encoding/FrameEncoder.hpp"
 #include "Frame_Encoding/FramePostprocessor.h"
 #include "LPC_Analysis/Autocorrelation.h"
 #include "LPC_Analysis/LinearPredictor.h"
@@ -172,7 +172,7 @@ std::vector<Frame> BitstreamGenerator::generateFrames(
 std::string BitstreamGenerator::serializeFrames(
     const std::vector<Frame>& frames, const std::string &filename) const {
     // Encode frames to hex bitstreams
-    auto encoder = FrameEncoder(frames, style_ != ENCODERSTYLE_ASCII, ',');
+    auto encoder = FrameEncoder(frames, style_ != ENCODERSTYLE_ASCII);
     std::string bitstream;
 
     switch (style_) {

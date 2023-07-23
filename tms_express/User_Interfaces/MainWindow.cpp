@@ -520,14 +520,14 @@ void MainWindow::performBitstreamParsing(const std::string &path) {
     auto frameEncoder = FrameEncoder();
 
     if (filePath.endsWith(".lpc")) {
-        auto frame_count = frameEncoder.importFromAscii(path);
+        auto frame_count = frameEncoder.importASCIIFromFile(path);
 
     } else {
         // TODO: Binary parsing
         return;
     }
 
-    frameTable = frameEncoder.frameTable();
+    frameTable = frameEncoder.getFrameTable();
 }
 
 void MainWindow::exportBitstream(const std::string& path) {
@@ -543,7 +543,7 @@ void MainWindow::exportBitstream(const std::string& path) {
         lpcOut.close();
 
     } else if (filePath.endsWith(".bin")) {
-        auto bin = frameEncoder.toBin();
+        auto bin = frameEncoder.toBytes();
 
         std::ofstream binOut(path, std::ios::out | std::ios::binary);
         binOut.write((char *)(bin.data()), long(bin.size()));

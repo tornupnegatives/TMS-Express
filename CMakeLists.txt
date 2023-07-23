@@ -16,7 +16,10 @@ option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
 #             PROGRAM FILES
 #  ====================================
 include_directories(
+    # For lib directory
     ${CMAKE_CURRENT_LIST_DIR}
+
+    # For project sources
     tms_express
 )
 

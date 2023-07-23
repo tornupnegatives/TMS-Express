@@ -7,7 +7,7 @@
 #include "Audio/AudioFilter.hpp"
 #include "Bitstream_Generation/BitstreamGenerator.hpp"
 #include "Frame_Encoding/Frame.hpp"
-#include "Frame_Encoding/FrameEncoder.h"
+#include "Frame_Encoding/FrameEncoder.hpp"
 #include "Frame_Encoding/FramePostprocessor.h"
 #include "Frame_Encoding/Synthesizer.h"
 #include "LPC_Analysis/PitchEstimator.h"

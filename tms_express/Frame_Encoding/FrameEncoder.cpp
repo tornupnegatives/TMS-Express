@@ -1,321 +1,315 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: FrameEncoder
-//
-// Description: The FrameEncoder generates a bitstream representing a Frame vector. This bitstream adheres to the LPC-10
-//              specification, and data is segmented into reversed hex bytes to mimic the behavior of the TMS6100 Voice
-//              Synthesis Memory device.
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "Frame_Encoding/FrameEncoder.h"
-#include "Frame_Encoding/Frame.hpp"
-#include "Frame_Encoding/Tms5220CodingTable.h"
+#include "Frame_Encoding/FrameEncoder.hpp"
 
-#include "json.hpp"
-
-#include <algorithm>
-#include <bitset>
-#include <cstddef>
-#include <cstdio>
 #include <fstream>
 #include <string>
 
+#include "lib/json.hpp"
+
+#include "Frame_Encoding/Frame.hpp"
+#include "Frame_Encoding/Tms5220CodingTable.h"
+
 namespace tms_express {
 
-/// Create a new Frame Encoder with an empty frame buffer
-///
-/// \param includeHexPrefix Whether or not to include '0x' before hex bytes
-/// \param separator Character with which to separate hex bytes
-FrameEncoder::FrameEncoder(bool includeHexPrefix, char separator) {
-    shouldIncludeHexPrefix = includeHexPrefix;
-    byteSeparator = separator;
-    frames = std::vector<Frame>();
-    binary = std::vector<std::string>(1, "");
+///////////////////////////////////////////////////////////////////////////////
+// Initializers ///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+FrameEncoder::FrameEncoder(bool include_hex_prefix) {
+    include_hex_prefix_ = include_hex_prefix;
+    frames_ = std::vector<Frame>();
+    binary_bitstream_ = std::vector<std::string>(1, "");
 }
 
-/// Create a new Frame Encoder and populate it with frames
-///
-/// \param initialFrames Frames with which to populate encoder
-/// \param includeHexPrefix Whether or not to include '0x' before hex bytes
-/// \param separator Character with which to separate hex bytes
-FrameEncoder::FrameEncoder(const std::vector<Frame> &initialFrames, bool includeHexPrefix, char separator) {
-    binary = std::vector<std::string>(1, "");
-    byteSeparator = separator;
-    frames = std::vector<Frame>();
-    shouldIncludeHexPrefix = includeHexPrefix;
+FrameEncoder::FrameEncoder(const std::vector<Frame> &frames,
+    bool include_hex_prefix) {
+    binary_bitstream_ = std::vector<std::string>(1, "");
+    frames_ = std::vector<Frame>();
+    include_hex_prefix_ = include_hex_prefix;
 
-    append(initialFrames);
+    append(frames);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                          Append Functions
+// Frame Appenders ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Append binary representation of a frame to the end of the encoder buffer
-///
-/// \note   The binary representation of a Frame is seldom cleanly divisible into bytes. As such, the first few bits of
-///         a Frame may be packed into the empty space of an existing vector element, or the last few bits may partially
-///         occupy a new vector element
 void FrameEncoder::append(Frame frame) {
-    frames.push_back(frame);
+    frames_.push_back(frame);
     auto bin = frame.toBinary();
 
-    // Check to see if the previous byte is incomplete (contains less than 8 characters), and fill it if so
-    auto emptyBitsInLastByte = 8 - binary.back().size();
-    if (emptyBitsInLastByte != 0) {
-        binary.back() += bin.substr(0, emptyBitsInLastByte);
-        bin.erase(0, emptyBitsInLastByte);
+    // The binary representation of a Frame is seldom cleanly divisible into
+    // bytes. As such, the first few bits of a Frame may be packed into the
+    // empty space of an existing vector element, or the last few bits may
+    // partially ccupy a new vector element
+    //
+    // Check to see if the previous byte is incomplete (contains less than 8
+    // characters), and fill it if so
+    auto empty_bits_in_last_byte = 8 - binary_bitstream_.back().size();
+    if (empty_bits_in_last_byte != 0) {
+        binary_bitstream_.back() += bin.substr(0, empty_bits_in_last_byte);
+        bin.erase(0, empty_bits_in_last_byte);
     }
 
-    // Segment the rest of the binary frame into binary. The final byte will likely be incomplete, but that will be
-    // addressed either in a subsequent call to append() or during hex stream generation
+    // Segment the rest of the binary frame into binary. The final byte will
+    // likely be incomplete, but that will be addressed either in a subsequent
+    // call to append() or during hex stream generation
     while (!bin.empty()) {
         auto byte = bin.substr(0, 8);
-        binary.push_back(byte);
+        binary_bitstream_.push_back(byte);
 
         bin.erase(0, 8);
     }
 }
 
-/// Append binary representation of new frames to the end of the encoder buffer
-///
-/// \param newFrames Frames to be appended
-void FrameEncoder::append(const std::vector<Frame> &newFrames) {
-    for (const auto &frame: newFrames) {
+void FrameEncoder::append(const std::vector<Frame> &frames) {
+    for (const auto &frame : frames) {
         append(frame);
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                          Import Functions
-///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+// (De-)Serialization ////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
-/// Import ASCII bitstream (CSV) from disk
-///
-/// \param path Path to comma-delimited ASCII bytes
-/// \return Number of frames imported
-size_t FrameEncoder::importFromAscii(const std::string &path) {
+size_t FrameEncoder::importASCIIFromFile(const std::string &path) {
     // Flatten bitstream and remove delimiter
     std::ifstream file(path);
-    std::string flatBitstream = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string flat = std::string((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
 
-    return parseAsciiBitstream(flatBitstream);
+    return importASCIIFromString(flat);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//                              Serialization
-///////////////////////////////////////////////////////////////////////////////
+size_t FrameEncoder::importASCIIFromString(std::string flat_bitstream) {
+    // Copy reversed-hex bytes into binary buffer
+    std::string buffer = reverseHexBytes(flat_bitstream);
 
-/// Serialize the Frame data to a stream of hex bytes
-///
-/// \note   Appending a stop frame tells the TMS5220 to exit Speak External mode. It is not necessary for
-///         software emulations of the TMS5220 or for bitstreams intended to be stored in the TMS6100 Voice Synthesis
-///         Memory IC
-//
-/// \param shouldAppendStopFrame Whether or not to include an explicit stop frame at the end of the bitstream
+    // Parse frames
+    frames_.clear();
+    const auto blank_frame = Frame(0, false, 0.0f, std::vector<float>(10, 0.f));
+
+    while (!buffer.empty()) {
+        // TODO(Joseph Bellahcen): Handle exception
+        auto energy_idx = std::stoul(buffer.substr(0, 4), nullptr, 2);
+
+        // Stop frame
+        if (energy_idx == 0xf) {
+            break;
+        }
+
+        // Silent frame
+        if (energy_idx == 0x0) {
+            append(blank_frame);
+            buffer.erase(0, 4);
+            continue;
+        }
+
+        auto is_repeat = (buffer[4] == '1');
+        // TODO(Joseph Bellahcen): Handle exception
+        auto pitch_idx = std::stoul(buffer.substr(5, 6), nullptr, 2);
+
+        auto gain = Tms5220CodingTable::rms.at(energy_idx);
+        auto pitch = Tms5220CodingTable::pitch.at(pitch_idx);
+
+        if (is_repeat) {
+            append(Frame(pitch, false, gain, std::vector<float>(10, 0.0f)));
+            frames_.end()->setRepeat(true);
+            buffer.erase(0, 11);
+            continue;
+        }
+
+        float k1, k2, k3, k4, k5, k6, k7, k8, k9, k10 = 0;
+        extractUnvoicedCoeffs(buffer, &k1, &k2, &k3, &k4);
+
+        if (pitch == 0x0) {
+            buffer.erase(0, 29);
+
+        } else {
+            extractVoicedCoeffs(buffer, &k5, &k6, &k7, &k8, &k9, &k10);
+
+            buffer.erase(0, 50);
+        }
+
+        append(
+            Frame(pitch,
+            pitch != 0x0,
+            gain,
+            std::vector<float>{k1, k2, k3, k4, k5, k6, k7, k8, k9, k10}));
+    }
+
+    return frames_.size();
+}
+
 std::string FrameEncoder::toHex(bool shouldAppendStopFrame) {
-    std::string hexStream;
+    std::string hex_stream;
 
     if (shouldAppendStopFrame) {
         appendStopFrame();
     }
 
     // Pad final byte with zeros
-    auto emptyBitsInLastByte = 8 - binary.back().size();
-    if (emptyBitsInLastByte != 0) {
-        binary.back() += std::string(emptyBitsInLastByte, '0');
+    auto n_empty_bits_in_last_byte = 8 - binary_bitstream_.back().size();
+    if (n_empty_bits_in_last_byte != 0) {
+        binary_bitstream_.back() += std::string(n_empty_bits_in_last_byte, '0');
     }
 
     // Reverse each byte and convert to hex
-    for (auto byte: binary) {
+    for (auto byte : binary_bitstream_) {
         std::reverse(byte.begin(), byte.end());
-        hexStream += byteToHex(byte) + byteSeparator;
+        hex_stream += binToHex(byte, include_hex_prefix_) + byte_delimiter;
     }
 
     // Remove final trailing comma
-    hexStream.erase(hexStream.end() - 1);
-
-    return hexStream;
+    hex_stream.erase(hex_stream.end() - 1);
+    return hex_stream;
 }
 
-/// Serialize frame data to a vector of raw bytes
-///
-/// \return Frame table data represented as bytes
-std::vector<std::byte> FrameEncoder::toBin(bool shouldAppendStopFrame) {
+std::vector<std::byte> FrameEncoder::toBytes(bool append_stop_frame) {
     auto bytes = std::vector<std::byte>();
 
-    if (shouldAppendStopFrame) {
+    if (append_stop_frame) {
         appendStopFrame();
     }
 
     // Pad final byte with zeros
-    auto emptyBitsInLastByte = 8 - binary.back().size();
-    if (emptyBitsInLastByte != 0) {
-        binary.back() += std::string(emptyBitsInLastByte, '0');
+    auto n_empty_bits_in_last_byte = 8 - binary_bitstream_.back().size();
+    if (n_empty_bits_in_last_byte != 0) {
+        binary_bitstream_.back() += std::string(n_empty_bits_in_last_byte, '0');
     }
 
     // Reverse each byte and convert to hex
-    for (auto byte: binary) {
+    for (auto byte : binary_bitstream_) {
         std::reverse(byte.begin(), byte.end());
-        auto data = std::byte(std::stoul(byteToHex(byte), nullptr, 16));
+        auto data = std::byte(
+            std::stoul(binToHex(byte, include_hex_prefix_), nullptr, 16));
         bytes.push_back(data);
     }
 
     return bytes;
 }
 
-/// Serialize the Frame data to a JSON object
-std::string FrameEncoder::toJSON() {
+std::string FrameEncoder::toJSON() const {
     nlohmann::json json;
 
-    for (auto frame: frames) {
+    for (auto frame : frames_) {
         json.push_back(frame.toJSON());
     }
 
     return json.dump(4);
 }
 
-/// Pass the frame table vector
-std::vector<Frame> FrameEncoder::frameTable() {
-    return frames;
+///////////////////////////////////////////////////////////////////////////////
+// Accessors //////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+std::vector<Frame> FrameEncoder::getFrameTable() const {
+    return frames_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                              Helpers
+// Static Helpers /////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Append a stop frame to the end of the bitstream
-///
-/// \note See \code FrameEncoder::toHex() \endcode for more information on stop frames
-void FrameEncoder::appendStopFrame() {
-    auto bin = std::string("1111");
+std::string FrameEncoder::binToHex(const std::string &bin_str,
+    bool include_hex_prefix) {
+    // TODO(Joseph Bellahcen): Handle exception
+    int value = std::stoi(bin_str, nullptr, 2);
 
-    // Check to see if the previous byte is incomplete (contains less than 8 characters), and fill it if so
-    auto emptyBitsInLastByte = 8 - binary.back().size();
-    if (emptyBitsInLastByte != 0) {
-        binary.back() += bin.substr(0, emptyBitsInLastByte);
-        bin.erase(0, emptyBitsInLastByte);
-    }
+    char hex_byte[6];
 
-    // Segment the rest of the binary frame into bytes. The final byte will likely be incomplete, but that will be
-    // addressed either in a subsequent call to append() or during hex stream generation
-    while (!bin.empty()) {
-        auto byte = bin.substr(0, 8);
-        binary.push_back(byte);
-
-        bin.erase(0, 8);
-    }
-}
-
-/// Convert binary string to its ASCII hex bytes
-std::string FrameEncoder::byteToHex(const std::string &byte) const {
-    int value = std::stoi(byte, nullptr, 2);
-
-    char hexByte[6];
-
-    if (shouldIncludeHexPrefix) {
-        snprintf(hexByte, 5, "0x%02x", value);
+    if (include_hex_prefix) {
+        snprintf(hex_byte, sizeof(hex_byte), "0x%02x", value);
     } else {
-        snprintf(hexByte, 5, "%02x", value);
+        snprintf(hex_byte, sizeof(hex_byte), "%02x", value);
     }
 
-    return {hexByte};
+    return {hex_byte};
 }
 
-size_t FrameEncoder::parseAsciiBitstream(std::string flatBitstream) {
-    // Copy reversed-hex bytes into binary buffer
+std::string FrameEncoder::reverseHexBytes(std::string bitstream) {
     std::string buffer;
-    flatBitstream.erase(std::remove(flatBitstream.begin(), flatBitstream.end(), ','), flatBitstream.end());
 
-    for (int i = 0; i < flatBitstream.size() - 1; i += 4) {
-        auto substr = flatBitstream.substr(i, 4);
+    bitstream.erase(std::remove(bitstream.begin(), bitstream.end(), ','),
+        bitstream.end());
+
+    // TODO(Joseph Bellahcen): Handle prefix/no prefix
+    for (int i = 0; i < bitstream.size() - 1; i += 4) {
+        auto substr = bitstream.substr(i, 4);
         std::reverse(substr.begin(), substr.end());
+
+        // TODO(Joseph Bellahcen): Handle exception
         uint8_t byte = std::stoul(substr, nullptr, 16);
         auto bin = std::bitset<8>(byte);
 
-        auto firstHalf = bin.to_string().substr(0, 4);
-        auto secondhalf = bin.to_string().substr(4, 4);
+        auto first_half = bin.to_string().substr(0, 4);
+        auto second_half = bin.to_string().substr(4, 4);
 
-        std::reverse(firstHalf.begin(), firstHalf.end());
-        std::reverse(secondhalf.begin(), secondhalf.end());
-        buffer += (firstHalf + secondhalf);
+        std::reverse(first_half.begin(), first_half.end());
+        std::reverse(second_half.begin(), second_half.end());
+        buffer += (first_half + second_half);
     }
 
-    // Parse frames
-    frames.clear();
-    const auto blankFrame = Frame(0, false, 0.0f, std::vector<float>(10, 0.0f));
+    return buffer;
+}
 
-    while (!buffer.empty()) {
-        auto energyIdx = std::stoul(buffer.substr(0, 4), nullptr, 2);
+void FrameEncoder::extractUnvoicedCoeffs(const std::string &chunk, float *k1,
+    float *k2, float *k3, float *k4) {
+        auto k1_idx = std::stoul(chunk.substr(11, 5), nullptr, 2);
+        auto k2_idx = std::stoul(chunk.substr(16, 5), nullptr, 2);
+        auto k3_idx = std::stoul(chunk.substr(21, 4), nullptr, 2);
+        auto k4_idx = std::stoul(chunk.substr(25, 4), nullptr, 2);
 
-        // Stop frame
-        if (energyIdx == 0xf) {
-            break;
-        }
+        // TODO(Joseph Bellahcen): Guard against nullptr dereference
+        *k1 = Tms5220CodingTable::k1.at(k1_idx);
+        *k2 = Tms5220CodingTable::k2.at(k2_idx);
+        *k3 = Tms5220CodingTable::k3.at(k3_idx);
+        *k4 = Tms5220CodingTable::k4.at(k4_idx);
+}
 
-        // Silent frame
-        if (energyIdx == 0x0) {
-            append(blankFrame);
-            buffer.erase(0, 4);
-            continue;
-        }
+void FrameEncoder::extractVoicedCoeffs(const std::string &chunk, float *k5,
+    float *k6, float *k7, float *k8, float *k9, float *k10) {
+    auto k5_idx = std::stoul(chunk.substr(29, 4), nullptr, 2);
+    auto k6_idx = std::stoul(chunk.substr(33, 4), nullptr, 2);
+    auto k7_idx = std::stoul(chunk.substr(37, 4), nullptr, 2);
+    auto k8_idx = std::stoul(chunk.substr(41, 3), nullptr, 2);
+    auto k9_idx = std::stoul(chunk.substr(44, 3), nullptr, 2);
+    auto k10_idx = std::stoul(chunk.substr(47, 3), nullptr, 2);
 
-        auto isRepeat = (buffer[4] == '1');
-        auto pitchIdx = std::stoul(buffer.substr(5, 6), nullptr, 2);
+    // TODO(Joseph Bellahcen): Guard against nullptr dereference
+    *k5 = Tms5220CodingTable::k5.at(k5_idx);
+    *k6 = Tms5220CodingTable::k6.at(k6_idx);
+    *k7 = Tms5220CodingTable::k7.at(k7_idx);
+    *k8 = Tms5220CodingTable::k8.at(k8_idx);
+    *k9 = Tms5220CodingTable::k9.at(k9_idx);
+    *k10 = Tms5220CodingTable::k10.at(k10_idx);
+}
 
-        auto gain = Tms5220CodingTable::rms.at(energyIdx);
-        auto pitch = int(Tms5220CodingTable::pitch.at(pitchIdx));
+///////////////////////////////////////////////////////////////////////////////
+// Helpers ////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-        if (isRepeat) {
-            append(Frame(pitch, false, gain, std::vector<float>(10, 0.0f)));
-            frames.end()->setRepeat(true);
-            buffer.erase(0, 11);
-            continue;
-        }
+void FrameEncoder::appendStopFrame() {
+    std::string bin = "1111";
 
-        auto kIdx1 = std::stoul(buffer.substr(11, 5), nullptr, 2);
-        auto kIdx2 = std::stoul(buffer.substr(16, 5), nullptr, 2);
-        auto kIdx3 = std::stoul(buffer.substr(21, 4), nullptr, 2);
-        auto kIdx4 = std::stoul(buffer.substr(25, 4), nullptr, 2);
-
-        auto k1 = Tms5220CodingTable::k1.at(kIdx1);
-        auto k2 = Tms5220CodingTable::k2.at(kIdx2);
-        auto k3 = Tms5220CodingTable::k3.at(kIdx3);
-        auto k4 = Tms5220CodingTable::k4.at(kIdx4);
-
-        auto k5 = 0.0f;
-        auto k6 = 0.0f;
-        auto k7 = 0.0f;
-        auto k8 = 0.0f;
-        auto k9 = 0.0f;
-        auto k10 = 0.0f;
-
-        if (pitch == 0x0) {
-            buffer.erase(0, 29);
-
-        } else {
-            auto kIdx5 = std::stoul(buffer.substr(29, 4), nullptr, 2);
-            auto kIdx6 = std::stoul(buffer.substr(33, 4), nullptr, 2);
-            auto kIdx7 = std::stoul(buffer.substr(37, 4), nullptr, 2);
-            auto kIdx8 = std::stoul(buffer.substr(41, 3), nullptr, 2);
-            auto kIdx9 = std::stoul(buffer.substr(44, 3), nullptr, 2);
-            auto kIdx10 = std::stoul(buffer.substr(47, 3), nullptr, 2);
-
-            k5 = Tms5220CodingTable::k5.at(kIdx5);
-            k6 = Tms5220CodingTable::k6.at(kIdx6);
-            k7 = Tms5220CodingTable::k7.at(kIdx7);
-            k8 = Tms5220CodingTable::k8.at(kIdx8);
-            k9 = Tms5220CodingTable::k9.at(kIdx9);
-            k10 = Tms5220CodingTable::k10.at(kIdx10);
-
-            buffer.erase(0, 50);
-        }
-
-        append(Frame(pitch, pitch != 0x0, gain, std::vector<float>{k1, k2, k3, k4, k5, k6, k7, k8, k9, k10}));
+    // Check to see if the previous byte is incomplete (contains less than 8
+    // characters), and fill it if so
+    auto empty_bits_in_last_byte = 8 - binary_bitstream_.back().size();
+    if (empty_bits_in_last_byte != 0) {
+        binary_bitstream_.back() += bin.substr(0, empty_bits_in_last_byte);
+        bin.erase(0, empty_bits_in_last_byte);
     }
 
-    return frames.size();
+    // Segment the rest of the binary frame into bytes. The final byte will
+    // likely be incomplete, but that will be addressed either in a subsequent
+    // call to append() or during hex stream generation
+    while (!bin.empty()) {
+        auto byte = bin.substr(0, 8);
+        binary_bitstream_.push_back(byte);
+
+        bin.erase(0, 8);
+    }
 }
 
 };  // namespace tms_express
