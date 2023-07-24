@@ -139,4 +139,4 @@ class FrameEncoder {
 
 };  // namespace tms_express
 
-#endif  //  TMS_EXPRESS_FRAME_ENCODING_FRAMEENCODER_HPP_
+#endif  // TMS_EXPRESS_FRAME_ENCODING_FRAMEENCODER_HPP_

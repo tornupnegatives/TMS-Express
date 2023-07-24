@@ -88,4 +88,4 @@ class PathUtils {
 
 };  // namespace tms_express
 
-#endif  //  TMS_EXPRESS_BITSTREAM_GENERATION_PATHUTILS_HPP_
+#endif  // TMS_EXPRESS_BITSTREAM_GENERATION_PATHUTILS_HPP_

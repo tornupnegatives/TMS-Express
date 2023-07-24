@@ -148,4 +148,4 @@ class BitstreamGenerator {
 
 };  // namespace tms_express
 
-#endif  //  TMS_EXPRESS_BITSTREAM_GENERATION_BITSTREAMGENERATOR_HPP_
+#endif  // TMS_EXPRESS_BITSTREAM_GENERATION_BITSTREAMGENERATOR_HPP_

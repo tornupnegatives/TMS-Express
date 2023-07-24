@@ -175,4 +175,4 @@ class Frame {
 
 };  // namespace tms_express
 
-#endif  //  TMS_EXPRESS_FRAME_ENCODING_FRAME_HPP_
+#endif  // TMS_EXPRESS_FRAME_ENCODING_FRAME_HPP_

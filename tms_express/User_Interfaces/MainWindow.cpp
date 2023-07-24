@@ -7,7 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Audio/AudioBuffer.hpp"
-#include "Frame_Encoding/FramePostprocessor.h"
+#include "Frame_Encoding/FramePostprocessor.hpp"
 #include "LPC_Analysis/Autocorrelation.h"
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
 #include "User_Interfaces/MainWindow.h"
