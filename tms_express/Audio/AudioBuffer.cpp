@@ -98,8 +98,8 @@ void AudioBuffer::setSamples(const std::vector<float> &samples) {
 }
 
 float AudioBuffer::getWindowWidthMs() const {
-    float numerator = n_samples_per_segment_;
-    float denominator = sample_rate_hz_ * 1.0e-3;
+    float numerator = static_cast<float>(n_samples_per_segment_);
+    float denominator = static_cast<float>(sample_rate_hz_) * 1.0e-3;
 
     return numerator / denominator;
 }
@@ -112,7 +112,8 @@ void AudioBuffer::setWindowWidthMs(float window_width_ms) {
     }
 
     // Re-compute segment bounds
-    n_samples_per_segment_ = sample_rate_hz_ * window_width_ms * 1e-3;
+    n_samples_per_segment_ = static_cast<int>(
+        static_cast<float>(sample_rate_hz_) * window_width_ms * 1e-3);
     n_segments_ = samples_.size() / n_samples_per_segment_;
 
     // Pad final segment with zeros
@@ -235,8 +236,12 @@ std::vector<float> AudioBuffer::resample(std::vector<float> samples,
     //          compatibility with stereo audio, compute the
     //          number of frames as: size / (channels * ratio)
     //          and the number of samples as: (frames * channels)
-    double ratio = target_sample_rate_hz / src_sample_rate_hz;
-    auto n_frames = samples.size() * ratio;
+    double ratio = static_cast<double>(target_sample_rate_hz) /
+        static_cast<double>(src_sample_rate_hz);
+
+    auto n_frames = static_cast<int>(
+        static_cast<double>(samples.size()) * ratio);
+
     auto resampled_buffer = std::vector<float>(n_frames);
 
     // Initialize resampler
