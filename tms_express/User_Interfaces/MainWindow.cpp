@@ -270,7 +270,7 @@ void MainWindow::onExportAudio() {
         return;
     }
 
-    synthesizer.render(filePath.toStdString());
+    synthesizer.render(synthesizer.getSamples(), filePath.toStdString(), lpcBuffer.getSampleRateHz(), lpcBuffer.getWindowWidthMs());
 }
 
 /// Play contents of input buffer
@@ -315,14 +315,14 @@ void MainWindow::onLpcAudioPlay() {
     // be significant enough to modify the buffer checksum alone
     char filename[35];
 
-    uint checksum = (!lpcBuffer.empty()) ? samplesChecksum(lpcBuffer.getSamples()) : samplesChecksum(synthesizer.samples());
+    uint checksum = (!lpcBuffer.empty()) ? samplesChecksum(lpcBuffer.getSamples()) : samplesChecksum(synthesizer.getSamples());
     snprintf(filename, 35, "tmsexpress_lpc_render_%x.wav", checksum);
 
     // Only render audio if this particular buffer does not exist
     auto tempDir = std::filesystem::temp_directory_path();
     tempDir.append(filename);
     qDebug() << "Playing " << tempDir.c_str();
-    synthesizer.render(tempDir);
+    synthesizer.render(synthesizer.getSamples(), tempDir, lpcBuffer.getSampleRateHz(), lpcBuffer.getWindowWidthMs());
 
     // Setup player and play
     player->setAudioOutput(audioOutput);

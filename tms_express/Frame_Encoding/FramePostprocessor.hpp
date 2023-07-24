@@ -96,9 +96,16 @@ class FramePostprocessor {
     // Members ////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
+    /// @brief Frame table at initialization
     std::vector<Frame> original_frame_table_;
+
+    /// @brief Frame table
     std::vector<Frame> *frame_table_;
+
+    /// @brief Max unvoiced (consonant) gain, in decibels
     float max_unvoiced_gain_db_;
+
+    /// @brief Max voiced (vowel) gain, in decibels
     float max_voiced_gain_db_;
 
 };

@@ -1,66 +1,44 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: Synthesizer
-//
-// Description: The Synthesizer converts a Frame vector into PCM samples representing synthesized speech. The lattice
-//              filter through which Frame parameters pass is modeled after the TMS5220 Voice Synthesis Processor
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-//
-// Acknowledgement: This class implements a pure-software version of the popular Arduino Talkie library, written by
-//                  Peter Knight and Jonathan Gevaryahu, which emulates the behavior of the TMS5220. It also draws from
-//                  a Lua implementation of the original C++ codebase, which utilized a floating-point coding table.
-//                  The original source codes may be found at https://github.com/going-digital/Talkie and
-//                  https://github.com/tocisz/talkie.love
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
+// References: https://github.com/going-digital/Talkie
+//             https://github.com/tocisz/talkie.love
 
-#include "Audio/AudioBuffer.hpp"
-#include "Frame_Encoding/Synthesizer.h"
-#include "Frame_Encoding/Frame.hpp"
-#include "Frame_Encoding/Tms5220CodingTable.h"
+#include "Frame_Encoding/Synthesizer.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <string>
 #include <vector>
 
+#include "Audio/AudioBuffer.hpp"
+#include "Frame_Encoding/Frame.hpp"
+#include "Frame_Encoding/Tms5220CodingTable.h"
+
 namespace tms_express {
 
-using namespace Tms5220CodingTable;
+///////////////////////////////////////////////////////////////////////////////
+// Initializers ///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-/// Create a new synthesizer
-///
-/// \note   The synthesizer consists of three parts: the synthesis table, the random noise generator, and the lattice
-///         filter. The synthesis table holds parameters of the current frame. These parameters pass through the lattice
-///         filter repeatedly to produce audio. The random noise generator provides the basis for unvoiced sounds
-///
-/// \param sampleRateHz Sample rate of synthesized audio (in Hertz)
-/// \param frameRateMs Frame rate of synthesized audio, or duration of each frame (in milliseconds)
-Synthesizer::Synthesizer(int sampleRateHz, float frameRateMs) {
-    sampleRate = sampleRateHz;
-    windowWidth = frameRateMs;
-    samplesPerFrame = int(float(sampleRateHz) * frameRateMs * 1e-3f);
+Synthesizer::Synthesizer(int sample_rate_hz, float frame_rate_ms) {
+    sample_rate_hz_ = sample_rate_hz;
+    window_width_ms_ = frame_rate_ms;
+    n_samples_per_frame_ = sample_rate_hz * frame_rate_ms * 1e-3f;
 
-    synthEnergy = synthPeriod = 0;
-    synthK1 = synthK2 = synthK3 = synthK4 = synthK5 = synthK6 = synthK7 = synthK8 = synthK9 = synthK10 = 0;
-    x0 = x1 = x2 = x3 = x4 = x5 = x6 = x7 = x8 = x9 = u0 = 0;
-    synthRand = periodCounter = 0;
-    synthesizedSamples = {};
+    energy_ = period_ = 0;
+
+    k1_ = k2_ = k3_ = k4_ =
+    k5_ = k6_ = k7_ = k8_ =
+    k9_ = k10_ = 0;
+
+    x0_ = x1_ = x2_ = x3_ = x4_ = x5_ = x6_ = x7_ = x8_ = x9_ = u0_ = 0;
+    rand_noise_ = period_count_ = 0;
+    samples_ = {};
 }
 
-/// Reset the synthesizer
-///
-/// \note Synthesizer::synthesize calls this automatically
-void Synthesizer::reset() {
-    synthEnergy = synthPeriod = 0;
-    synthK1 = synthK2 = synthK3 = synthK4 = synthK5 = synthK6 = synthK7 = synthK8 = synthK9 = synthK10 = 0;
-    x0 = x1 = x2 = x3 = x4 = x5 = x6 = x7 = x8 = x9 = u0 = 0;
-    synthRand = periodCounter = 0;
-    synthesizedSamples = {};
-}
+///////////////////////////////////////////////////////////////////////////////
+// Synthesis Interfaces ///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-/// Reconstruct audio from frame data
-///
-/// \param frames Frames to synthesize
-/// \return Synthesized PCM samples
 std::vector<float> Synthesizer::synthesize(const std::vector<Frame>& frames) {
     reset();
 
@@ -69,55 +47,73 @@ std::vector<float> Synthesizer::synthesize(const std::vector<Frame>& frames) {
             break;
         }
 
-        for (int i = 0; i < samplesPerFrame; i++)
-            synthesizedSamples.push_back(updateLatticeFilter());
+        for (int i = 0; i < n_samples_per_frame_; i++)
+            samples_.push_back(updateLatticeFilter());
     }
 
-    return synthesizedSamples;
+    return samples_;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Accessors //////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+std::vector<float> Synthesizer::getSamples() const {
+    return samples_;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Static Utilities ///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 /// Export synthesized samples as an audio file
-void Synthesizer::render(const std::string &path) {
-    AudioBuffer(synthesizedSamples, sampleRate, windowWidth).render(path);
+void Synthesizer::render(const std::vector<float> &samples,
+    const std::string& path, int sample_rate_hz, float frame_rate_ms) {
+    AudioBuffer(samples, sample_rate_hz, frame_rate_ms).render(path);
 }
 
-/// Update the synthesizer state based on incoming frame
-///
-/// \param frame Frame to load into synthesis table
-/// \return Whether stop frame encountered, at which point synthesis should halt
+///////////////////////////////////////////////////////////////////////////////
+// Synthesis Functions ////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+bool Synthesizer::updateNoiseGenerator() {
+    rand_noise_ = (rand_noise_ >> 1) ^ ((rand_noise_ & 1) ? 0xB800 : 0);
+    return (rand_noise_ & 1);
+}
+
 bool Synthesizer::updateSynthTable(Frame frame) {
-    auto quantizedGain = frame.quantizedGain();
+    auto quantized_gain = frame.quantizedGain();
 
     // Silent frame
-    if (quantizedGain == 0) {
-        synthEnergy = 0;
+    if (quantized_gain == 0) {
+        energy_ = 0;
 
-        // Stop frame
-    } else if (quantizedGain == 0xf) {
+    // Stop frame
+    } else if (quantized_gain == 0xf) {
         reset();
         return true;
 
     } else {
-        synthEnergy = energy[quantizedGain];
-        synthPeriod = pitch[frame.quantizedPitch()];
+        energy_ = Tms5220CodingTable::energy[quantized_gain];
+        period_ = Tms5220CodingTable::pitch[frame.quantizedPitch()];
 
         if (!frame.isRepeat()) {
             auto coeffs = frame.quantizedCoeffs();
 
             // Voiced/unvoiced parameters
-            synthK1 = k1[coeffs[0]];
-            synthK2 = k2[coeffs[1]];
-            synthK3 = k3[coeffs[2]];
-            synthK4 = k4[coeffs[3]];
+            k1_ = Tms5220CodingTable::k1[coeffs[0]];
+            k2_ = Tms5220CodingTable::k2[coeffs[1]];
+            k3_ = Tms5220CodingTable::k3[coeffs[2]];
+            k4_ = Tms5220CodingTable::k4[coeffs[3]];
 
             // Voiced-only parameters
-            if (std::fpclassify(synthPeriod) != FP_ZERO) {
-                synthK5 = k5[coeffs[4]];
-                synthK6 = k6[coeffs[5]];
-                synthK7 = k7[coeffs[6]];
-                synthK8 = k8[coeffs[7]];
-                synthK9 = k9[coeffs[8]];
-                synthK10 = k9[coeffs[9]];
+            if (std::fpclassify(period_) != FP_ZERO) {
+                k5_ = Tms5220CodingTable::k5[coeffs[4]];
+                k6_ = Tms5220CodingTable::k6[coeffs[5]];
+                k7_ = Tms5220CodingTable::k7[coeffs[6]];
+                k8_ = Tms5220CodingTable::k8[coeffs[7]];
+                k9_ = Tms5220CodingTable::k9[coeffs[8]];
+                k10_ = Tms5220CodingTable::k10[coeffs[9]];
             }
         }
     }
@@ -125,74 +121,71 @@ bool Synthesizer::updateSynthTable(Frame frame) {
     return false;
 }
 
-/// Advance the random noise generator
-///
-/// \return The polarity (+true, -false) of the unvoiced sample to generate
-bool Synthesizer::updateNoiseGenerator() {
-    synthRand = (synthRand >> 1) ^ ((synthRand & 1) ? 0xB800 : 0);
-    return (synthRand & 1);
-}
-
-/// Synthesize new sample and advance synthesizer state
-///
-/// \return Newly synthesized sample
 float Synthesizer::updateLatticeFilter() {
     // Generate voiced sample
-    if (std::fpclassify(synthPeriod) != FP_ZERO) {
-        if (float(periodCounter) < synthPeriod) {
-            periodCounter++;
+    if (std::fpclassify(period_) != FP_ZERO) {
+        if (static_cast<float>(period_count_) < period_) {
+            period_count_++;
         } else {
-            periodCounter = 0;
+            period_count_ = 0;
         }
 
-        if (periodCounter < chirpWidth) {
-            u0 = ((chirp[periodCounter]) * synthEnergy);
+        if (period_count_ < Tms5220CodingTable::chirpWidth) {
+            u0_ = ((Tms5220CodingTable::chirp[period_count_]) * energy_);
         } else {
-            u0 = 0;
+            u0_ = 0;
         }
 
     // Generate unvoiced sample
     } else {
-        u0 = (updateNoiseGenerator()) ? synthEnergy : -synthEnergy;
+        u0_ = (updateNoiseGenerator()) ? energy_ : -energy_;
     }
 
     // Push new data through lattice filter
-    if (std::fpclassify(synthPeriod) != FP_ZERO) {
-        u0 -= (synthK10 * x9) + (synthK9 * x8);
-        x9 = x8 + (synthK9 * u0);
+    if (std::fpclassify(period_) != FP_ZERO) {
+        u0_ -= (k10_ * x9_) + (k9_ * x8_);
+        x9_ = x8_ + (k9_ * u0_);
 
-        u0 -= synthK8 * x7;
-        x8 = x7 + (synthK8 * u0);
+        u0_ -= k8_ * x7_;
+        x8_ = x7_ + (k8_ * u0_);
 
-        u0 -= synthK7 * x6;
-        x7 = x6 + (synthK7 * u0);
+        u0_ -= k7_ * x6_;
+        x7_ = x6_ + (k7_ * u0_);
 
-        u0 -= synthK6 * x5;
-        x6 = x5 + (synthK6 * u0);
+        u0_ -= k6_ * x5_;
+        x6_ = x5_ + (k6_ * u0_);
 
-        u0 -= synthK5 * x4;
-        x5 = x4 + (synthK5 * u0);
+        u0_ -= k5_ * x4_;
+        x5_ = x4_ + (k5_ * u0_);
     }
 
-    u0 -= synthK4 * x3;
-    x4 = x3 + (synthK4 * u0);
+    u0_ -= k4_ * x3_;
+    x4_ = x3_ + (k4_ * u0_);
 
-    u0 -= synthK3 * x2;
-    x3 = x2 + (synthK3 * u0);
+    u0_ -= k3_ * x2_;
+    x3_ = x2_ + (k3_ * u0_);
 
-    u0 -= synthK2 * x1;
-    x2 = x1 + (synthK2 * u0);
+    u0_ -= k2_ * x1_;
+    x2_ = x1_ + (k2_ * u0_);
 
-    u0 -= synthK1 * x0;
-    x1 = x0 + (synthK1 * u0);
+    u0_ -= k1_ * x0_;
+    x1_ = x0_ + (k1_ * u0_);
 
     // Normalize result
-    x0 = std::max(std::min(u0, 1.0f), -1.0f);
-    return x0;
+    x0_ = std::max(std::min(u0_, 1.0f), -1.0f);
+    return x0_;
 }
 
-std::vector<float> Synthesizer::samples() {
-    return synthesizedSamples;
+///////////////////////////////////////////////////////////////////////////
+// Utility Functions //////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
+void Synthesizer::reset() {
+    energy_ = period_ = 0;
+    k1_ = k2_ = k3_ = k4_ = k5_ = k6_ = k7_ = k8_ = k9_ = k10_ = 0;
+    x0_ = x1_ = x2_ = x3_ = x4_ = x5_ = x6_ = x7_ = x8_ = x9_ = u0_ = 0;
+    rand_noise_ = period_count_ = 0;
+    samples_ = {};
 }
 
 };  // namespace tms_express

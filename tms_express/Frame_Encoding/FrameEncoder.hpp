@@ -131,9 +131,16 @@ class FrameEncoder {
     // Members ////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
+    /// @brief Binary representation of Frame table
     std::vector<std::string> binary_bitstream_;
+
+    /// @brief Hex byte separator for ASCII bitstreams
     static const char byte_delimiter = ',';
+
+    /// @brief Frame table
     std::vector<Frame> frames_;
+
+    /// @brief true to prefix hex bytes with '0x', false otherwise
     bool include_hex_prefix_;
 };
 
