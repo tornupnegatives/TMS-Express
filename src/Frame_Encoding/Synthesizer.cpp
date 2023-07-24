@@ -115,7 +115,7 @@ bool Synthesizer::updateSynthTable(Frame frame) {
                 synthK7 = k7[coeffs[6]];
                 synthK8 = k8[coeffs[7]];
                 synthK9 = k9[coeffs[8]];
-                synthK10 = k9[coeffs[9]];
+                synthK10 = k10[coeffs[9]];
             }
         }
     }
