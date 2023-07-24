@@ -1,6 +1,6 @@
 // Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
-// References: https://github.com/going-digital/Talkie
-//             https://github.com/tocisz/talkie.love
+// Reference: Arduino Talkie (https://github.com/going-digital/Talkie)
+// Reference: Talkie.Love (https://github.com/tocisz/talkie.love)
 
 #include "Frame_Encoding/Synthesizer.hpp"
 
@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "Audio/AudioBuffer.hpp"
+#include "Frame_Encoding/CodingTable.hpp"
 #include "Frame_Encoding/Frame.hpp"
-#include "Frame_Encoding/Tms5220CodingTable.h"
 
 namespace tms_express {
 
@@ -94,26 +94,26 @@ bool Synthesizer::updateSynthTable(Frame frame) {
         return true;
 
     } else {
-        energy_ = Tms5220CodingTable::energy[quantized_gain];
-        period_ = Tms5220CodingTable::pitch[frame.quantizedPitch()];
+        energy_ = coding_table::tms5220::energy[quantized_gain];
+        period_ = coding_table::tms5220::pitch[frame.quantizedPitch()];
 
         if (!frame.isRepeat()) {
             auto coeffs = frame.quantizedCoeffs();
 
             // Voiced/unvoiced parameters
-            k1_ = Tms5220CodingTable::k1[coeffs[0]];
-            k2_ = Tms5220CodingTable::k2[coeffs[1]];
-            k3_ = Tms5220CodingTable::k3[coeffs[2]];
-            k4_ = Tms5220CodingTable::k4[coeffs[3]];
+            k1_ = coding_table::tms5220::k1[coeffs[0]];
+            k2_ = coding_table::tms5220::k2[coeffs[1]];
+            k3_ = coding_table::tms5220::k3[coeffs[2]];
+            k4_ = coding_table::tms5220::k4[coeffs[3]];
 
             // Voiced-only parameters
             if (std::fpclassify(period_) != FP_ZERO) {
-                k5_ = Tms5220CodingTable::k5[coeffs[4]];
-                k6_ = Tms5220CodingTable::k6[coeffs[5]];
-                k7_ = Tms5220CodingTable::k7[coeffs[6]];
-                k8_ = Tms5220CodingTable::k8[coeffs[7]];
-                k9_ = Tms5220CodingTable::k9[coeffs[8]];
-                k10_ = Tms5220CodingTable::k10[coeffs[9]];
+                k5_ = coding_table::tms5220::k5[coeffs[4]];
+                k6_ = coding_table::tms5220::k6[coeffs[5]];
+                k7_ = coding_table::tms5220::k7[coeffs[6]];
+                k8_ = coding_table::tms5220::k8[coeffs[7]];
+                k9_ = coding_table::tms5220::k9[coeffs[8]];
+                k10_ = coding_table::tms5220::k10[coeffs[9]];
             }
         }
     }
@@ -130,8 +130,8 @@ float Synthesizer::updateLatticeFilter() {
             period_count_ = 0;
         }
 
-        if (period_count_ < Tms5220CodingTable::chirpWidth) {
-            u0_ = ((Tms5220CodingTable::chirp[period_count_]) * energy_);
+        if (period_count_ < coding_table::tms5220::chirp.size()) {
+            u0_ = ((coding_table::tms5220::chirp[period_count_]) * energy_);
         } else {
             u0_ = 0;
         }

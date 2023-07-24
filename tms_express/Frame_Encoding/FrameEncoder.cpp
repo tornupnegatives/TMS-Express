@@ -7,8 +7,8 @@
 
 #include "lib/json.hpp"
 
+#include "Frame_Encoding/CodingTable.hpp"
 #include "Frame_Encoding/Frame.hpp"
-#include "Frame_Encoding/Tms5220CodingTable.h"
 
 namespace tms_express {
 
@@ -110,8 +110,8 @@ size_t FrameEncoder::importASCIIFromString(std::string flat_bitstream) {
         // TODO(Joseph Bellahcen): Handle exception
         auto pitch_idx = std::stoul(buffer.substr(5, 6), nullptr, 2);
 
-        auto gain = Tms5220CodingTable::rms.at(energy_idx);
-        auto pitch = Tms5220CodingTable::pitch.at(pitch_idx);
+        auto gain = coding_table::tms5220::rms.at(energy_idx);
+        auto pitch = coding_table::tms5220::pitch.at(pitch_idx);
 
         if (is_repeat) {
             append(Frame(pitch, false, gain, std::vector<float>(10, 0.0f)));
@@ -262,10 +262,10 @@ void FrameEncoder::extractUnvoicedCoeffs(const std::string &chunk, float *k1,
         auto k4_idx = std::stoul(chunk.substr(25, 4), nullptr, 2);
 
         // TODO(Joseph Bellahcen): Guard against nullptr dereference
-        *k1 = Tms5220CodingTable::k1.at(k1_idx);
-        *k2 = Tms5220CodingTable::k2.at(k2_idx);
-        *k3 = Tms5220CodingTable::k3.at(k3_idx);
-        *k4 = Tms5220CodingTable::k4.at(k4_idx);
+        *k1 = coding_table::tms5220::k1.at(k1_idx);
+        *k2 = coding_table::tms5220::k2.at(k2_idx);
+        *k3 = coding_table::tms5220::k3.at(k3_idx);
+        *k4 = coding_table::tms5220::k4.at(k4_idx);
 }
 
 void FrameEncoder::extractVoicedCoeffs(const std::string &chunk, float *k5,
@@ -278,12 +278,12 @@ void FrameEncoder::extractVoicedCoeffs(const std::string &chunk, float *k5,
     auto k10_idx = std::stoul(chunk.substr(47, 3), nullptr, 2);
 
     // TODO(Joseph Bellahcen): Guard against nullptr dereference
-    *k5 = Tms5220CodingTable::k5.at(k5_idx);
-    *k6 = Tms5220CodingTable::k6.at(k6_idx);
-    *k7 = Tms5220CodingTable::k7.at(k7_idx);
-    *k8 = Tms5220CodingTable::k8.at(k8_idx);
-    *k9 = Tms5220CodingTable::k9.at(k9_idx);
-    *k10 = Tms5220CodingTable::k10.at(k10_idx);
+    *k5 = coding_table::tms5220::k5.at(k5_idx);
+    *k6 = coding_table::tms5220::k6.at(k6_idx);
+    *k7 = coding_table::tms5220::k7.at(k7_idx);
+    *k8 = coding_table::tms5220::k8.at(k8_idx);
+    *k9 = coding_table::tms5220::k9.at(k9_idx);
+    *k10 = coding_table::tms5220::k10.at(k10_idx);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

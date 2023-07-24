@@ -6,15 +6,13 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "Frame_Encoding/Tms5220CodingTable.h"
+#include "Frame_Encoding/CodingTable.hpp"
 #include "User_Interfaces/Control_Panels/ControlPanelPostView.h"
 
 #include <QWidget>
 #include <QtWidgets>
 
 namespace tms_express {
-
-using namespace Tms5220CodingTable;
 
 ControlPanelPostView::ControlPanelPostView(QWidget *parent): ControlPanelView("Post-Processing", parent) {
     auto line2 = new QFrame(this);
@@ -36,14 +34,14 @@ ControlPanelPostView::ControlPanelPostView(QWidget *parent): ControlPanelView("P
     maxVoicedGainLine = new QLineEdit("37.5", this);
 
     // Setup sliders based on TMS5220 coding table
-    pitchShiftSlider->setRange(-pitch.size(), pitch.size());
-    pitchShiftSlider->setTickInterval(pitch.size() / 8);
+    pitchShiftSlider->setRange(-coding_table::tms5220::pitch.size(), coding_table::tms5220::pitch.size());
+    pitchShiftSlider->setTickInterval(coding_table::tms5220::pitch.size() / 8);
 
-    pitchOverrideSlider->setRange(0, pitch.size());
-    pitchOverrideSlider->setTickInterval(pitch.size() / 16);
+    pitchOverrideSlider->setRange(0, coding_table::tms5220::pitch.size());
+    pitchOverrideSlider->setTickInterval(coding_table::tms5220::pitch.size() / 16);
 
-    gainShiftSlider->setRange(-rms.size(), rms.size());
-    gainShiftSlider->setTickInterval(rms.size() / 8);
+    gainShiftSlider->setRange(-coding_table::tms5220::rms.size(), coding_table::tms5220::rms.size());
+    gainShiftSlider->setTickInterval(coding_table::tms5220::rms.size() / 8);
 
     // Construct layout
     auto row = grid->rowCount();
@@ -89,7 +87,7 @@ void ControlPanelPostView::reset() {
     pitchShiftCheckbox->setChecked(false);
     pitchShiftSlider->setSliderPosition(0);
     pitchOverrideCheckbox->setChecked(false);
-    pitchOverrideSlider->setSliderPosition(pitch.size() / 2);
+    pitchOverrideSlider->setSliderPosition(coding_table::tms5220::pitch.size() / 2);
 
     repeatFramesCheckbox->setChecked(false);
 

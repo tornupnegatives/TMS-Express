@@ -4,8 +4,8 @@
 
 #include <vector>
 
+#include "Frame_Encoding/CodingTable.hpp"
 #include "Frame_Encoding/Frame.hpp"
-#include "Frame_Encoding/Tms5220CodingTable.h"
 
 namespace tms_express {
 
@@ -88,14 +88,14 @@ void FramePostprocessor::shiftGain(int offset) {
         // If the shifted gain would exceed the maximum representable gain of
         // the coding table, let it "hit the ceiling." Overuse of the largest
         // gain parameter may destabilize the synthesized signal
-        if (change >= Tms5220CodingTable::rms.size()) {
-            frame.setGain(*Tms5220CodingTable::rms.end());
+        if (change >= coding_table::tms5220::rms.size()) {
+            frame.setGain(*coding_table::tms5220::rms.end());
 
         } else if (change < 0) {
             frame.setGain(0);
 
         } else {
-            frame.setGain(Tms5220CodingTable::rms.at(change));
+            frame.setGain(coding_table::tms5220::rms.at(change));
         }
     }
 }
@@ -114,14 +114,14 @@ void FramePostprocessor::shiftPitch(int offset) {
             continue;
         }
 
-        if (change >= Tms5220CodingTable::pitch.size()) {
-            frame.setPitch(*Tms5220CodingTable::pitch.end());
+        if (change >= coding_table::tms5220::pitch.size()) {
+            frame.setPitch(*coding_table::tms5220::pitch.end());
 
         } else if (change < 0) {
             frame.setPitch(0);
 
         } else {
-            frame.setPitch(Tms5220CodingTable::pitch.at(change));
+            frame.setPitch(coding_table::tms5220::pitch.at(change));
         }
     }
 }
@@ -129,11 +129,11 @@ void FramePostprocessor::shiftPitch(int offset) {
 void FramePostprocessor::overridePitch(int index) {
     for (Frame &frame : *frame_table_) {
         if (!frame.isSilent()) {
-            if (index >= Tms5220CodingTable::pitch.size()) {
-                frame.setPitch(*Tms5220CodingTable::pitch.end());
+            if (index >= coding_table::tms5220::pitch.size()) {
+                frame.setPitch(*coding_table::tms5220::pitch.end());
 
             } else {
-                frame.setPitch(Tms5220CodingTable::pitch.at(index));
+                frame.setPitch(coding_table::tms5220::pitch.at(index));
             }
         }
     }

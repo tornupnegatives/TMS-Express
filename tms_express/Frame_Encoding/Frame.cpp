@@ -8,7 +8,7 @@
 
 #include "lib/json.hpp"
 
-#include "Frame_Encoding/Tms5220CodingTable.h"
+#include "Frame_Encoding/CodingTable.hpp"
 
 namespace tms_express {
 
@@ -55,13 +55,13 @@ void Frame::setGain(float gain_db) {
 
 void Frame::setGain(int idx) {
     if (idx < 0) {
-        gain_db_ = *Tms5220CodingTable::rms.begin();
+        gain_db_ = *coding_table::tms5220::rms.begin();
 
-    } else if (idx > Tms5220CodingTable::rms.size()) {
-        gain_db_ = *Tms5220CodingTable::rms.end();
+    } else if (idx > coding_table::tms5220::rms.size()) {
+        gain_db_ = *coding_table::tms5220::rms.end();
 
     } else {
-        gain_db_ = Tms5220CodingTable::rms.at(idx);
+        gain_db_ = coding_table::tms5220::rms.at(idx);
     }
 }
 
@@ -94,12 +94,12 @@ void Frame::setVoicing(bool isVoiced) {
 ///////////////////////////////////////////////////////////////////////////////
 
 std::vector<int> Frame::quantizedCoeffs() const {
-    auto size = Tms5220CodingTable::nKCoeffs;
+    auto size = coding_table::tms5220::kNCoeffs;
     auto indices = std::vector<int>(size);
 
     // Only parse as many coefficients as the coding table supports
     for (int i = 0; i < size; i++) {
-        auto table = Tms5220CodingTable::kCoeffsSlice(i);
+        auto table = coding_table::tms5220::getCoeffTable(i);
         float coeff = coeffs_[i];
 
         int idx = closestIndex(coeff, table);
@@ -110,7 +110,7 @@ std::vector<int> Frame::quantizedCoeffs() const {
 }
 
 int Frame::quantizedGain() const {
-    auto table_array = Tms5220CodingTable::rms;
+    auto table_array = coding_table::tms5220::rms;
     auto table_vector = std::vector<float>(table_array.begin(),
         table_array.end());
 
@@ -120,7 +120,7 @@ int Frame::quantizedGain() const {
 
 /// Return pitch period indices, corresponding to coding table entries
 int Frame::quantizedPitch() const {
-    auto table = Tms5220CodingTable::pitch;
+    auto table = coding_table::tms5220::pitch;
     auto table_vector = std::vector<float>(table.begin(), table.end());
 
     int idx = closestIndex(pitch_period_, table_vector);
@@ -159,7 +159,7 @@ std::string Frame::toBinary() {
 
     // At minimum, a frame will contain an energy parameter
     int gain_idx = quantizedGain();
-    bin += valueToBinary(gain_idx, Tms5220CodingTable::gainWidth);
+    bin += valueToBinary(gain_idx, coding_table::tms5220::kGainBitWidth);
 
     // A silent frame will contain no further parameters
     if (isSilent()) {
@@ -171,7 +171,7 @@ std::string Frame::toBinary() {
 
     // A voiced frame will have a non-zero pitch
     int pitch_idx = isVoiced() ? quantizedPitch() : 0;
-    bin += valueToBinary(pitch_idx, Tms5220CodingTable::pitchWidth);
+    bin += valueToBinary(pitch_idx, coding_table::tms5220::kPitchBitWidth);
 
     if (isRepeat()) {
         return bin;
@@ -184,7 +184,7 @@ std::string Frame::toBinary() {
 
     for (int i = 0; i < n_coeffs; i++) {
         int coeff = coeffs.at(i);
-        int coeff_width = Tms5220CodingTable::coeffWidths.at(i);
+        auto coeff_width = coding_table::tms5220::kCoeffBitWidths[i];
 
         bin += valueToBinary(coeff, coeff_width);
     }
