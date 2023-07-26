@@ -1,5 +1,6 @@
 // Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
-// Reference: TMS 5220 VOICE SYNTHESIS PROCESSOR DATA MANUAL (http://sprow.co.uk/bbc/hardware/speech/tms5220.pdf)
+// Reference: TMS 5220 VOICE SYNTHESIS PROCESSOR DATA MANUAL
+//              (http://sprow.co.uk/bbc/hardware/speech/tms5220.pdf)
 // Reference: Arduino Talkie (https://github.com/going-digital/Talkie)
 
 #ifndef TMS_EXPRESS_FRAME_ENCODING_CODINGTABLE_HPP_

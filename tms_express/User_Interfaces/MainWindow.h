@@ -11,7 +11,7 @@
 #include "Frame_Encoding/FramePostprocessor.hpp"
 #include "Frame_Encoding/Synthesizer.hpp"
 #include "LPC_Analysis/PitchEstimator.h"
-#include "LPC_Analysis/LinearPredictor.h"
+#include "LPC_Analysis/LinearPredictor.hpp"
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
 #include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"

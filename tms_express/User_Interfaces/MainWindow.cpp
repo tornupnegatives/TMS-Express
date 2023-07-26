@@ -468,7 +468,7 @@ void MainWindow::performLpcAnalysis() {
         auto segment = lpcBuffer.getSegment(i);
         auto acf = tms_express::Autocorrelation(segment);
 
-        auto coeffs = linearPredictor.reflectorCoefficients(acf);
+        auto coeffs = linearPredictor.computeCoeffs(acf);
         auto gain = linearPredictor.gain();
 
         auto pitchPeriod = pitchPeriodTable[i];

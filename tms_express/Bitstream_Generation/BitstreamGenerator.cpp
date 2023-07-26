@@ -14,7 +14,7 @@
 #include "Frame_Encoding/FrameEncoder.hpp"
 #include "Frame_Encoding/FramePostprocessor.hpp"
 #include "LPC_Analysis/Autocorrelation.hpp"
-#include "LPC_Analysis/LinearPredictor.h"
+#include "LPC_Analysis/LinearPredictor.hpp"
 #include "LPC_Analysis/PitchEstimator.h"
 
 namespace tms_express {
@@ -142,7 +142,7 @@ std::vector<Frame> BitstreamGenerator::generateFrames(
         auto pitch_acf = tms_express::Autocorrelation(pitch_segment);
 
         // Extract LPC reflector coefficients and compute the predictor gain
-        auto coeffs = linearPredictor.reflectorCoefficients(lpc_acf);
+        auto coeffs = linearPredictor.computeCoeffs(lpc_acf);
         auto gain = linearPredictor.gain();
 
         // Estimate pitch
