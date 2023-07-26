@@ -1,6 +1,7 @@
 // Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "LPC_Analysis/Autocorrelation.h"
+#include "LPC_Analysis/Autocorrelation.hpp"
+
 #include <vector>
 
 namespace tms_express {

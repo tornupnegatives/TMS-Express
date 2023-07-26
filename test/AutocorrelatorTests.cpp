@@ -2,7 +2,7 @@
 // Created by Joseph Bellahcen on 6/1/22.
 //
 
-#include "LPC_Analysis/Autocorrelation.h"
+#include "LPC_Analysis/Autocorrelation.hpp"
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>

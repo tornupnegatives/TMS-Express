@@ -13,7 +13,7 @@
 #include "Frame_Encoding/Frame.hpp"
 #include "Frame_Encoding/FrameEncoder.hpp"
 #include "Frame_Encoding/FramePostprocessor.hpp"
-#include "LPC_Analysis/Autocorrelation.h"
+#include "LPC_Analysis/Autocorrelation.hpp"
 #include "LPC_Analysis/LinearPredictor.h"
 #include "LPC_Analysis/PitchEstimator.h"
 
