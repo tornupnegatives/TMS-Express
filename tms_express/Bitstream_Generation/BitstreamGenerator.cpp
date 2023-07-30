@@ -15,7 +15,7 @@
 #include "Frame_Encoding/FramePostprocessor.hpp"
 #include "LPC_Analysis/Autocorrelation.hpp"
 #include "LPC_Analysis/LinearPredictor.hpp"
-#include "LPC_Analysis/PitchEstimator.h"
+#include "LPC_Analysis/PitchEstimator.hpp"
 
 namespace tms_express {
 

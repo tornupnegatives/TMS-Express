@@ -1,100 +1,75 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: PitchEstimator
-//
-// Description: The PitchEstimator detects the pitch of a segment based on its cumulative mean normalized distribution.
-//              This class implements a very basic autocorrelation-based pitch detector, which exploits the fact that
-//              the autocorrelation of a periodic signal is also periodic
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "LPC_Analysis/PitchEstimator.h"
+#include "LPC_Analysis/PitchEstimator.hpp"
+
 #include <algorithm>
 #include <vector>
 
 namespace tms_express {
 
-/// Create a new pitch estimator, bounded by the min and max frequencies
-///
-/// \param sampleRateHz Sample rate of the audio samples
-/// \param minFrqHz Minimum frequency to search
-/// \param maxFrqHz Maximum frequency to search
-PitchEstimator::PitchEstimator(int sampleRateHz, int minFrqHz, int maxFrqHz) {
-    maxPeriod = sampleRateHz / minFrqHz;
-    minPeriod = sampleRateHz / maxFrqHz;
-    sampleRate = sampleRateHz;
+///////////////////////////////////////////////////////////////////////////////
+// Initializers ///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+PitchEstimator::PitchEstimator(int sample_rate_hz, int min_frq_hz,
+    int max_frq_hz) {
+    max_period_ = sample_rate_hz / min_frq_hz;
+    min_period_ = sample_rate_hz / max_frq_hz;
+    sample_rate_hz_ = sample_rate_hz;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                          Getters & Setters
+// Accessors //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Return the minimum pitch period (in samples) to search
 int PitchEstimator::getMinPeriod() const {
-    return minPeriod;
+    return min_period_;
 }
 
-/// Return the minimum pitch frequency (in Hertz) to search
 int PitchEstimator::getMinFrq() const {
-    return sampleRate / maxPeriod;
+    return sample_rate_hz_ / max_period_;
 }
 
-/// Set the minimum pitch period (in samples) to search
-///
-/// \note Setting a minimum pitch period may reduce the computation time of pitch estimation
-///
-/// \param maxFrqHz The minimum pitch period is determined by the maximum pitch frequency (in Hertz)
 void PitchEstimator::setMinPeriod(int maxFrqHz) {
-    minPeriod = sampleRate / maxFrqHz;
+    min_period_ = sample_rate_hz_ / maxFrqHz;
 }
 
-/// Return the maximum pitch period (in samples) to search
 int PitchEstimator::getMaxPeriod() const {
-    return maxPeriod;
+    return max_period_;
 }
 
-/// Return the maximum pitch frequency (in Hertz) to search
 int PitchEstimator::getMaxFrq() const {
-    return sampleRate / minPeriod;
+    return sample_rate_hz_ / min_period_;
 }
 
-/// Set the maximum pitch period (in samples) to search
-///
-/// \note Setting a maximum pitch period may reduce the computation time of pitch estimation
-///
-/// \param minFrqHz The maximum pitch period is determined by the minimum pitch frequency (in Hertz)
 void PitchEstimator::setMaxPeriod(int minFrqHz) {
-    maxPeriod = sampleRate / minFrqHz;
+    max_period_ = sample_rate_hz_ / minFrqHz;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                                 Estimators
+// Pitch Estimation ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Estimate the pitch frequency of the segment (in Hertz) from its autocorrelation
-///
-/// \param acf Autocorrelation of the segment
-/// \return Pitch frequency estimate (in Hertz)
 float PitchEstimator::estimateFrequency(const std::vector<float> &acf) const {
     auto period = estimatePeriod(acf);
-    return float(sampleRate) / float(period);
+    return static_cast<float>(sample_rate_hz_) / static_cast<float>(period);
 }
 
-/// Estimate the pitch period of the segment (in samples) from its autocorrelation
 int PitchEstimator::estimatePeriod(const std::vector<float> &acf) const {
-    // Restrict the search window to the min and max pitch periods set during initialization
-    auto acfStart = acf.begin() + minPeriod;
-    auto acfEnd = acf.begin()  + maxPeriod;
+    // Restrict the search window to the min and max pitch periods
+    auto start = acf.begin() + min_period_;
+    auto end = acf.begin()  + max_period_;
 
-    // Identify the first local minimum and subsequent local maximum. The distance between these values likely
-    // corresponds to the pitch period of the segment
-    auto firstLocalMin = std::min_element(acfStart, acfEnd);
-    auto period = int(std::distance(acf.begin(), std::max_element(firstLocalMin, acfEnd)));
+    // Identify the first local minimum and subsequent local maximum.
+    // The distance between these values likely corresponds to the pitch period
+    // of the segment
+    auto local_min = std::min_element(start, end);
+    auto period = std::distance(acf.begin(), std::max_element(local_min, end));
 
-    if (period > maxPeriod) {
-        return maxPeriod;
-    } else if (period < minPeriod) {
-        return minPeriod;
+    if (period > max_period_) {
+        return max_period_;
+    } else if (period < min_period_) {
+        return min_period_;
     } else {
         return period;
     }

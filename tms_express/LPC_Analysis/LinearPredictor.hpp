@@ -17,7 +17,7 @@ class LinearPredictor {
 
     /// @brief Creates new Linear Predictor with given model order
     /// @param modelOrder Model order, corresponding to number of filter poles
-    explicit LinearPredictor(int modelOrder = 10);
+    explicit LinearPredictor(int model_order = 10);
 
     ///////////////////////////////////////////////////////////////////////////
     // Linear Prediction //////////////////////////////////////////////////////

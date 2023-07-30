@@ -10,8 +10,8 @@ namespace tms_express {
 // Initializers ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-LinearPredictor::LinearPredictor(int modelOrder) {
-    order_ = modelOrder;
+LinearPredictor::LinearPredictor(int model_order) {
+    order_ = model_order;
     error_ = 0.0f;
 }
 
