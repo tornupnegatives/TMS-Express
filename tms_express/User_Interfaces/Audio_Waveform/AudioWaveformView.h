@@ -3,7 +3,7 @@
 #ifndef TMS_EXPRESS_AUDIOWAVEFORMVIEW_H
 #define TMS_EXPRESS_AUDIOWAVEFORMVIEW_H
 
-#include "User_Interfaces/Audio_Waveform/AudioWaveform.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveform.hpp"
 
 #include <QWidget>
 #include <QtWidgets>

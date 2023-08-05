@@ -1,6 +1,6 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 
-#include "User_Interfaces/Audio_Waveform/AudioWaveform.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveform.hpp"
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
 
 #include <QWidget>
@@ -34,11 +34,11 @@ AudioWaveformView::AudioWaveformView(std::string title, uint baseWidth, uint bas
 }
 
 void AudioWaveformView::plotPitch(const std::vector<float> &_pitchTable) {
-    waveform->plotPitch(_pitchTable);
+    waveform->setPitchTable(_pitchTable);
 }
 
 void AudioWaveformView::plotSamples(const std::vector<float> &_samples) {
-    waveform->plotSamples(_samples);
+    waveform->setSamples(_samples);
 }
 
 void AudioWaveformView::onPlayButtonPressed() {

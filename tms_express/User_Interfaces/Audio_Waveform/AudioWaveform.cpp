@@ -1,24 +1,19 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: AudioWaveform
-//
-// Description: The AudioWaveform implements a Qt plot of time-domain audio samples and its corresponding pitch-estimate
-//              table. Both are displayed on the same graph, with the pitch table occupying the lower half of the canvas
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "User_Interfaces/Audio_Waveform/AudioWaveform.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveform.hpp"
 
-#include <QPainter>
 #include <QWidget>
-#include <QtWidgets>
+#include <QPainter>
 
 #include <string>
 #include <vector>
 
 namespace tms_express {
 
-/// Create a new Audio Waveform plot
+///////////////////////////////////////////////////////////////////////////////
+// Initializers ///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
 AudioWaveform::AudioWaveform(QWidget *parent) : QWidget(parent) {
     // Set the plot background to true black
     QPalette pal = QPalette();
@@ -26,66 +21,72 @@ AudioWaveform::AudioWaveform(QWidget *parent) : QWidget(parent) {
     setAutoFillBackground(true);
     setPalette(pal);
 
-    samples = {};
-    pitchTable = {};
+    samples_ = {};
+    pitch_curve_ = {};
 }
 
-/// Plot audio samples
-void AudioWaveform::plotSamples(const std::vector<float>& _samples) {
-    samples = _samples;
+///////////////////////////////////////////////////////////////////////////////
+// Accessors //////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+void AudioWaveform::setSamples(const std::vector<float>& samples) {
+    samples_ = samples;
     repaint();
 }
 
 /// Plot pitch table corresponding to audio samples
-void AudioWaveform::plotPitch(const std::vector<float>& _pitchTable) {
-    pitchTable = _pitchTable;
+void AudioWaveform::setPitchTable(const std::vector<float>& pitch_curve) {
+    pitch_curve_ = pitch_curve;
     repaint();
 }
 
-/// Paint the plot
-///
-/// \note Called under the hood by Qt, not by the programmer
-///
-/// \param event QPaintEvent
-void AudioWaveform::paintEvent(QPaintEvent * event) {
-    auto width = QWidget::width();
-    auto height = QWidget::height();
+///////////////////////////////////////////////////////////////////////////////
+// Qt Widget Helpers //////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-    // Plot axis
+void AudioWaveform::paintEvent(QPaintEvent * event) {
+    const auto width = QWidget::width();
+    const auto height = QWidget::height();
+
+    // Consider the origin of the plot (y = 0) as the vertical center of the
+    // widget, and draw an axis line through it
+    const float origin = static_cast<float>(height) / 2.0f;
+
     QPainter painter(this);
     painter.setPen(Qt::darkGray);
-
-    painter.drawLine(0, height / 2, width, height / 2);
-
-    // Set plot origin to center of Y-axis
-    auto penOrigin = float(height) / 2.0f;
+    painter.drawLine(0, origin, width, origin);
 
     // Plot samples
-    if (!samples.empty()) {
+    if (!samples_.empty()) {
         painter.setPen(QColor(255, 128, 0));
-        auto penSpacing = float(width) / float(samples.size());
+        const float spacing = static_cast<float>(width) /
+            static_cast<float>(samples_.size());
 
-        for (int i = 0; i < samples.size() - 1; i++) {
-            auto x1 = float(i) * penSpacing;
-            auto y1 = penOrigin + (samples[i]) * penOrigin;
-            auto x2 = float(i + 1) * penSpacing;
-            auto y2 = penOrigin + (samples[i + 1] * penOrigin);
+        for (int i = 0; i < samples_.size() - 1; i++) {
+            float x_1 = static_cast<float>(i) * spacing;
+            float y_1 = origin + (samples_[i] * origin);
 
-            painter.drawLine(int(x1), int(y1), int(x2), int(y2));
+            float x_2 = static_cast<float>(i + 1) * spacing;
+            float y_2 = origin + (samples_[i + 1] * origin);
+
+            painter.drawLine(x_1, y_1, x_2, y_2);
         }
     }
 
-    if (!pitchTable.empty()) {
+    // Plot pitch curve underneath the samples
+    if (!pitch_curve_.empty()) {
         painter.setPen(Qt::darkRed);
-        auto penSpacing = float(width) / float(pitchTable.size());
+        const float spacing = static_cast<float>(width) /
+            static_cast<float>(pitch_curve_.size());
 
-        for (int i = 0; i < pitchTable.size(); i++) {
-            auto x1 = float(i) * penSpacing;
-            auto y1 = float(QWidget::height()) - (pitchTable[i] * penOrigin);
-            auto x2 = float(i + 1) * penSpacing;
-            auto y2 = float(QWidget::height()) - (pitchTable[i + 1] * penOrigin);
+        for (int i = 0; i < pitch_curve_.size(); i++) {
+            float x_1 = static_cast<float>(i) * spacing;
+            float y_1 = height - (pitch_curve_[i] * origin);
 
-            painter.drawLine(int(x1), int(y1), int(x2), int(y2));
+            float x_2 = static_cast<float>(i + 1) * spacing;
+            float y_2 = height - (pitch_curve_[i + 1] * origin);
+
+            painter.drawLine(x_1, y_1, x_2, y_2);
         }
     }
 }
