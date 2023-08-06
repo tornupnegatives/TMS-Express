@@ -17,74 +17,74 @@ namespace tms_express::ui {
 ControlPanelLpcView::ControlPanelLpcView(QWidget *parent): ControlPanelView("LPC Analysis", parent)  {
     auto analysisWindowLabel = new QLabel("Analysis window (ms)", this);
     analysisWindowLine = new QLineEdit("25.0", this);
-    hpfCheckbox = new QCheckBox("Highpass filter (Hz)", this);
-    hpfLine = new QLineEdit("100", this);
-    lpfCheckbox = new QCheckBox("Lowpass filter (Hz)", this);
-    lpfLine = new QLineEdit("800", this);
-    preemphCheckbox = new QCheckBox("Pre-emphasis filter (alpha)", this);
-    preemphLine = new QLineEdit("0.9375", this);
+    hpf_checkbox_ = new QCheckBox("Highpass filter (Hz)", this);
+    hpf_line_ = new QLineEdit("100", this);
+    lpf_checkbox_ = new QCheckBox("Lowpass filter (Hz)", this);
+    lpf_line_ = new QLineEdit("800", this);
+    preemphasis_checkbox_ = new QCheckBox("Pre-emphasis filter (alpha)", this);
+    preemphasis_line_ = new QLineEdit("0.9375", this);
 
     // Construct layout
     auto row = grid->rowCount();
     grid->addWidget(analysisWindowLabel, row, 0);
     grid->addWidget(analysisWindowLine, row++, 1);
 
-    grid->addWidget(hpfCheckbox, row, 0);
-    grid->addWidget(hpfLine, row++, 1);
+    grid->addWidget(hpf_checkbox_, row, 0);
+    grid->addWidget(hpf_line_, row++, 1);
 
-    grid->addWidget(lpfCheckbox, row, 0);
-    grid->addWidget(lpfLine, row++, 1);
+    grid->addWidget(lpf_checkbox_, row, 0);
+    grid->addWidget(lpf_line_, row++, 1);
 
-    grid->addWidget(preemphCheckbox, row, 0);
-    grid->addWidget(preemphLine, row, 1);
+    grid->addWidget(preemphasis_checkbox_, row, 0);
+    grid->addWidget(preemphasis_line_, row, 1);
 }
 
 void ControlPanelLpcView::configureSlots() {
     connect(analysisWindowLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
-    connect(hpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
-    connect(hpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
-    connect(lpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
-    connect(lpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
-    connect(preemphCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
-    connect(preemphLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(hpf_checkbox_, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(hpf_line_, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(lpf_checkbox_, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(lpf_line_, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(preemphasis_checkbox_, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(preemphasis_line_, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
 }
 
 void ControlPanelLpcView::reset() {
-    hpfCheckbox->setChecked(false);
-    hpfLine->setText("100");
+    hpf_checkbox_->setChecked(false);
+    hpf_line_->setText("100");
 
-    lpfCheckbox->setChecked(false);
-    lpfLine->setText("800");
+    lpf_checkbox_->setChecked(false);
+    lpf_line_->setText("800");
 
-    preemphCheckbox->setChecked(true);
-    preemphLine->setText("0.9375");
+    preemphasis_checkbox_->setChecked(true);
+    preemphasis_line_->setText("0.9375");
 }
 
 float ControlPanelLpcView::analysisWindowWidth() {
     return analysisWindowLine->text().toFloat();
 }
-bool ControlPanelLpcView::hpfEnabled() {
-    return hpfCheckbox->isChecked();
+bool ControlPanelLpcView::getHpfEnabled() {
+    return hpf_checkbox_->isChecked();
 }
 
-int ControlPanelLpcView::hpfCutoff() {
-    return hpfLine->text().toInt();
+int ControlPanelLpcView::getHpfCutoff() {
+    return hpf_line_->text().toInt();
 }
 
-bool ControlPanelLpcView::lpfEnabled() {
-    return lpfCheckbox->isChecked();
+bool ControlPanelLpcView::getLpfEnabled() {
+    return lpf_checkbox_->isChecked();
 }
 
-int ControlPanelLpcView::lpfCutoff() {
-    return lpfLine->text().toInt();
+int ControlPanelLpcView::getLpfCutoff() {
+    return lpf_line_->text().toInt();
 }
 
-bool ControlPanelLpcView::preemphEnabled() {
-    return preemphCheckbox->isChecked();
+bool ControlPanelLpcView::getPreEmphasisEnabled() {
+    return preemphasis_checkbox_->isChecked();
 }
 
-float ControlPanelLpcView::preemphAlpha() {
-    return preemphLine->text().toFloat();
+float ControlPanelLpcView::getPreEmphasisAlpha() {
+    return preemphasis_line_->text().toFloat();
 }
 
 };  // namespace tms_express

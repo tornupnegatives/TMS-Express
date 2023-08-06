@@ -12,6 +12,7 @@
 
 namespace tms_express::ui {
 
+/// @brief Control Panel View for LPC bitstream post-processing parameters
 class ControlPanelPostView: public ControlPanelView {
     Q_OBJECT
 
@@ -20,8 +21,8 @@ class ControlPanelPostView: public ControlPanelView {
     // Initializers ///////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
-    /// @brief Creates a new Control Panel View for LPC post-processing
-    ///         parameters
+    /// @brief Creates a new Control Panel View for LPC bitstream
+    ///        post-processing parameters
     /// @param parent Parent Qt widget
     explicit ControlPanelPostView(QWidget *parent = nullptr);
 

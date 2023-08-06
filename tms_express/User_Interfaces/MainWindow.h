@@ -13,7 +13,7 @@
 #include "LPC_Analysis/PitchEstimator.hpp"
 #include "LPC_Analysis/LinearPredictor.hpp"
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.hpp"
-#include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelPitchView.hpp"
 #include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
 #include "User_Interfaces/Control_Panels/ControlPanelPostView.hpp"
 

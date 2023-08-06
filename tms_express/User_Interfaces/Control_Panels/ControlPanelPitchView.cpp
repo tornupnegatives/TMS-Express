@@ -6,103 +6,146 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
-#include "User_Interfaces/Control_Panels/ControlPanelView.hpp"
+#include "User_Interfaces/Control_Panels/ControlPanelPitchView.hpp"
+
+#include <QCheckBox>
+#include <QFrame>
+#include <QSlider>
+#include <QLabel>
+#include <QLineEdit>
 #include <QWidget>
-#include <QtWidgets>
+
+#include <string>
+
+#include "User_Interfaces/Control_Panels/ControlPanelView.hpp"
 
 namespace tms_express::ui {
 
-ControlPanelPitchView::ControlPanelPitchView(QWidget *parent): ControlPanelView("Pitch Analysis", parent) {
-    auto line2 = new QFrame(this);
-    line2->setFrameShape(QFrame::HLine);
+///////////////////////////////////////////////////////////////////////////////
+// Initializers ///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
-    hpfCheckbox = new QCheckBox("Highpass filter (Hz)", this);
-    hpfLine = new QLineEdit("100", this);
-    lpfCheckbox = new QCheckBox("Lowpass filter (Hz)", this);
-    lpfLine = new QLineEdit("800", this);
-    preemphCheckbox = new QCheckBox("Pre-emphasis filter (alpha)", this);
-    preemphLine = new QLineEdit("0.9375", this);
-    maxPitchLabel = new QLabel("Max pitch (Hz)", this);
-    maxPitchLine = new QLineEdit("500", this);
-    minPitchLabel = new QLabel("Min pitch (Hz)", this);
-    minPitchLine = new QLineEdit("50", this);
+ControlPanelPitchView::ControlPanelPitchView(QWidget *parent):
+    ControlPanelView("Pitch Analysis", parent) {
+    // Initialize parameters
+    hpf_checkbox_ = new QCheckBox("Highpass filter (Hz)", this);
+    hpf_line_ = new QLineEdit("100", this);
 
+    lpf_checkbox_ = new QCheckBox("Lowpass filter (Hz)", this);
+    lpf_line_ = new QLineEdit("800", this);
+
+    preemphasis_checkbox_ = new QCheckBox("Pre-emphasis filter (alpha)", this);
+    preemphasis_line_ = new QLineEdit("0.9375", this);
+
+    auto maxPitchLabel = new QLabel("Max pitch (Hz)", this);
+    max_pitch_frq_line_ = new QLineEdit("500", this);
+
+    auto minPitchLabel = new QLabel("Min pitch (Hz)", this);
+    min_pitch_frq_line_ = new QLineEdit("50", this);
+
+    // Construct layout
     auto row = grid->rowCount();
 
-    grid->addWidget(hpfCheckbox, row, 0);
-    grid->addWidget(hpfLine, row++, 1);
+    grid->addWidget(hpf_checkbox_, row, 0);
+    grid->addWidget(hpf_line_, row++, 1);
 
-    grid->addWidget(lpfCheckbox, row, 0);
-    grid->addWidget(lpfLine, row++, 1);
+    grid->addWidget(lpf_checkbox_, row, 0);
+    grid->addWidget(lpf_line_, row++, 1);
 
-    grid->addWidget(preemphCheckbox, row, 0);
-    grid->addWidget(preemphLine, row++, 1);
+    grid->addWidget(preemphasis_checkbox_, row, 0);
+    grid->addWidget(preemphasis_line_, row++, 1);
 
+    auto line2 = new QFrame(this);
+    line2->setFrameShape(QFrame::HLine);
     grid->addWidget(line2, row++, 0, 1, 2);
-    
+
     grid->addWidget(maxPitchLabel, row, 0);
-    grid->addWidget(maxPitchLine, row++, 1);
+    grid->addWidget(max_pitch_frq_line_, row++, 1);
 
     grid->addWidget(minPitchLabel, row, 0);
-    grid->addWidget(minPitchLine, row, 1);
+    grid->addWidget(min_pitch_frq_line_, row, 1);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Overloaded Methods /////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+
 void ControlPanelPitchView::configureSlots() {
-    connect(hpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
-    connect(hpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
-    connect(lpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
-    connect(lpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
-    connect(preemphCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
-    connect(preemphLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
-    connect(maxPitchLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
-    connect(minPitchLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(hpf_checkbox_, &QCheckBox::released, this,
+        &ControlPanelView::stateChanged);
+
+    connect(hpf_line_, &QLineEdit::editingFinished, this,
+        &ControlPanelView::stateChanged);
+
+    connect(lpf_checkbox_, &QCheckBox::released, this,
+        &ControlPanelView::stateChanged);
+
+    connect(lpf_line_, &QLineEdit::editingFinished, this,
+        &ControlPanelView::stateChanged);
+
+    connect(preemphasis_checkbox_, &QCheckBox::released, this,
+        &ControlPanelView::stateChanged);
+
+    connect(preemphasis_line_, &QLineEdit::editingFinished, this,
+        &ControlPanelView::stateChanged);
+
+    connect(max_pitch_frq_line_, &QLineEdit::editingFinished, this,
+        &ControlPanelView::stateChanged);
+
+    connect(min_pitch_frq_line_, &QLineEdit::editingFinished, this,
+        &ControlPanelView::stateChanged);
 }
 
 void ControlPanelPitchView::reset() {
-    hpfCheckbox->setChecked(false);
-    hpfLine->setText("100");
+    hpf_checkbox_->setChecked(false);
+    hpf_line_->setText("100");
 
-    lpfCheckbox->setChecked(true);
-    lpfLine->setText("800");
+    lpf_checkbox_->setChecked(true);
+    lpf_line_->setText("800");
 
-    preemphCheckbox->setChecked(false);
-    preemphLine->setText("0.9375");
+    preemphasis_checkbox_->setChecked(false);
+    preemphasis_line_->setText("0.9375");
 
-    maxPitchLine->setText("500");
-    minPitchLine->setText("50");
+    max_pitch_frq_line_->setText("500");
+    min_pitch_frq_line_->setText("50");
 }
 
-bool ControlPanelPitchView::hpfEnabled() {
-    return hpfCheckbox->isChecked();
+///////////////////////////////////////////////////////////////////////////////
+// Accessors //////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+
+bool ControlPanelPitchView::getHpfEnabled() {
+    return hpf_checkbox_->isChecked();
 }
 
-int ControlPanelPitchView::hpfCutoff() {
-    return hpfLine->text().toInt();
+int ControlPanelPitchView::getHpfCutoff() {
+    return hpf_line_->text().toInt();
 }
 
-bool ControlPanelPitchView::lpfEnabled() {
-    return lpfCheckbox->isChecked();
+bool ControlPanelPitchView::getLpfEnabled() {
+    return lpf_checkbox_->isChecked();
 }
 
-int ControlPanelPitchView::lpfCutoff() {
-    return lpfLine->text().toInt();
+int ControlPanelPitchView::getLpfCutoff() {
+    return lpf_line_->text().toInt();
 }
 
-bool ControlPanelPitchView::preemphEnabled() {
-    return preemphCheckbox->isChecked();
+bool ControlPanelPitchView::getPreEmphasisEnabled() {
+    return preemphasis_checkbox_->isChecked();
 }
 
-float ControlPanelPitchView::preemphAlpha() {
-    return preemphLine->text().toFloat();
+float ControlPanelPitchView::getPreEmphasisAlpha() {
+    return preemphasis_line_->text().toFloat();
 }
 
-int ControlPanelPitchView::maxPitchFrq() {
-    return maxPitchLine->text().toInt();
+int ControlPanelPitchView::getMaxPitchFrq() {
+    return max_pitch_frq_line_->text().toInt();
 }
 
-int ControlPanelPitchView::minPitchFrq() {
-    return minPitchLine->text().toInt();
+int ControlPanelPitchView::getMinPitchFrq() {
+    return min_pitch_frq_line_->text().toInt();
 }
 
-};  // namespace tms_express
+};  // namespace tms_express::ui

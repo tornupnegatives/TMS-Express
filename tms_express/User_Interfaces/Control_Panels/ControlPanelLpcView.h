@@ -20,21 +20,21 @@ public:
 
     // Getters
     float analysisWindowWidth();
-    bool hpfEnabled();
-    int hpfCutoff();
-    bool lpfEnabled();
-    int lpfCutoff();
-    bool preemphEnabled();
-    float preemphAlpha();
+    bool getHpfEnabled();
+    int getHpfCutoff();
+    bool getLpfEnabled();
+    int getLpfCutoff();
+    bool getPreEmphasisEnabled();
+    float getPreEmphasisAlpha();
 
 private:
     QLineEdit *analysisWindowLine;
-    QCheckBox *hpfCheckbox;
-    QLineEdit *hpfLine;
-    QCheckBox *lpfCheckbox;
-    QLineEdit *lpfLine;
-    QCheckBox *preemphCheckbox;
-    QLineEdit *preemphLine;
+    QCheckBox *hpf_checkbox_;
+    QLineEdit *hpf_line_;
+    QCheckBox *lpf_checkbox_;
+    QLineEdit *lpf_line_;
+    QCheckBox *preemphasis_checkbox_;
+    QLineEdit *preemphasis_line_;
 };
 
 };  // namespace tms_express

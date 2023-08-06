@@ -11,7 +11,7 @@
 #include "LPC_Analysis/Autocorrelation.hpp"
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.hpp"
 #include "User_Interfaces/MainWindow.h"
-#include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelPitchView.hpp"
 #include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
 #include "User_Interfaces/Control_Panels/ControlPanelPostView.hpp"
 
@@ -383,7 +383,7 @@ unsigned int MainWindow::samplesChecksum(std::vector<float> samples) {
     auto bufferSize = int(samples.size());
     auto checksumBuffer = (float *) malloc(sizeof(float) * (bufferSize + 1));
     memccpy(checksumBuffer, samples.data(), bufferSize, sizeof(float));
-    checksumBuffer[bufferSize] = char(lpcControl->preemphAlpha() + pitchControl->preemphAlpha());
+    checksumBuffer[bufferSize] = char(lpcControl->getPreEmphasisAlpha() + pitchControl->getPreEmphasisAlpha());
 
     auto checksum = CRC::Calculate(checksumBuffer, sizeof(float), CRC::CRC_32());
 
@@ -403,20 +403,20 @@ void MainWindow::performPitchAnalysis() {
     pitchFrqTable.clear();
 
     // Pre-process
-    if (pitchControl->hpfEnabled()) {
-        filter.applyHighpass(inputBuffer, pitchControl->hpfCutoff());
+    if (pitchControl->getHpfEnabled()) {
+        filter.applyHighpass(inputBuffer, pitchControl->getHpfCutoff());
     }
 
-    if (pitchControl->lpfEnabled()) {
-        filter.applyLowpass(inputBuffer, pitchControl->lpfCutoff());
+    if (pitchControl->getLpfEnabled()) {
+        filter.applyLowpass(inputBuffer, pitchControl->getLpfCutoff());
     }
 
-    if (pitchControl->preemphEnabled()) {
-        filter.applyPreEmphasis(inputBuffer, pitchControl->preemphAlpha());
+    if (pitchControl->getPreEmphasisEnabled()) {
+        filter.applyPreEmphasis(inputBuffer, pitchControl->getPreEmphasisAlpha());
     }
 
-    pitchEstimator.setMaxPeriod(pitchControl->minPitchFrq());
-    pitchEstimator.setMinPeriod(pitchControl->maxPitchFrq());
+    pitchEstimator.setMaxPeriod(pitchControl->getMinPitchFrq());
+    pitchEstimator.setMinPeriod(pitchControl->getMaxPitchFrq());
 
     for (const auto &segment : inputBuffer.getAllSegments()) {
         auto acf = tms_express::Autocorrelation(segment);
@@ -448,20 +448,20 @@ void MainWindow::performLpcAnalysis() {
     }
 
     // Pre-process
-    if (lpcControl->hpfEnabled()) {
+    if (lpcControl->getHpfEnabled()) {
         qDebug() << "HPF";
-        filter.applyHighpass(lpcBuffer, lpcControl->hpfCutoff());
+        filter.applyHighpass(lpcBuffer, lpcControl->getHpfCutoff());
     }
 
-    if (lpcControl->lpfEnabled()) {
+    if (lpcControl->getLpfEnabled()) {
         qDebug() << "LPF";
-        filter.applyLowpass(lpcBuffer, lpcControl->lpfCutoff());
+        filter.applyLowpass(lpcBuffer, lpcControl->getLpfCutoff());
     }
 
-    if (lpcControl->preemphEnabled()) {
+    if (lpcControl->getPreEmphasisEnabled()) {
         qDebug() << "PEF";
         qDebug() << (lpcBuffer.empty());
-        filter.applyPreEmphasis(lpcBuffer, lpcControl->preemphAlpha());
+        filter.applyPreEmphasis(lpcBuffer, lpcControl->getPreEmphasisAlpha());
     }
 
     for (int i = 0; i < lpcBuffer.getNSegments(); i++) {
