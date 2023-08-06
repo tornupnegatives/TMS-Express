@@ -13,7 +13,7 @@
 #include "User_Interfaces/MainWindow.h"
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
 #include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
-#include "User_Interfaces/Control_Panels/ControlPanelPostView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelPostView.hpp"
 
 #include "CRC.h"
 
@@ -486,28 +486,28 @@ void MainWindow::performPostProc() {
     framePostprocessor.reset();
 
     // Re-configure post-processor
-    framePostprocessor.setMaxUnvoicedGainDB(postControl->maxUnvoicedGain());
-    framePostprocessor.setMaxVoicedGainDB(postControl->maxVoicedGain());
+    framePostprocessor.setMaxUnvoicedGainDB(postControl->getMaxUnvoicedGain());
+    framePostprocessor.setMaxVoicedGainDB(postControl->getMaxVoicedGain());
 
-    if (postControl->gainNormalizationEnabled()) {
+    if (postControl->getGainNormalizationEnabled()) {
         framePostprocessor.normalizeGain();
     }
 
     // Perform either a pitch shift or a fixed-pitch offset
-    if (postControl->pitchShiftEnabled()) {
-        framePostprocessor.shiftPitch(postControl->pitchShift());
+    if (postControl->getPitchShiftEnabled()) {
+        framePostprocessor.shiftPitch(postControl->getPitchShift());
 
-    } else if (postControl->pitchOverrideEnabled()) {
-        framePostprocessor.overridePitch(postControl->pitchOverride());
+    } else if (postControl->getPitchOverrideEnabled()) {
+        framePostprocessor.overridePitch(postControl->getPitchOverride());
     }
 
-    if (postControl->repeatFramesEnabled()) {
+    if (postControl->getRepeatFramesEnabled()) {
         auto nRepeatFrames = framePostprocessor.detectRepeatFrames();
         qDebug() << "Detected " << nRepeatFrames << " repeat frames";
     }
 
-    if (postControl->gainShiftEnabled()) {
-        framePostprocessor.shiftGain(postControl->gainShift());
+    if (postControl->getGainShiftEnabled()) {
+        framePostprocessor.shiftGain(postControl->getGainShift());
     }
 
     synthesizer.synthesize(frameTable);
