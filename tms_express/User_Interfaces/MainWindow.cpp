@@ -12,7 +12,7 @@
 #include "User_Interfaces/Audio_Waveform/AudioWaveformView.hpp"
 #include "User_Interfaces/MainWindow.h"
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.hpp"
-#include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelLpcView.hpp"
 #include "User_Interfaces/Control_Panels/ControlPanelPostView.hpp"
 
 #include "CRC.h"
@@ -207,7 +207,7 @@ void MainWindow::onOpenFile() {
         // Enable gain normalization by default
         //ui->postGainNormalizeEnable->setChecked(true);
 
-        auto input_buffer_ptr = AudioBuffer::Create(filePath.toStdString(), 8000, lpcControl->analysisWindowWidth());
+        auto input_buffer_ptr = AudioBuffer::Create(filePath.toStdString(), 8000, lpcControl->getAnalysisWindowWidth());
 
         if (input_buffer_ptr == nullptr) {
             qDebug() << "NULL";
@@ -439,9 +439,9 @@ void MainWindow::performLpcAnalysis() {
     frameTable.clear();
 
     // Re-trigger pitch analysis if window width has changed
-    if (lpcControl->analysisWindowWidth() != inputBuffer.getWindowWidthMs()) {
-        inputBuffer.setWindowWidthMs(lpcControl->analysisWindowWidth());
-        lpcBuffer.setWindowWidthMs(lpcControl->analysisWindowWidth());
+    if (lpcControl->getAnalysisWindowWidth() != inputBuffer.getWindowWidthMs()) {
+        inputBuffer.setWindowWidthMs(lpcControl->getAnalysisWindowWidth());
+        lpcBuffer.setWindowWidthMs(lpcControl->getAnalysisWindowWidth());
 
         qDebug() << "Adjusting window width for pitch and LPC buffers";
         performPitchAnalysis();

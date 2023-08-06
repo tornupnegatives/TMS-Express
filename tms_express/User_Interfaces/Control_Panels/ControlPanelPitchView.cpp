@@ -1,10 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Class: ControlPanelPitchView
-//
-// Description: The ControlPanelPitchView contains parameters which guide pitch analysis
-//
-// Author: Joseph Bellahcen <joeclb@icloud.com>
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.hpp"
 
@@ -23,7 +17,7 @@ namespace tms_express::ui {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Initializers ///////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 ControlPanelPitchView::ControlPanelPitchView(QWidget *parent):
     ControlPanelView("Pitch Analysis", parent) {
@@ -70,6 +64,19 @@ ControlPanelPitchView::ControlPanelPitchView(QWidget *parent):
 // Overloaded Methods /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+void ControlPanelPitchView::reset() {
+    hpf_checkbox_->setChecked(false);
+    hpf_line_->setText("100");
+
+    lpf_checkbox_->setChecked(true);
+    lpf_line_->setText("800");
+
+    preemphasis_checkbox_->setChecked(false);
+    preemphasis_line_->setText("0.9375");
+
+    max_pitch_frq_line_->setText("500");
+    min_pitch_frq_line_->setText("50");
+}
 
 void ControlPanelPitchView::configureSlots() {
     connect(hpf_checkbox_, &QCheckBox::released, this,
@@ -97,24 +104,9 @@ void ControlPanelPitchView::configureSlots() {
         &ControlPanelView::stateChanged);
 }
 
-void ControlPanelPitchView::reset() {
-    hpf_checkbox_->setChecked(false);
-    hpf_line_->setText("100");
-
-    lpf_checkbox_->setChecked(true);
-    lpf_line_->setText("800");
-
-    preemphasis_checkbox_->setChecked(false);
-    preemphasis_line_->setText("0.9375");
-
-    max_pitch_frq_line_->setText("500");
-    min_pitch_frq_line_->setText("50");
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Accessors //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
 
 bool ControlPanelPitchView::getHpfEnabled() {
     return hpf_checkbox_->isChecked();
