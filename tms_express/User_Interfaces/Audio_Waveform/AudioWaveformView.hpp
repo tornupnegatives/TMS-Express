@@ -63,8 +63,13 @@ class AudioWaveformView: public QWidget {
     // Members ////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
+    /// @brief Audio Waveform plot
     AudioWaveform *waveform;
+
+    /// @brief Widget layout, comprised of stacked rows
     QVBoxLayout *rows_layout;
+
+    /// @brief Play button, which emits signal prompting for audio playback
     QPushButton *play_button;
 };
 
