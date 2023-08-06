@@ -1,48 +1,69 @@
-// Author: Joseph Bellahcen <joeclb@icloud.com>
+// Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "User_Interfaces/Audio_Waveform/AudioWaveform.hpp"
-#include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveformView.hpp"
 
 #include <QWidget>
-#include <QtWidgets>
+#include <QLabel>
+#include <QLayout>
+#include <QPushButton>
 
-namespace tms_express {
+#include "User_Interfaces/Audio_Waveform/AudioWaveform.hpp"
 
-AudioWaveformView::AudioWaveformView(std::string title, uint baseWidth, uint baseHeight, QWidget *parent): QWidget(parent) {
-    setMinimumSize(baseWidth, baseHeight);
+namespace tms_express::ui {
 
-    rowsLayout = new QVBoxLayout(this);
+///////////////////////////////////////////////////////////////////////////////
+// Initializers ///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+AudioWaveformView::AudioWaveformView(std::string title, int base_width,
+    int base_height, QWidget *parent): QWidget(parent) {
+
+    // Widget properties
+    setMinimumSize(base_width, base_height);
+
+    // Layout properties
+    rows_layout = new QVBoxLayout(this);
+    rows_layout->setContentsMargins(0, 0, 0, 0);
+    rows_layout->setSpacing(10);
+
+    // Widget title, displayed above layout
     auto label = new QLabel(title.c_str(), this);
     label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    rowsLayout->addWidget(label);
+    rows_layout->addWidget(label);
 
-    rowsLayout->setContentsMargins(0, 0, 0, 0); // Set margins to 0
-    rowsLayout->setSpacing(10); // Set spacing to 10 pixels
-
+    // Audio Waveform plot
     waveform = new AudioWaveform(this);
     waveform->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    rows_layout->addWidget(waveform);
 
-    rowsLayout->addWidget(waveform);
+    // Audio play button
+    play_button = new QPushButton("Play", this);
+    play_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+    play_button->setFixedWidth(64);
+    rows_layout->addWidget(play_button);
 
-    playButton = new QPushButton("Play", this);
-    playButton->setFixedWidth(64);
-    playButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
-
-    rowsLayout->addWidget(playButton);
-
-    connect(playButton, &QPushButton::released, this, &AudioWaveformView::onPlayButtonPressed);
+    connect(play_button, &QPushButton::released, this,
+        &AudioWaveformView::onPlayButtonPressed);
 }
 
-void AudioWaveformView::plotPitch(const std::vector<float> &_pitchTable) {
-    waveform->setPitchTable(_pitchTable);
+///////////////////////////////////////////////////////////////////////////////
+// Accessors //////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+void AudioWaveformView::setSamples(const std::vector<float> &samples) {
+    waveform->setSamples(samples);
 }
 
-void AudioWaveformView::plotSamples(const std::vector<float> &_samples) {
-    waveform->setSamples(_samples);
+void AudioWaveformView::setPitchCurve(const std::vector<float> &pitch_curve) {
+    waveform->setPitchCurve(pitch_curve);
 }
+
+///////////////////////////////////////////////////////////////////////////
+// Qt Slots ///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 void AudioWaveformView::onPlayButtonPressed() {
     emit signalPlayButtonPressed(true);
 }
 
-};  // namespace tms_express
+};  // namespace tms_express::ui

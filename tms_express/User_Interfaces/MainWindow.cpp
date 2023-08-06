@@ -9,7 +9,7 @@
 #include "Audio/AudioBuffer.hpp"
 #include "Frame_Encoding/FramePostprocessor.hpp"
 #include "LPC_Analysis/Autocorrelation.hpp"
-#include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveformView.hpp"
 #include "User_Interfaces/MainWindow.h"
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
 #include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
@@ -24,7 +24,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace tms_express {
+namespace tms_express::ui {
 
 /// Setup the main window of the application
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -155,20 +155,20 @@ void MainWindow::configureUiState() {
 
 /// Draw the input and output signal waveforms, along with an abstract representation of their associated pitch data
 void MainWindow::drawPlots() {
-    inputWaveform->plotSamples(inputBuffer.getSamples());
+    inputWaveform->setSamples(inputBuffer.getSamples());
 
     if (!frameTable.empty()) {
         auto samples = synthesizer.synthesize(frameTable);
-        lpcWaveform->plotSamples(samples);
+        lpcWaveform->setSamples(samples);
 
         auto framePitchTable = std::vector<float>(frameTable.size());
         for (int i = 0; i < frameTable.size(); i++)
             // TODO: Parameterize
             framePitchTable[i] = (8000.0f / float(frameTable[i].quantizedPitch())) / float(pitchEstimator.getMaxFrq());
 
-            lpcWaveform->plotPitch(framePitchTable);
+            lpcWaveform->setPitchCurve(framePitchTable);
     } else {
-        lpcWaveform->plotSamples({});
+        lpcWaveform->setSamples({});
     }
 }
 

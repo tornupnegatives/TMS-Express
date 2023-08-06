@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     if (argc == 1) {
         QApplication app(argc, argv);
 
-        tms_express::MainWindow w;
+        tms_express::ui::MainWindow w;
         w.show();
 
         return app.exec();

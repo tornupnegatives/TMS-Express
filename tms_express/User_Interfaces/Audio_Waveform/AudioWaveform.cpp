@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace tms_express {
+namespace tms_express::ui {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Initializers ///////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@ void AudioWaveform::setSamples(const std::vector<float>& samples) {
 }
 
 /// Plot pitch table corresponding to audio samples
-void AudioWaveform::setPitchTable(const std::vector<float>& pitch_curve) {
+void AudioWaveform::setPitchCurve(const std::vector<float>& pitch_curve) {
     pitch_curve_ = pitch_curve;
     repaint();
 }
@@ -91,4 +91,4 @@ void AudioWaveform::paintEvent(QPaintEvent * event) {
     }
 }
 
-};  // namespace tms_express
+};  // namespace tms_express::ui

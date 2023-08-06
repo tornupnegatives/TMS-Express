@@ -12,7 +12,7 @@
 #include "Frame_Encoding/Synthesizer.hpp"
 #include "LPC_Analysis/PitchEstimator.hpp"
 #include "LPC_Analysis/LinearPredictor.hpp"
-#include "User_Interfaces/Audio_Waveform/AudioWaveformView.h"
+#include "User_Interfaces/Audio_Waveform/AudioWaveformView.hpp"
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
 #include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
 #include "User_Interfaces/Control_Panels/ControlPanelPostView.h"
@@ -28,7 +28,7 @@
 #define TMS_EXPRESS_WINDOW_MARGINS      5
 #define TMS_EXPRESS_AUDIO_SAMPLE_RATE   8000
 
-namespace tms_express {
+namespace tms_express::ui {
 
 class MainWindow : public QMainWindow
 {

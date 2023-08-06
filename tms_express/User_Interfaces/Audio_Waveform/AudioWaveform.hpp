@@ -5,10 +5,9 @@
 
 #include <QWidget>
 
-#include <string>
 #include <vector>
 
-namespace tms_express {
+namespace tms_express::ui {
 
 /// @brief Time-domain plot of audio samples and pitch
 class AudioWaveform : public QWidget {
@@ -33,7 +32,7 @@ class AudioWaveform : public QWidget {
 
     /// @brief Replaces existing pitch curve and re-paints plot
     /// @param pitch_curve New pitch table
-    void setPitchTable(const std::vector<float>& pitch_curve);
+    void setPitchCurve(const std::vector<float>& pitch_curve);
 
  protected:
     ///////////////////////////////////////////////////////////////////////////
@@ -57,6 +56,6 @@ class AudioWaveform : public QWidget {
     std::vector<float> samples_;
 };
 
-};  // namespace tms_express
+};  // namespace tms_express::ui
 
 #endif  // TMS_EXPRESS_USER_INTERFACES_AUDIO_WAVEFORM_AUDIOWAVEFORM_HPP_
