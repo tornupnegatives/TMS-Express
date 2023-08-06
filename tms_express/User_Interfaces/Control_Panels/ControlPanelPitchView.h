@@ -3,13 +3,13 @@
 #ifndef TMS_EXPRESS_CONTROLPANELPITCHVIEW_H
 #define TMS_EXPRESS_CONTROLPANELPITCHVIEW_H
 
-#include "User_Interfaces/Control_Panels/ControlPanelView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelView.hpp"
 
 #include <QWidget>
 #include <QtWidgets>
 #include <string>
 
-namespace tms_express {
+namespace tms_express::ui {
 
 class ControlPanelPitchView: public ControlPanelView {
 Q_OBJECT

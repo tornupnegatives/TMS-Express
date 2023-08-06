@@ -12,7 +12,7 @@
 #include <QWidget>
 #include <QtWidgets>
 
-namespace tms_express {
+namespace tms_express::ui {
 
 ControlPanelPostView::ControlPanelPostView(QWidget *parent): ControlPanelView("Post-Processing", parent) {
     auto line2 = new QFrame(this);
@@ -71,16 +71,16 @@ ControlPanelPostView::ControlPanelPostView(QWidget *parent): ControlPanelView("P
 }
 
 void ControlPanelPostView::configureSlots() {
-    connect(pitchShiftCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(pitchShiftSlider, &QSlider::sliderReleased, this, &ControlPanelView::stateChangeSlot);
-    connect(pitchOverrideCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(pitchOverrideSlider, &QSlider::sliderReleased, this, &ControlPanelView::stateChangeSlot);
-    connect(repeatFramesCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(gainShiftCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(gainShiftSlider, &QSlider::sliderReleased, this, &ControlPanelView::stateChangeSlot);
-    connect(gainNormalizationCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(maxUnvoicedGainLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
-    connect(maxVoicedGainLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
+    connect(pitchShiftCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(pitchShiftSlider, &QSlider::sliderReleased, this, &ControlPanelView::stateChanged);
+    connect(pitchOverrideCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(pitchOverrideSlider, &QSlider::sliderReleased, this, &ControlPanelView::stateChanged);
+    connect(repeatFramesCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(gainShiftCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(gainShiftSlider, &QSlider::sliderReleased, this, &ControlPanelView::stateChanged);
+    connect(gainNormalizationCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(maxUnvoicedGainLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(maxVoicedGainLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
 }
 
 void ControlPanelPostView::reset() {

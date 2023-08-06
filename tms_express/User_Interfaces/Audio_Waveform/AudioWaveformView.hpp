@@ -14,6 +14,7 @@
 
 namespace tms_express::ui {
 
+/// @brief QWidget container for Audio Waveform plot
 class AudioWaveformView: public QWidget {
     Q_OBJECT
 

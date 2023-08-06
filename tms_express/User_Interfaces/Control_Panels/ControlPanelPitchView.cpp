@@ -7,11 +7,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "User_Interfaces/Control_Panels/ControlPanelPitchView.h"
-#include "User_Interfaces/Control_Panels/ControlPanelView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelView.hpp"
 #include <QWidget>
 #include <QtWidgets>
 
-namespace tms_express {
+namespace tms_express::ui {
 
 ControlPanelPitchView::ControlPanelPitchView(QWidget *parent): ControlPanelView("Pitch Analysis", parent) {
     auto line2 = new QFrame(this);
@@ -49,14 +49,14 @@ ControlPanelPitchView::ControlPanelPitchView(QWidget *parent): ControlPanelView(
 }
 
 void ControlPanelPitchView::configureSlots() {
-    connect(hpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(hpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
-    connect(lpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(lpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
-    connect(preemphCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(preemphLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
-    connect(maxPitchLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
-    connect(minPitchLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
+    connect(hpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(hpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(lpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(lpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(preemphCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(preemphLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(maxPitchLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(minPitchLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
 }
 
 void ControlPanelPitchView::reset() {

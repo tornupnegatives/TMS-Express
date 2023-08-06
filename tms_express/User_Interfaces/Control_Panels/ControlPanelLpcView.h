@@ -3,12 +3,12 @@
 #ifndef TMS_EXPRESS_CONTROLPANELLPCVIEW_H
 #define TMS_EXPRESS_CONTROLPANELLPCVIEW_H
 
-#include "User_Interfaces/Control_Panels/ControlPanelView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelView.hpp"
 
 #include <QWidget>
 #include <QtWidgets>
 
-namespace tms_express {
+namespace tms_express::ui {
 
 class ControlPanelLpcView: public ControlPanelView {
 Q_OBJECT

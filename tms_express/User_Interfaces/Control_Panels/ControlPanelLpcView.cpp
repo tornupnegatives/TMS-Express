@@ -7,12 +7,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "User_Interfaces/Control_Panels/ControlPanelLpcView.h"
-#include "User_Interfaces/Control_Panels/ControlPanelView.h"
+#include "User_Interfaces/Control_Panels/ControlPanelView.hpp"
 
 #include <QWidget>
 #include <QtWidgets>
 
-namespace tms_express {
+namespace tms_express::ui {
 
 ControlPanelLpcView::ControlPanelLpcView(QWidget *parent): ControlPanelView("LPC Analysis", parent)  {
     auto analysisWindowLabel = new QLabel("Analysis window (ms)", this);
@@ -40,13 +40,13 @@ ControlPanelLpcView::ControlPanelLpcView(QWidget *parent): ControlPanelView("LPC
 }
 
 void ControlPanelLpcView::configureSlots() {
-    connect(analysisWindowLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
-    connect(hpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(hpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
-    connect(lpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(lpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
-    connect(preemphCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChangeSlot);
-    connect(preemphLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChangeSlot);
+    connect(analysisWindowLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(hpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(hpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(lpfCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(lpfLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
+    connect(preemphCheckbox, &QCheckBox::released, this, &ControlPanelView::stateChanged);
+    connect(preemphLine, &QLineEdit::editingFinished, this, &ControlPanelView::stateChanged);
 }
 
 void ControlPanelLpcView::reset() {
