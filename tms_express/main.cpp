@@ -1,8 +1,9 @@
-// Author: Joseph Bellahcen <joeclb@icloud.com>
+// Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
+
+#include <QApplication>
 
 #include "User_Interfaces/CommandLineApp.hpp"
-#include "User_Interfaces/MainWindow.h"
-#include <QApplication>
+#include "User_Interfaces/MainWindow.hpp"
 
 int main(int argc, char **argv) {
     // If no arguments are passed, launch GUI

@@ -120,8 +120,8 @@ std::vector<Frame> BitstreamGenerator::generateFrames(
     auto sample_rate = lpc_buffer.getSampleRateHz();
 
     // Initialize analysis objects and data structures
-    auto linearPredictor = LinearPredictor();
-    auto pitchEstimator = PitchEstimator(sample_rate, min_pitch_hz_,
+    auto linear_predictor = LinearPredictor();
+    auto pitch_estimator = PitchEstimator(sample_rate, min_pitch_hz_,
         max_pitch_hz_);
     auto frames = std::vector<Frame>();
 
@@ -142,11 +142,11 @@ std::vector<Frame> BitstreamGenerator::generateFrames(
         auto pitch_acf = tms_express::Autocorrelation(pitch_segment);
 
         // Extract LPC reflector coefficients and compute the predictor gain
-        auto coeffs = linearPredictor.computeCoeffs(lpc_acf);
-        auto gain = linearPredictor.gain();
+        auto coeffs = linear_predictor.computeCoeffs(lpc_acf);
+        auto gain = linear_predictor.gain();
 
         // Estimate pitch
-        auto pitch_period = pitchEstimator.estimatePeriod(pitch_acf);
+        auto pitch_period = pitch_estimator.estimatePeriod(pitch_acf);
 
         // Decide whether the segment is voiced or unvoiced
         auto segment_is_voiced = coeffs[0] < 0;
