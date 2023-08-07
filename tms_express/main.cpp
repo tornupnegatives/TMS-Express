@@ -1,6 +1,6 @@
 // Author: Joseph Bellahcen <joeclb@icloud.com>
 
-#include "User_Interfaces/CommandLineApp.h"
+#include "User_Interfaces/CommandLineApp.hpp"
 #include "User_Interfaces/MainWindow.h"
 #include <QApplication>
 
@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 
     // Otherwise, use command-line interface
     if (argc > 1) {
-        auto cli = tms_express::CommandLineApp();
+        auto cli = tms_express::ui::CommandLineApp();
         int status = cli.run(argc, argv);
         exit(status);
     }

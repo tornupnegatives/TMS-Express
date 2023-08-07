@@ -15,7 +15,7 @@
 #include "User_Interfaces/Control_Panels/ControlPanelLpcView.hpp"
 #include "User_Interfaces/Control_Panels/ControlPanelPostView.hpp"
 
-#include "CRC.h"
+#include "lib/CRC.h"
 
 #include <QFileDialog>
 #include <QMediaPlayer>

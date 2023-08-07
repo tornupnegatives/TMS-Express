@@ -18,7 +18,7 @@ namespace tms_express::ui {
 ControlPanelLpcView::ControlPanelLpcView(QWidget *parent):
     ControlPanelView("LPC Analysis", parent)  {
     // Initialize parameters
-    auto analysisWindowLabel = new QLabel("Analysis window (ms)", this);
+    auto analysis_window_label = new QLabel("Analysis window (ms)", this);
     analysis_window_line_ = new QLineEdit("25.0", this);
 
     hpf_checkbox_ = new QCheckBox("Highpass filter (Hz)", this);
@@ -33,7 +33,7 @@ ControlPanelLpcView::ControlPanelLpcView(QWidget *parent):
     // Construct layout
     auto row = grid->rowCount();
 
-    grid->addWidget(analysisWindowLabel, row, 0);
+    grid->addWidget(analysis_window_label, row, 0);
     grid->addWidget(analysis_window_line_, row++, 1);
 
     grid->addWidget(hpf_checkbox_, row, 0);

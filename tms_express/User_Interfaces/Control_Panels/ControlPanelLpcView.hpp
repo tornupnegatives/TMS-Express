@@ -3,11 +3,11 @@
 #ifndef TMS_EXPRESS_USER_INTERFACES_CONTROL_PANELS_CONTROLPANELLPCVIEW_HPP_
 #define TMS_EXPRESS_USER_INTERFACES_CONTROL_PANELS_CONTROLPANELLPCVIEW_HPP_
 
-#include "User_Interfaces/Control_Panels/ControlPanelView.hpp"
-
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QWidget>
+
+#include "User_Interfaces/Control_Panels/ControlPanelView.hpp"
 
 namespace tms_express::ui {
 
