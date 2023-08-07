@@ -18,6 +18,7 @@ namespace tms_express {
 
 Frame::Frame(int pitch_period, bool is_voiced, float gain_db,
     std::vector<float> coeffs) {
+    //
     gain_db_ = gain_db;
     pitch_period_ = pitch_period;
     coeffs_ = coeffs;

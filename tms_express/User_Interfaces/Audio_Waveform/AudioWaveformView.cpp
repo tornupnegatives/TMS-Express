@@ -17,7 +17,7 @@ namespace tms_express::ui {
 
 AudioWaveformView::AudioWaveformView(std::string title, int base_width,
     int base_height, QWidget *parent): QWidget(parent) {
-
+    //
     // Widget properties
     setMinimumSize(base_width, base_height);
 

@@ -80,6 +80,7 @@ std::string PathUtils::extractFilenameFromPath(const std::string &path) {
 
 std::vector<std::string> PathUtils::splitString(const std::string& str,
     const std::string& delim) {
+    //
     auto result = std::vector<std::string>();
     auto delim_size = delim.length();
 

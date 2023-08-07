@@ -15,6 +15,7 @@ namespace tms_express {
 
 FramePostprocessor::FramePostprocessor(std::vector<Frame> *frames,
     float max_voiced_gain_db, float max_unvoiced_gain_db) {
+    //
     original_frame_table_ = std::vector<Frame>(frames->begin(), frames->end());
     frame_table_ = frames;
     max_unvoiced_gain_db_ = max_unvoiced_gain_db;

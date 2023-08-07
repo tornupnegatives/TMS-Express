@@ -1,4 +1,4 @@
-
+// Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
 #include "LPC_Analysis/LinearPredictor.hpp"
 #include <cmath>
@@ -21,6 +21,7 @@ LinearPredictor::LinearPredictor(int model_order) {
 
 std::vector<float> LinearPredictor::computeCoeffs(
     const std::vector<float>& acf) {
+    //
     // Reference: "Levinson–Durbin Algorithm" (Castiglioni)
 
     // Autocorrelation alias

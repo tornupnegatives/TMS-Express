@@ -13,6 +13,7 @@ namespace tms_express {
 
 PitchEstimator::PitchEstimator(int sample_rate_hz, int min_frq_hz,
     int max_frq_hz) {
+    //
     max_period_ = sample_rate_hz / min_frq_hz;
     min_period_ = sample_rate_hz / max_frq_hz;
     sample_rate_hz_ = sample_rate_hz;

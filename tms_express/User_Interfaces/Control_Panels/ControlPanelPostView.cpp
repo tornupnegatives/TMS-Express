@@ -18,6 +18,7 @@ namespace tms_express::ui {
 
 ControlPanelPostView::ControlPanelPostView(QWidget *parent):
     ControlPanelView("Post-Processing", parent) {
+    //
     // Initialize parameters
     pitch_shift_checkbox_ = new QCheckBox("Pitch shift", this);
     pitch_shift_slider_ = new QSlider(Qt::Horizontal, this);

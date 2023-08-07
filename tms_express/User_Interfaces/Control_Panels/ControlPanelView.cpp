@@ -14,6 +14,7 @@ namespace tms_express::ui {
 
 ControlPanelView::ControlPanelView(const std::string &title, QWidget *parent):
     QWidget(parent) {
+    //
     grid = new QGridLayout(this);
 
     auto panel_title = new QLabel(title.c_str(), this);

@@ -17,6 +17,7 @@ namespace tms_express::ui {
 
 ControlPanelLpcView::ControlPanelLpcView(QWidget *parent):
     ControlPanelView("LPC Analysis", parent)  {
+    //
     // Initialize parameters
     auto analysis_window_label = new QLabel("Analysis window (ms)", this);
     analysis_window_line_ = new QLineEdit("25.0", this);

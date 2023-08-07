@@ -24,6 +24,7 @@ FrameEncoder::FrameEncoder(bool include_hex_prefix) {
 
 FrameEncoder::FrameEncoder(const std::vector<Frame> &frames,
     bool include_hex_prefix) {
+    //
     binary_bitstream_ = std::vector<std::string>(1, "");
     frames_ = std::vector<Frame>();
     include_hex_prefix_ = include_hex_prefix;
@@ -214,6 +215,7 @@ std::vector<Frame> FrameEncoder::getFrameTable() const {
 
 std::string FrameEncoder::binToHex(const std::string &bin_str,
     bool include_hex_prefix) {
+    //
     // TODO(Joseph Bellahcen): Handle exception
     int value = std::stoi(bin_str, nullptr, 2);
 
@@ -256,20 +258,22 @@ std::string FrameEncoder::reverseHexBytes(std::string bitstream) {
 
 void FrameEncoder::extractUnvoicedCoeffs(const std::string &chunk, float *k1,
     float *k2, float *k3, float *k4) {
-        auto k1_idx = std::stoul(chunk.substr(11, 5), nullptr, 2);
-        auto k2_idx = std::stoul(chunk.substr(16, 5), nullptr, 2);
-        auto k3_idx = std::stoul(chunk.substr(21, 4), nullptr, 2);
-        auto k4_idx = std::stoul(chunk.substr(25, 4), nullptr, 2);
+    //
+    auto k1_idx = std::stoul(chunk.substr(11, 5), nullptr, 2);
+    auto k2_idx = std::stoul(chunk.substr(16, 5), nullptr, 2);
+    auto k3_idx = std::stoul(chunk.substr(21, 4), nullptr, 2);
+    auto k4_idx = std::stoul(chunk.substr(25, 4), nullptr, 2);
 
-        // TODO(Joseph Bellahcen): Guard against nullptr dereference
-        *k1 = coding_table::tms5220::k1.at(k1_idx);
-        *k2 = coding_table::tms5220::k2.at(k2_idx);
-        *k3 = coding_table::tms5220::k3.at(k3_idx);
-        *k4 = coding_table::tms5220::k4.at(k4_idx);
+    // TODO(Joseph Bellahcen): Guard against nullptr dereference
+    *k1 = coding_table::tms5220::k1.at(k1_idx);
+    *k2 = coding_table::tms5220::k2.at(k2_idx);
+    *k3 = coding_table::tms5220::k3.at(k3_idx);
+    *k4 = coding_table::tms5220::k4.at(k4_idx);
 }
 
 void FrameEncoder::extractVoicedCoeffs(const std::string &chunk, float *k5,
     float *k6, float *k7, float *k8, float *k9, float *k10) {
+    //
     auto k5_idx = std::stoul(chunk.substr(29, 4), nullptr, 2);
     auto k6_idx = std::stoul(chunk.substr(33, 4), nullptr, 2);
     auto k7_idx = std::stoul(chunk.substr(37, 4), nullptr, 2);

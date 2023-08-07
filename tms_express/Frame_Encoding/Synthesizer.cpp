@@ -69,6 +69,7 @@ std::vector<float> Synthesizer::getSamples() const {
 /// Export synthesized samples as an audio file
 void Synthesizer::render(const std::vector<float> &samples,
     const std::string& path, int sample_rate_hz, float frame_rate_ms) {
+    //
     AudioBuffer(samples, sample_rate_hz, frame_rate_ms).render(path);
 }
 

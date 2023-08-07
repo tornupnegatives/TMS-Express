@@ -17,6 +17,7 @@ namespace tms_express {
 
 std::shared_ptr<AudioBuffer> AudioBuffer::Create(const std::string &path,
     int sample_rate_hz, float window_width_ms) {
+    //
     // Attempt to open an audio file via libsndfile, aborting initialization if
     // the given path does not exist, is invalid, or is not a suported format
     auto audio_file = SndfileHandle(path);
@@ -55,6 +56,7 @@ std::shared_ptr<AudioBuffer> AudioBuffer::Create(const std::string &path,
 
 AudioBuffer::AudioBuffer(std::vector<float> samples, int sample_rate_hz,
     float window_width_ms) {
+    //
     n_segments_ = 0;
     n_samples_per_segment_ = 0;
     sample_rate_hz_ = sample_rate_hz;
@@ -214,6 +216,7 @@ void AudioBuffer::reset() {
 
 std::vector<float> AudioBuffer::mixToMono(std::vector<float> samples,
     int n_channels) {
+    //
     int mono_size = samples.size() / n_channels;
     auto mono_samples = std::vector<float>(mono_size, 0);
 
@@ -231,6 +234,7 @@ std::vector<float> AudioBuffer::mixToMono(std::vector<float> samples,
 // Resample the audio buffer to the target sample rate
 std::vector<float> AudioBuffer::resample(std::vector<float> samples,
     int src_sample_rate_hz, int target_sample_rate_hz) {
+    //
     // Resampler parameters
     // NOTE:    If a future version of this codebase requires
     //          compatibility with stereo audio, compute the

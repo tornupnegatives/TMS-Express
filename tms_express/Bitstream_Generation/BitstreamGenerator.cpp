@@ -24,7 +24,7 @@ BitstreamGenerator::BitstreamGenerator(float window_width_ms,
     EncoderStyle style, bool include_stop_frame, int gain_shift,
     float max_voiced_gain_db, float max_unvoiced_gain_db,
     bool detect_repeat_frames, int max_pitch_hz, int min_pitch_hz) {
-
+    //
     window_width_ms_ = window_width_ms;
     highpass_cutoff_hz_ = highpass_cutoff_hz;
     lowpass_cutoff_hz_ = lowpass_cutoff_hz;
@@ -171,6 +171,7 @@ std::vector<Frame> BitstreamGenerator::generateFrames(
 
 std::string BitstreamGenerator::serializeFrames(
     const std::vector<Frame>& frames, const std::string &filename) const {
+    //
     // Encode frames to hex bitstreams
     auto encoder = FrameEncoder(frames, style_ != ENCODERSTYLE_ASCII);
     std::string bitstream;

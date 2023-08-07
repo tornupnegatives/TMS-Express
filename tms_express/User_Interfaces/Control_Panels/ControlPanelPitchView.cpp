@@ -21,6 +21,7 @@ namespace tms_express::ui {
 
 ControlPanelPitchView::ControlPanelPitchView(QWidget *parent):
     ControlPanelView("Pitch Analysis", parent) {
+    //
     // Initialize parameters
     hpf_checkbox_ = new QCheckBox("Highpass filter (Hz)", this);
     hpf_line_ = new QLineEdit("100", this);
