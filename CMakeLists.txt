@@ -1,32 +1,36 @@
-# Author: Joseph Bellahcen <joeclb@icloud.com>
+# Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
+
+###############################################################################
+# CMake Configuration #########################################################
+###############################################################################
 
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Run Qt's moc, rcc, and uic tools
+# Required for Qt
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+###############################################################################
+# Project Configuration #######################################################
+###############################################################################
+
 project(TMS-Express)
 option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
 
-#  ====================================
-#             PROGRAM FILES
-#  ====================================
-include_directories(
-    # For lib directory
-    ${CMAKE_CURRENT_LIST_DIR}
+###############################################################################
+# Project Sources & Includes ##################################################
+###############################################################################
 
-    # For project sources
+include_directories(
+    ${CMAKE_CURRENT_LIST_DIR}
     tms_express
 )
 
 add_executable(${PROJECT_NAME}
-    #  ====================================
-    #             BACKEND SOURCES 
-    #  ====================================
+    # Backend #################################################################
     tms_express/Audio/AudioBuffer.cpp
     tms_express/Audio/AudioFilter.cpp
 
@@ -42,12 +46,8 @@ add_executable(${PROJECT_NAME}
     tms_express/Bitstream_Generation/BitstreamGenerator.cpp
     tms_express/Bitstream_Generation/PathUtils.cpp
 
-    #  ====================================
-    #             FRONTEND SOURCES
-    #  ====================================
+    # Frontend ###############################################################
     tms_express/User_Interfaces/CommandLineApp.cpp
-
-    tms_express/User_Interfaces/MainWindow.cpp
 
     tms_express/User_Interfaces/Audio_Waveform/AudioWaveform.cpp
     tms_express/User_Interfaces/Audio_Waveform/AudioWaveformView.cpp
@@ -57,15 +57,19 @@ add_executable(${PROJECT_NAME}
     tms_express/User_Interfaces/Control_Panels/ControlPanelLpcView.cpp
     tms_express/User_Interfaces/Control_Panels/ControlPanelPostView.cpp
 
+    tms_express/User_Interfaces/MainWindow.cpp
+
+    # Main ####################################################################
     tms_express/main.cpp
 )
 
-#  ====================================
-#              DYNAMIC LIBS
-#  ====================================
-find_package(Qt6 COMPONENTS Core Gui Multimedia Widgets REQUIRED)
+###############################################################################
+# Project Dependencies ########################################################
+###############################################################################
 
+find_package(Qt6 COMPONENTS Core Gui Multimedia Widgets REQUIRED)
 find_package(PkgConfig REQUIRED)
+
 pkg_check_modules(SndFile REQUIRED IMPORTED_TARGET sndfile)
 pkg_check_modules(SampleRate REQUIRED IMPORTED_TARGET samplerate)
 
@@ -79,10 +83,13 @@ target_link_libraries(${PROJECT_NAME}
     Qt::Multimedia
 )
 
-# Rename executable
+###############################################################################
+# Artifacts & Sub-Targets #####################################################
+###############################################################################
+
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
 
 if (TMSEXPRESS_BUILD_TESTS)
     message(STATUS "Building TMS Express test suite")
-    include(test/TmsTest.cmake)
+    add_subdirectory(test)
 endif()
