@@ -2,6 +2,7 @@
 
 #include "Frame_Encoding/FrameEncoder.hpp"
 
+#include <bitset>
 #include <fstream>
 #include <string>
 
