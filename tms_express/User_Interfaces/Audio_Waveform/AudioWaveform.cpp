@@ -44,7 +44,7 @@ void AudioWaveform::setPitchCurve(const std::vector<float>& pitch_curve) {
 // Qt Widget Helpers //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-void AudioWaveform::paintEvent(QPaintEvent * event) {
+void AudioWaveform::paintEvent([[maybe_unused]] QPaintEvent * event) {
     const auto width = QWidget::width();
     const auto height = QWidget::height();
 

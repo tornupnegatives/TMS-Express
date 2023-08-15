@@ -535,7 +535,8 @@ void MainWindow::importBitstream(const std::string &path) {
     auto frame_encoder = FrameEncoder();
 
     if (filepath.endsWith(".lpc")) {
-        auto frame_count = frame_encoder.importASCIIFromFile(path);
+        // auto frame_count = frame_encoder.importASCIIFromFile(path);
+        frame_encoder.importASCIIFromFile(path);
 
     } else {
         return;
