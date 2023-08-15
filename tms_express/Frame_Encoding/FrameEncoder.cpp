@@ -122,7 +122,9 @@ size_t FrameEncoder::importASCIIFromString(std::string flat_bitstream) {
             continue;
         }
 
-        float k1, k2, k3, k4, k5, k6, k7, k8, k9, k10 = 0;
+        float k1, k2, k3, k4, k5, k6, k7, k8, k9, k10;
+        k1 = k2 = k3 = k4 = k5 = k6 = k7 = k8 = k9 = k10 = 0;
+
         extractUnvoicedCoeffs(buffer, &k1, &k2, &k3, &k4);
 
         if (pitch == 0x0) {
