@@ -238,7 +238,7 @@ std::string FrameEncoder::reverseHexBytes(std::string bitstream) {
         bitstream.end());
 
     // TODO(Joseph Bellahcen): Handle prefix/no prefix
-    for (int i = 0; i < bitstream.size() - 1; i += 4) {
+    for (int i = 0; i < static_cast<int>(bitstream.size()) - 1; i += 4) {
         auto substr = bitstream.substr(i, 4);
         std::reverse(substr.begin(), substr.end());
 

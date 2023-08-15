@@ -20,7 +20,7 @@ void AudioFilter::applyHammingWindow(AudioBuffer &buffer) const {
 void AudioFilter::applyHammingWindow(std::vector<float> &segment) const {
     auto size = segment.size();
 
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < static_cast<int>(size); i++) {
         float theta = 2.0f * M_PI * i / size;
         // TODO(Joseph Bellahcen): Make smearing coefficient alpha configurable
         float window = 0.54f - 0.46f * cosf(theta);
@@ -56,7 +56,7 @@ void AudioFilter::applyPreEmphasis(AudioBuffer &buffer, float alpha) const {
 
     // Apply filter
     // y(t) = x(t) - a * x(t-1)
-    for (int i = 1; i < samples.size(); i++) {
+    for (int i = 1; i < static_cast<int>(samples.size()); i++) {
         auto new_sample = samples[i] - alpha * samples[i - 1];
         filteredSamples.push_back(new_sample);
     }

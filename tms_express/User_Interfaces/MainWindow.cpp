@@ -391,7 +391,7 @@ void MainWindow::drawPlots() {
         auto tmp_pitch_curve_table = std::vector<float>(frame_table_.size());
         const auto max_pitch = static_cast<float>(pitch_estimator_.getMaxFrq());
 
-        for (int i = 0; i < frame_table_.size(); i++) {
+        for (int i = 0; i < static_cast<int>(frame_table_.size()); i++) {
             auto quantized_pitch = static_cast<float>(
                 frame_table_[i].quantizedPitch());
 

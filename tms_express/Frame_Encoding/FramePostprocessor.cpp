@@ -49,7 +49,7 @@ void FramePostprocessor::setMaxVoicedGainDB(float gain_db) {
 int FramePostprocessor::detectRepeatFrames() {
     int n_repeat_frames = 0;
 
-    for (int i = 1; i < frame_table_->size(); i++) {
+    for (int i = 1; i < static_cast<int>(frame_table_->size()); i++) {
         Frame previous_frame = frame_table_->at(i - 1);
         Frame &current_frame = frame_table_->at(i);
 
@@ -89,7 +89,7 @@ void FramePostprocessor::shiftGain(int offset) {
         // If the shifted gain would exceed the maximum representable gain of
         // the coding table, let it "hit the ceiling." Overuse of the largest
         // gain parameter may destabilize the synthesized signal
-        if (change >= coding_table::tms5220::rms.size()) {
+        if (change >= static_cast<int>(coding_table::tms5220::rms.size())) {
             frame.setGain(*coding_table::tms5220::rms.end());
 
         } else if (change < 0) {
@@ -115,7 +115,7 @@ void FramePostprocessor::shiftPitch(int offset) {
             continue;
         }
 
-        if (change >= coding_table::tms5220::pitch.size()) {
+        if (change >= static_cast<int>(coding_table::tms5220::pitch.size())) {
             frame.setPitch(*coding_table::tms5220::pitch.end());
 
         } else if (change < 0) {
@@ -130,7 +130,9 @@ void FramePostprocessor::shiftPitch(int offset) {
 void FramePostprocessor::overridePitch(int index) {
     for (Frame &frame : *frame_table_) {
         if (!frame.isSilent()) {
-            if (index >= coding_table::tms5220::pitch.size()) {
+            auto size = static_cast<int>(coding_table::tms5220::pitch.size());
+
+            if (index >= size) {
                 frame.setPitch(*coding_table::tms5220::pitch.end());
 
             } else {
@@ -145,7 +147,7 @@ void FramePostprocessor::overridePitch(int index) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void FramePostprocessor::reset() {
-    for (int i = 0; i < frame_table_->size(); i++) {
+    for (int i = 0; i < static_cast<int>(frame_table_->size()); i++) {
         auto &frame = frame_table_->at(i);
         auto originalFrame = original_frame_table_.at(i);
 
