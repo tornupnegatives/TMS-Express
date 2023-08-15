@@ -131,7 +131,9 @@ float Synthesizer::updateLatticeFilter() {
             period_count_ = 0;
         }
 
-        if (period_count_ < coding_table::tms5220::chirp.size()) {
+        auto size = static_cast<int>(coding_table::tms5220::chirp.size());
+
+        if (period_count_ < size) {
             u0_ = ((coding_table::tms5220::chirp[period_count_]) * energy_);
         } else {
             u0_ = 0;

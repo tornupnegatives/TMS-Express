@@ -122,7 +122,9 @@ size_t FrameEncoder::importASCIIFromString(std::string flat_bitstream) {
             continue;
         }
 
-        float k1, k2, k3, k4, k5, k6, k7, k8, k9, k10 = 0;
+        float k1, k2, k3, k4, k5, k6, k7, k8, k9, k10;
+        k1 = k2 = k3 = k4 = k5 = k6 = k7 = k8 = k9 = k10 = 0;
+
         extractUnvoicedCoeffs(buffer, &k1, &k2, &k3, &k4);
 
         if (pitch == 0x0) {
@@ -238,7 +240,7 @@ std::string FrameEncoder::reverseHexBytes(std::string bitstream) {
         bitstream.end());
 
     // TODO(Joseph Bellahcen): Handle prefix/no prefix
-    for (int i = 0; i < bitstream.size() - 1; i += 4) {
+    for (int i = 0; i < static_cast<int>(bitstream.size()) - 1; i += 4) {
         auto substr = bitstream.substr(i, 4);
         std::reverse(substr.begin(), substr.end());
 

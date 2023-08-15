@@ -391,7 +391,7 @@ void MainWindow::drawPlots() {
         auto tmp_pitch_curve_table = std::vector<float>(frame_table_.size());
         const auto max_pitch = static_cast<float>(pitch_estimator_.getMaxFrq());
 
-        for (int i = 0; i < frame_table_.size(); i++) {
+        for (int i = 0; i < static_cast<int>(frame_table_.size()); i++) {
             auto quantized_pitch = static_cast<float>(
                 frame_table_[i].quantizedPitch());
 
@@ -535,7 +535,8 @@ void MainWindow::importBitstream(const std::string &path) {
     auto frame_encoder = FrameEncoder();
 
     if (filepath.endsWith(".lpc")) {
-        auto frame_count = frame_encoder.importASCIIFromFile(path);
+        // auto frame_count = frame_encoder.importASCIIFromFile(path);
+        frame_encoder.importASCIIFromFile(path);
 
     } else {
         return;

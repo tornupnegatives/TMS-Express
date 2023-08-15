@@ -109,7 +109,7 @@ static const std::array<float, 16> energy = {0, 0.00390625, 0.005859375,
 /// @brief Gets the ith LPC reflector coefficient table
 /// @param i Index of coefficient table
 /// @return ith coefficient table if i in range, empty vector otherwise
-static const std::vector<float> getCoeffTable(int i) {
+[[maybe_unused]] static const std::vector<float> getCoeffTable(int i) {
     switch (i) {
         case 0: return {k1.begin(), k1.end()};
         case 1: return {k2.begin(), k2.end()};

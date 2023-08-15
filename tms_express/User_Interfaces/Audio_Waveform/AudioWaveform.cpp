@@ -44,7 +44,7 @@ void AudioWaveform::setPitchCurve(const std::vector<float>& pitch_curve) {
 // Qt Widget Helpers //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-void AudioWaveform::paintEvent(QPaintEvent * event) {
+void AudioWaveform::paintEvent([[maybe_unused]] QPaintEvent * event) {
     const auto width = QWidget::width();
     const auto height = QWidget::height();
 
@@ -62,7 +62,7 @@ void AudioWaveform::paintEvent(QPaintEvent * event) {
         const float spacing = static_cast<float>(width) /
             static_cast<float>(samples_.size());
 
-        for (int i = 0; i < samples_.size() - 1; i++) {
+        for (int i = 0; i < static_cast<int>(samples_.size()) - 1; i++) {
             float x_1 = static_cast<float>(i) * spacing;
             float y_1 = origin + (samples_[i] * origin);
 
@@ -79,7 +79,7 @@ void AudioWaveform::paintEvent(QPaintEvent * event) {
         const float spacing = static_cast<float>(width) /
             static_cast<float>(pitch_curve_.size());
 
-        for (int i = 0; i < pitch_curve_.size(); i++) {
+        for (int i = 0; i < static_cast<int>(pitch_curve_.size()); i++) {
             float x_1 = static_cast<float>(i) * spacing;
             float y_1 = height - (pitch_curve_[i] * origin);
 

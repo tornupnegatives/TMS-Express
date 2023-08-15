@@ -58,7 +58,7 @@ void Frame::setGain(int idx) {
     if (idx < 0) {
         gain_db_ = *coding_table::tms5220::rms.begin();
 
-    } else if (idx > coding_table::tms5220::rms.size()) {
+    } else if (idx > static_cast<int>(coding_table::tms5220::rms.size())) {
         gain_db_ = *coding_table::tms5220::rms.end();
 
     } else {
@@ -216,7 +216,7 @@ nlohmann::json Frame::toJSON() {
 ///////////////////////////////////////////////////////////////////////////////
 
 int Frame::closestIndex(float value, std::vector<float> table) {
-    auto size = table.size();
+    auto size = static_cast<int>(table.size());
 
     // First, check if the value is within the lower bound of the array values
     if (value <= table.at(0)) {

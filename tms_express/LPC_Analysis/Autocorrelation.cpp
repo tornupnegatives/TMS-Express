@@ -10,10 +10,10 @@ std::vector<float> Autocorrelation(const std::vector<float> &segment) {
     auto size = segment.size();
     auto acf = std::vector<float>(size);
 
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < static_cast<int>(size); i++) {
         float sum = 0.0f;
 
-        for (int j = 0; j < size - i; j++) {
+        for (int j = 0; j < static_cast<int>(size) - i; j++) {
             sum += segment[j] * segment[j + i];
         }
 

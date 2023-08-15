@@ -39,9 +39,6 @@ TEST(AutocorrelatorTests, AutocorrelationIsMaxAtIndexZero) {
 TEST(AutocorrelatorTests, AutocorrelationHasLocalMaxAtOriginalSignalPeriod) {
     auto acf = acfTestSubject();
 
-    auto max_element = std::max_element(acf.begin(), acf.end());
-    auto max_idx = std::distance(acf.begin(), max_element);
-
     auto min_element = std::min_element(acf.begin(), acf.end());
     auto next_max_element = std::max_element(min_element, acf.end());
     auto period_idx = std::distance(acf.begin(), next_max_element);

@@ -62,7 +62,7 @@ void BitstreamGenerator::encodeBatch(
         // Create directory to populate with encoded files
         std::filesystem::create_directory(output_path);
 
-        for (int i = 0; i < audio_input_paths.size(); i++) {
+        for (int i = 0; i < static_cast<int>(audio_input_paths.size()); i++) {
             in_path = audio_input_paths[i];
             filename = bitstream_names[i];
 
@@ -75,7 +75,7 @@ void BitstreamGenerator::encodeBatch(
         std::ofstream lpcOut;
         lpcOut.open(output_path);
 
-        for (int i = 0; i < audio_input_paths.size(); i++) {
+        for (int i = 0; i < static_cast<int>(audio_input_paths.size()); i++) {
             in_path = audio_input_paths[i];
             filename = bitstream_names[i];
 
