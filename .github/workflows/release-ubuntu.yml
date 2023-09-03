@@ -1,0 +1,38 @@
+name: Build & Release (Ubuntu)
+on:
+ push:
+        tags:
+            - "v*.*.*"
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Repo
+              uses: actions/checkout@v3
+
+            - name: Install Dependencies
+              run: sudo apt install libfontconfig1-dev libfreetype6-dev libx11-dev libx11-xcb-dev libxext-dev libxfixes-dev libxi-dev libxrender-dev libxcb1-dev libxcb-cursor-dev libxcb-glx0-dev libxcb-keysyms1-dev libxcb-image0-dev libxcb-shm0-dev libxcb-icccm4-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-shape0-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-util-dev libglx-dev libgl1-mesa-dev libxcb-xinerama0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev cmake libsndfile1-dev libsamplerate0-dev pkg-config qt6-base-dev qt6-multimedia-dev
+
+            - name: Configure Build
+              run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DTMSEXPRESS_BUILD_TESTS=OFF
+
+            - name: Build
+              run: cmake --build ${{github.workspace}}/build --config Release
+
+            - name: Create DEB Archive
+              id: create_deb
+              uses: jiro4989/build-deb-action@v3
+              with:
+                  package: tms-express
+                  package_root: ${{github.workspace}}/build
+                  maintainer: Joseph Bellahcen
+                  version: ${{ github.ref }}
+                  depends: "libsndfile1, libsamplerate0, libqt6core6, libqt6gui6, libqt6multimedia6, libqt6widgets6, libxcb-xinerama0"
+
+            - name: Attach to Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: |
+                      ${{github.workspace}}/${{steps.create_deb.outputs.file_name}}
+
