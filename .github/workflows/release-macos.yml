@@ -1,0 +1,32 @@
+name: Build & Release (macOS)
+on:
+ push:
+        tags:
+            - "v*.*.*"
+
+jobs:
+    build:
+        runs-on: macos-latest
+
+        steps:
+            - name: Checkout Repo
+              uses: actions/checkout@v3
+
+            - name: Install Dependencies
+              run: brew install cmake libsndfile libsamplerate pkg-config qt
+
+            - name: Configure Build
+              run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DTMSEXPRESS_BUILD_TESTS=OFF
+
+            - name: Build
+              run: cmake --build ${{github.workspace}}/build --config Release
+
+            - name: Package Build Artifact
+              run: zip -jr ${{github.workspace}}/build-macos.zip ${{github.workspace}}/build/tmsexpress
+
+            - name: Attach to Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: |
+                      ${{github.workspace}}/build-macos.zip
+
