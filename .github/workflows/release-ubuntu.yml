@@ -1,0 +1,38 @@
+name: Build & Release (Ubuntu)
+on:
+ push:
+        tags:
+            - "v*.*.*"
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Repo
+              uses: actions/checkout@v3
+
+            - name: Install Dependencies
+              run: sudo apt install cmake wget libsndfile1-dev libsamplerate0-dev qt6-base-dev qt6-multimedia-dev libgl1-mesa-dev
+            - name: Configure Build
+              run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DTMSEXPRESS_BUILD_TESTS=OFF
+
+            - name: Build
+              run: cmake --build ${{github.workspace}}/build --config Release
+
+            - name: Install cqtdeployer
+              run: |
+               wget https://github.com/QuasarApp/CQtDeployer/releases/download/v1.6.2320/CQtDeployer_1.6.2320.097d82b_Linux_x86_64.deb
+               sudo dpkg -i CQtDeployer_1.6.2320.097d82b_Linux_x86_64.deb
+
+            - name: Deploy Project
+              run: cqtdeployer -targetDir ${{github.workspace}}/tmsexpress -bin ${{github.workspace}}/build/tmsexpress -extraLibs libb2.so.1
+
+            - name: Package Build Artifact
+              run: cd ${{github.workspace}} && zip -r build-linux.zip tmsexpress
+            
+            - name: Attach to Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: |
+                      ${{github.workspace}}/build-linux.zip
+
