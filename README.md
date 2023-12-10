@@ -16,11 +16,22 @@ Compared to existing encoders, TMS Express has the following advantages:
 - Performs batch encoding of multiple files
 
 # Installation
-## Install via Homebrew 🍺
-Homebrew is the preferred installation method on macOS and Linux.
+
+## Linux & Windows
+
+Linux and Windows (via WSL) users can download the latest TMS Express binary
+from the [Releases](https://github.com/tornupnegatives/TMS-Express/releases)
+tab in GitHub.
+
+## macOS & Linux
+
+macOS and Linux users can donwload and install the latest TMS Express binary
+via Homebrew, using the below invocation. macOS binaries are also available
+from the [Releases](https://github.com/tornupnegatives/TMS-Express/releases)
+tab in GitHub.
 
 ```shell
-$ brew tap tornupnegatives/tmsexpress && brew install tms-express
+$ brew tap tornupnegatives/tap && brew install tmsexpress
 ```
 
 ## Compile from Source
