@@ -93,5 +93,5 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
 
 if (TMSEXPRESS_BUILD_TESTS)
     message(STATUS "Building TMS Express test suite")
-    add_subdirectory(test)
+    include(test/CMakeLists.txt)
 endif()

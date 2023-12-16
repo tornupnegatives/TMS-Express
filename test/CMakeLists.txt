@@ -1,26 +1,13 @@
 # Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
 
 ###############################################################################
-# CMake Configuration #########################################################
-###############################################################################
-
-cmake_minimum_required(VERSION 3.14)
-set(CMAKE_CXX_STANDARD 17)
-
-###############################################################################
-# Project Configuration #######################################################
-###############################################################################
-
-project(TMS-Test)
-
-###############################################################################
 # GoogleTest Framework ########################################################
 ###############################################################################
 
 include(FetchContent)
 FetchContent_Declare(googletest
     GIT_REPOSITORY "https://github.com/google/googletest.git"
-    GIT_TAG "release-1.12.1"
+    GIT_TAG "v1.14.0"
 )
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -35,18 +22,15 @@ include_directories(
     ${CMAKE_PROJECT_TOP_LEVEL_INCLUDES}
 )
 
-set (TEST_TARGET_DIR ${CMAKE_CURRENT_LIST_DIR}/../tms_express)
-message(${TEST_TARGET_DIR})
+add_executable(TMS-Express-Test
+    tms_express/LPC_Analysis/Autocorrelation.cpp
+    test/AutocorrelatorTests.cpp
 
-add_executable(${PROJECT_NAME}
-    ${TEST_TARGET_DIR}/LPC_Analysis/Autocorrelation.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/AutocorrelatorTests.cpp
+    tms_express/Frame_Encoding/Frame.cpp
+    test/FrameTests.cpp
 
-    ${TEST_TARGET_DIR}/Frame_Encoding/Frame.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/FrameTests.cpp
-
-    ${TEST_TARGET_DIR}/Frame_Encoding/FrameEncoder.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/FrameEncoderTests.cpp
+    tms_express/Frame_Encoding/FrameEncoder.cpp
+    test/FrameEncoderTests.cpp
 )
 
 ###############################################################################
@@ -54,9 +38,9 @@ add_executable(${PROJECT_NAME}
 ###############################################################################
 
 target_link_libraries(
-    ${PROJECT_NAME}
+    TMS-Express-Test
     gtest_main
 )
 
 include(GoogleTest)
-gtest_discover_tests(TMS-Test)
+gtest_discover_tests(TMS-Express-Test)
