@@ -1,0 +1,22 @@
+name: Unit Test
+on:
+  [pull_request]
+
+jobs:
+    unit-test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Repo
+              uses: actions/checkout@v3
+
+            - name: Install Dependencies
+              run: sudo apt install cmake wget libsndfile1-dev libsamplerate0-dev qt6-base-dev qt6-multimedia-dev libgl1-mesa-dev
+            - name: Configure Build
+              run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DTMSEXPRESS_BUILD_TESTS=ON
+
+            - name: Build
+              run: cmake --build ${{github.workspace}}/build --config Debug
+
+            - name: Run tests
+              run: cd build && ctest
