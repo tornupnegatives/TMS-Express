@@ -3,6 +3,7 @@
 #include "User_Interfaces/MainWindow.hpp"
 
 #include <QAction>
+#include <QMessageBox>
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -164,7 +165,7 @@ void MainWindow::onOpenFile() {
             lpc_control_->getAnalysisWindowWidth());
 
         if (input_buffer_ptr == nullptr) {
-            qDebug() << "NULL";
+            QMessageBox::critical(this, "Error", "Invalid audio file");
             return;
         }
 
