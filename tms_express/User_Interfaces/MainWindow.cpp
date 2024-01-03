@@ -165,7 +165,7 @@ void MainWindow::onOpenFile() {
             lpc_control_->getAnalysisWindowWidth());
 
         if (input_buffer_ptr == nullptr) {
-            QMessageBox::critical(this, "Error", "Invalid audio file");
+            QMessageBox::critical(this, "Error", "Could not read audio file");
             return;
         }
 
@@ -536,9 +536,13 @@ void MainWindow::importBitstream(const std::string &path) {
     auto frame_encoder = FrameEncoder();
 
     if (filepath.endsWith(".lpc")) {
-        // auto frame_count = frame_encoder.importASCIIFromFile(path);
-        frame_encoder.importASCIIFromFile(path);
-
+        try {
+            frame_encoder.importASCIIFromFile(path);
+        } catch (...) {
+            QMessageBox::critical(this, "Error",
+                "Could not read bitstream. File may be corrupt");
+            return;
+        }
     } else {
         return;
     }
