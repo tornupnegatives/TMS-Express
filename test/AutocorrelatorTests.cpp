@@ -6,7 +6,7 @@
 #include <cmath>
 #include <vector>
 
-#include "LPC_Analysis/Autocorrelation.hpp"
+#include "analysis/Autocorrelation.hpp"
 
 namespace tms_express {
 

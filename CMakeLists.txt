@@ -33,33 +33,33 @@ include_directories(
 
 add_executable(${PROJECT_NAME}
     # Backend #################################################################
-    tms_express/Audio/AudioBuffer.cpp
-    tms_express/Audio/AudioFilter.cpp
+    tms_express/audio/AudioBuffer.cpp
+    tms_express/audio/AudioFilter.cpp
 
-    tms_express/LPC_Analysis/Autocorrelation.cpp
-    tms_express/LPC_Analysis/PitchEstimator.cpp
-    tms_express/LPC_Analysis/LinearPredictor.cpp
+    tms_express/analysis/Autocorrelation.cpp
+    tms_express/analysis/PitchEstimator.cpp
+    tms_express/analysis/LinearPredictor.cpp
 
-    tms_express/Frame_Encoding/Frame.cpp
-    tms_express/Frame_Encoding/FrameEncoder.cpp
-    tms_express/Frame_Encoding/FramePostprocessor.cpp
-    tms_express/Frame_Encoding/Synthesizer.cpp
+    tms_express/encoding/Frame.cpp
+    tms_express/encoding/FrameEncoder.cpp
+    tms_express/encoding/FramePostprocessor.cpp
+    tms_express/encoding/Synthesizer.cpp
 
-    tms_express/Bitstream_Generation/BitstreamGenerator.cpp
-    tms_express/Bitstream_Generation/PathUtils.cpp
+    tms_express/bitstream/BitstreamGenerator.cpp
+    tms_express/bitstream/PathUtils.cpp
 
     # Frontend ###############################################################
-    tms_express/User_Interfaces/CommandLineApp.cpp
+    tms_express/ui/CommandLineApp.cpp
 
-    tms_express/User_Interfaces/Audio_Waveform/AudioWaveform.cpp
-    tms_express/User_Interfaces/Audio_Waveform/AudioWaveformView.cpp
+    tms_express/ui/Audio_Waveform/AudioWaveform.cpp
+    tms_express/ui/Audio_Waveform/AudioWaveformView.cpp
 
-    tms_express/User_Interfaces/Control_Panels/ControlPanelView.cpp
-    tms_express/User_Interfaces/Control_Panels/ControlPanelPitchView.cpp
-    tms_express/User_Interfaces/Control_Panels/ControlPanelLpcView.cpp
-    tms_express/User_Interfaces/Control_Panels/ControlPanelPostView.cpp
+    tms_express/ui/Control_Panels/ControlPanelView.cpp
+    tms_express/ui/Control_Panels/ControlPanelPitchView.cpp
+    tms_express/ui/Control_Panels/ControlPanelLpcView.cpp
+    tms_express/ui/Control_Panels/ControlPanelPostView.cpp
 
-    tms_express/User_Interfaces/MainWindow.cpp
+    tms_express/ui/MainWindow.cpp
 
     # Main ####################################################################
     tms_express/main.cpp

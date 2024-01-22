@@ -4,8 +4,8 @@
 
 #include <vector>
 
-#include "Frame_Encoding/Frame.hpp"
-#include "Frame_Encoding/FrameEncoder.hpp"
+#include "encoding/Frame.hpp"
+#include "encoding/FrameEncoder.hpp"
 
 namespace tms_express {
 

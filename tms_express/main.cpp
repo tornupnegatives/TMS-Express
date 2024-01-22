@@ -2,8 +2,8 @@
 
 #include <QApplication>
 
-#include "User_Interfaces/CommandLineApp.hpp"
-#include "User_Interfaces/MainWindow.hpp"
+#include "ui/CommandLineApp.hpp"
+#include "ui/MainWindow.hpp"
 
 int main(int argc, char **argv) {
     // If no arguments are passed, launch GUI

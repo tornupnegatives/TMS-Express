@@ -23,13 +23,13 @@ include_directories(
 )
 
 add_executable(TMS-Express-Test
-    tms_express/LPC_Analysis/Autocorrelation.cpp
+    tms_express/analysis/Autocorrelation.cpp
     test/AutocorrelatorTests.cpp
 
-    tms_express/Frame_Encoding/Frame.cpp
+    tms_express/encoding/Frame.cpp
     test/FrameTests.cpp
 
-    tms_express/Frame_Encoding/FrameEncoder.cpp
+    tms_express/encoding/FrameEncoder.cpp
     test/FrameEncoderTests.cpp
 )
 
