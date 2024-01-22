@@ -1,6 +1,6 @@
 // Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "ui/Control_Panels/ControlPanelView.hpp"
+#include "ui/gui/controlpanels/ControlPanelView.hpp"
 
 #include <QFrame>
 #include <QLabel>

@@ -1,13 +1,13 @@
 // Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "ui/Audio_Waveform/AudioWaveformView.hpp"
+#include "ui/gui/audiowaveform/AudioWaveformView.hpp"
 
 #include <QWidget>
 #include <QLabel>
 #include <QLayout>
 #include <QPushButton>
 
-#include "ui/Audio_Waveform/AudioWaveform.hpp"
+#include "ui/gui/audiowaveform/AudioWaveform.hpp"
 
 namespace tms_express::ui {
 

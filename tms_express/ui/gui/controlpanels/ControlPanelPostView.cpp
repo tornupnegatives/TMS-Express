@@ -1,6 +1,6 @@
 // Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "ui/Control_Panels/ControlPanelPostView.hpp"
+#include "ui/gui/controlpanels/ControlPanelPostView.hpp"
 
 #include <QCheckBox>
 #include <QSlider>

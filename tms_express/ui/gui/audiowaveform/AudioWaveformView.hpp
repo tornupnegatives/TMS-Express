@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "ui/Audio_Waveform/AudioWaveform.hpp"
+#include "ui/gui/audiowaveform/AudioWaveform.hpp"
 
 namespace tms_express::ui {
 

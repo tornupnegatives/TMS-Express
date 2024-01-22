@@ -1,22 +1,18 @@
 // Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#ifndef TMS_EXPRESS_USER_INTERFACES_CONTROL_PANELS_CONTROLPANELPITCHVIEW_HPP_
-#define TMS_EXPRESS_USER_INTERFACES_CONTROL_PANELS_CONTROLPANELPITCHVIEW_HPP_
+#ifndef TMS_EXPRESS_USER_INTERFACES_CONTROL_PANELS_CONTROLPANELLPCVIEW_HPP_
+#define TMS_EXPRESS_USER_INTERFACES_CONTROL_PANELS_CONTROLPANELLPCVIEW_HPP_
 
 #include <QCheckBox>
-#include <QSlider>
 #include <QLineEdit>
 #include <QWidget>
 
-#include <string>
-
-#include "ui/Control_Panels/ControlPanelView.hpp"
+#include "ui/gui/controlpanels/ControlPanelView.hpp"
 
 namespace tms_express::ui {
 
-/// @brief Control Panel View for LPC pitch analysis and post-processing
-///         parameters
-class ControlPanelPitchView: public ControlPanelView {
+/// @brief Control Panel View for LPC analysis parameters
+class ControlPanelLpcView: public ControlPanelView {
     Q_OBJECT
 
  public:
@@ -24,10 +20,9 @@ class ControlPanelPitchView: public ControlPanelView {
     // Initializers ///////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
-    /// @brief Creates a new Control Panel View for LPC pitch analysis and
-    ////        post-processing parameters
+    /// @brief Creates a new Control Panel View for LPC analysis parameters
     /// @param parent Parent Qt widget
-    explicit ControlPanelPitchView(QWidget *parent = nullptr);
+    explicit ControlPanelLpcView(QWidget *parent = nullptr);
 
     ///////////////////////////////////////////////////////////////////////////
     // Overloaded Methods /////////////////////////////////////////////////////
@@ -42,6 +37,12 @@ class ControlPanelPitchView: public ControlPanelView {
     ///////////////////////////////////////////////////////////////////////////
     // Accessors //////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
+
+    /// @brief Accesses LPC analysis (segmentation) window width
+    /// @return Analysis window width, in milliseconds
+    /// @note The analysis window width guides both pitch and LPC analysis by
+    ///         establishing Frame segmentation boundaries
+    float getAnalysisWindowWidth();
 
     /// @brief Checks if highpass filter should be applied to pitch buffer
     /// @return true if highpass filter should be applied, false otherwise
@@ -67,18 +68,12 @@ class ControlPanelPitchView: public ControlPanelView {
     /// @return Pre-emphasis filter coefficient
     float getPreEmphasisAlpha();
 
-    /// @brief Accesses pitch analysis ceiling
-    /// @return Max pitch frequency, in Hertz
-    int getMaxPitchFrq();
-
-    /// @brief Accesses pitch analysis floor
-    /// @return Min pitch frequency, in Hertz
-    int getMinPitchFrq();
-
  private:
     ///////////////////////////////////////////////////////////////////////////
     // Members ////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
+
+    QLineEdit *analysis_window_line_;
 
     QCheckBox *hpf_checkbox_;
     QLineEdit *hpf_line_;
@@ -88,11 +83,8 @@ class ControlPanelPitchView: public ControlPanelView {
 
     QCheckBox *preemphasis_checkbox_;
     QLineEdit *preemphasis_line_;
-
-    QLineEdit *max_pitch_frq_line_;
-    QLineEdit *min_pitch_frq_line_;
 };
 
 };  // namespace tms_express::ui
 
-#endif  // TMS_EXPRESS_USER_INTERFACES_CONTROL_PANELS_CONTROLPANELPITCHVIEW_HPP_
+#endif  // TMS_EXPRESS_USER_INTERFACES_CONTROL_PANELS_CONTROLPANELLPCVIEW_HPP_

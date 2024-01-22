@@ -49,17 +49,17 @@ add_executable(${PROJECT_NAME}
     tms_express/bitstream/PathUtils.cpp
 
     # Frontend ###############################################################
-    tms_express/ui/CommandLineApp.cpp
+    tms_express/ui/cli/CommandLineApp.cpp
 
-    tms_express/ui/Audio_Waveform/AudioWaveform.cpp
-    tms_express/ui/Audio_Waveform/AudioWaveformView.cpp
+    tms_express/ui/gui/audiowaveform/AudioWaveform.cpp
+    tms_express/ui/gui/audiowaveform/AudioWaveformView.cpp
 
-    tms_express/ui/Control_Panels/ControlPanelView.cpp
-    tms_express/ui/Control_Panels/ControlPanelPitchView.cpp
-    tms_express/ui/Control_Panels/ControlPanelLpcView.cpp
-    tms_express/ui/Control_Panels/ControlPanelPostView.cpp
+    tms_express/ui/gui/controlpanels/ControlPanelView.cpp
+    tms_express/ui/gui/controlpanels/ControlPanelPitchView.cpp
+    tms_express/ui/gui/controlpanels/ControlPanelLpcView.cpp
+    tms_express/ui/gui/controlpanels/ControlPanelPostView.cpp
 
-    tms_express/ui/MainWindow.cpp
+    tms_express/ui/gui/MainWindow.cpp
 
     # Main ####################################################################
     tms_express/main.cpp

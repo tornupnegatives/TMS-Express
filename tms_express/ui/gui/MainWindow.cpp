@@ -1,6 +1,6 @@
 // Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "ui/MainWindow.hpp"
+#include "ui/gui/MainWindow.hpp"
 
 #include <QAction>
 #include <QMessageBox>
@@ -23,10 +23,10 @@
 #include "audio/AudioBuffer.hpp"
 #include "encoding/FramePostprocessor.hpp"
 #include "analysis/Autocorrelation.hpp"
-#include "ui/Audio_Waveform/AudioWaveformView.hpp"
-#include "ui/Control_Panels/ControlPanelPitchView.hpp"
-#include "ui/Control_Panels/ControlPanelLpcView.hpp"
-#include "ui/Control_Panels/ControlPanelPostView.hpp"
+#include "ui/gui/audiowaveform/AudioWaveformView.hpp"
+#include "ui/gui/controlpanels/ControlPanelPitchView.hpp"
+#include "ui/gui/controlpanels/ControlPanelLpcView.hpp"
+#include "ui/gui/controlpanels/ControlPanelPostView.hpp"
 
 namespace tms_express::ui {
 

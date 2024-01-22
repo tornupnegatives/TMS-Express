@@ -1,6 +1,6 @@
 // Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "ui/CommandLineApp.hpp"
+#include "ui/cli/CommandLineApp.hpp"
 
 #include "lib/CLI11.hpp"
 

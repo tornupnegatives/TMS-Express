@@ -1,6 +1,6 @@
 // Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
 
-#include "ui/Audio_Waveform/AudioWaveform.hpp"
+#include "ui/gui/audiowaveform/AudioWaveform.hpp"
 
 #include <QWidget>
 #include <QPainter>

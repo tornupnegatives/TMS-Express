@@ -25,10 +25,10 @@
 #include "encoding/Synthesizer.hpp"
 #include "analysis/PitchEstimator.hpp"
 #include "analysis/LinearPredictor.hpp"
-#include "ui/Audio_Waveform/AudioWaveformView.hpp"
-#include "ui/Control_Panels/ControlPanelPitchView.hpp"
-#include "ui/Control_Panels/ControlPanelLpcView.hpp"
-#include "ui/Control_Panels/ControlPanelPostView.hpp"
+#include "ui/gui/audiowaveform/AudioWaveformView.hpp"
+#include "ui/gui/controlpanels/ControlPanelPitchView.hpp"
+#include "ui/gui/controlpanels/ControlPanelLpcView.hpp"
+#include "ui/gui/controlpanels/ControlPanelPostView.hpp"
 
 #define TE_WINDOW_MIN_WIDTH    1000
 #define TE_WINDOW_MIN_HEIGHT   800

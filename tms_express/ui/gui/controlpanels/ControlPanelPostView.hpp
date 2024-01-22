@@ -8,7 +8,7 @@
 #include <QLineEdit>
 #include <QWidget>
 
-#include "ui/Control_Panels/ControlPanelView.hpp"
+#include "ui/gui/controlpanels/ControlPanelView.hpp"
 
 namespace tms_express::ui {
 
