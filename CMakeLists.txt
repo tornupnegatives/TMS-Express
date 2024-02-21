@@ -34,43 +34,34 @@ endif()
 # Project Sources & Includes ##################################################
 ###############################################################################
 
-include_directories(
-    ${CMAKE_CURRENT_LIST_DIR}
-    tms_express
-)
+include_directories(${CMAKE_CURRENT_LIST_DIR} tms_express)
 
-add_executable(${PROJECT_NAME}
-    # Backend #################################################################
+add_executable(
+    ${PROJECT_NAME}
     tms_express/audio/AudioBuffer.cpp
     tms_express/audio/AudioFilter.cpp
-
     tms_express/analysis/Autocorrelation.cpp
     tms_express/analysis/PitchEstimator.cpp
     tms_express/analysis/LinearPredictor.cpp
-
     tms_express/encoding/Frame.cpp
     tms_express/encoding/FrameEncoder.cpp
     tms_express/encoding/FramePostprocessor.cpp
     tms_express/encoding/Synthesizer.cpp
-
     tms_express/bitstream/BitstreamGenerator.cpp
     tms_express/bitstream/PathUtils.cpp
-
-    # Main ####################################################################
     tms_express/ui/cli/CommandLineApp.cpp
-    tms_express/main.cpp
-)
+    tms_express/main.cpp)
 
 if(TMSEXPRESS_BUILD_GUI)
-    target_sources(${PROJECT_NAME} PRIVATE
-        tms_express/ui/gui/audiowaveform/AudioWaveform.cpp
-        tms_express/ui/gui/audiowaveform/AudioWaveformView.cpp
-        tms_express/ui/gui/controlpanels/ControlPanelView.cpp
-        tms_express/ui/gui/controlpanels/ControlPanelPitchView.cpp
-        tms_express/ui/gui/controlpanels/ControlPanelLpcView.cpp
-        tms_express/ui/gui/controlpanels/ControlPanelPostView.cpp
-        tms_express/ui/gui/MainWindow.cpp
-    )
+    target_sources(
+        ${PROJECT_NAME}
+        PRIVATE tms_express/ui/gui/audiowaveform/AudioWaveform.cpp
+                tms_express/ui/gui/audiowaveform/AudioWaveformView.cpp
+                tms_express/ui/gui/controlpanels/ControlPanelView.cpp
+                tms_express/ui/gui/controlpanels/ControlPanelPitchView.cpp
+                tms_express/ui/gui/controlpanels/ControlPanelLpcView.cpp
+                tms_express/ui/gui/controlpanels/ControlPanelPostView.cpp
+                tms_express/ui/gui/MainWindow.cpp)
 endif()
 
 ###############################################################################
@@ -78,26 +69,38 @@ endif()
 ###############################################################################
 
 if(TMSEXPRESS_BUILD_GUI)
-    find_package(Qt6 COMPONENTS Core Gui Multimedia Widgets REQUIRED)
+    find_package(
+        Qt6
+        COMPONENTS Core
+                   Gui
+                   Multimedia
+                   Widgets
+        REQUIRED)
 
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-        Qt::Core
-        Qt::Gui
-        Qt::Widgets
-        Qt::Multimedia
-    )
+    target_link_libraries(
+        ${PROJECT_NAME}
+        PRIVATE Qt::Core
+                Qt::Gui
+                Qt::Widgets
+                Qt::Multimedia)
 endif()
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(SndFile REQUIRED IMPORTED_TARGET sndfile)
-pkg_check_modules(SampleRate REQUIRED IMPORTED_TARGET samplerate)
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    PkgConfig::SndFile
-    PkgConfig::SampleRate
-)
+pkg_check_modules(
+    SndFile
+    REQUIRED
+    IMPORTED_TARGET
+    sndfile)
+
+pkg_check_modules(
+    SampleRate
+    REQUIRED
+    IMPORTED_TARGET
+    samplerate)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile
+                                              PkgConfig::SampleRate)
 
 ###############################################################################
 # Artifacts & Sub-Targets #####################################################
@@ -105,7 +108,7 @@ target_link_libraries(${PROJECT_NAME}
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
 
-if (TMSEXPRESS_BUILD_TESTS)
+if(TMSEXPRESS_BUILD_TESTS)
     message(STATUS "Building TMS Express test suite")
     include(test/CMakeLists.txt)
 endif()
