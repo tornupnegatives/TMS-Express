@@ -7,26 +7,27 @@
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 add_definitions(-Wall -Wextra -Wpedantic)
 
 ###############################################################################
 # Project Configuration #######################################################
 ###############################################################################
 
-project(TMS-Express)
+project(tmsexpress)
 option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
 option(TMSEXPRESS_BUILD_GUI "Build GUI frontend" ON)
 
 if(TMSEXPRESS_BUILD_GUI)
-    # CMake provides the UIC, MOC, and RCC tools to aid in Qt app development
-    # - UIC: Converts .UI files to C/C++ headers
-    # - MOC: Produces "meta-object code" for Q_OBJECT classes
-    # - RCC: Embeds resource files into Qt application binary
-    set(CMAKE_AUTOUIC ON)
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTORCC ON)
+    # Converts Qt designer (.UI) files to C/C++ headers
+    # set(CMAKE_AUTOUIC ON)
 
+    # Produces "meta-object code" for Qt Q_OBJECT classes
+    set(CMAKE_AUTOMOC ON)
+
+    # Embeds resource files into Qt application binary
+    # set(CMAKE_AUTORCC ON)
+
+    # Configures main method to include Qt application object
     add_compile_definitions(TMSEXPRESS_GUI=1)
 endif()
 
@@ -34,34 +35,34 @@ endif()
 # Project Sources & Includes ##################################################
 ###############################################################################
 
-include_directories(${CMAKE_CURRENT_LIST_DIR} tms_express)
+include_directories(${CMAKE_CURRENT_LIST_DIR} src)
 
 add_executable(
     ${PROJECT_NAME}
-    tms_express/audio/AudioBuffer.cpp
-    tms_express/audio/AudioFilter.cpp
-    tms_express/analysis/Autocorrelation.cpp
-    tms_express/analysis/PitchEstimator.cpp
-    tms_express/analysis/LinearPredictor.cpp
-    tms_express/encoding/Frame.cpp
-    tms_express/encoding/FrameEncoder.cpp
-    tms_express/encoding/FramePostprocessor.cpp
-    tms_express/encoding/Synthesizer.cpp
-    tms_express/bitstream/BitstreamGenerator.cpp
-    tms_express/bitstream/PathUtils.cpp
-    tms_express/ui/cli/CommandLineApp.cpp
-    tms_express/main.cpp)
+    src/audio/AudioBuffer.cpp
+    src/audio/AudioFilter.cpp
+    src/analysis/Autocorrelation.cpp
+    src/analysis/PitchEstimator.cpp
+    src/analysis/LinearPredictor.cpp
+    src/encoding/Frame.cpp
+    src/encoding/FrameEncoder.cpp
+    src/encoding/FramePostprocessor.cpp
+    src/encoding/Synthesizer.cpp
+    src/bitstream/BitstreamGenerator.cpp
+    src/bitstream/PathUtils.cpp
+    src/ui/cli/CommandLineApp.cpp
+    src/main.cpp)
 
 if(TMSEXPRESS_BUILD_GUI)
     target_sources(
         ${PROJECT_NAME}
-        PRIVATE tms_express/ui/gui/audiowaveform/AudioWaveform.cpp
-                tms_express/ui/gui/audiowaveform/AudioWaveformView.cpp
-                tms_express/ui/gui/controlpanels/ControlPanelView.cpp
-                tms_express/ui/gui/controlpanels/ControlPanelPitchView.cpp
-                tms_express/ui/gui/controlpanels/ControlPanelLpcView.cpp
-                tms_express/ui/gui/controlpanels/ControlPanelPostView.cpp
-                tms_express/ui/gui/MainWindow.cpp)
+        PRIVATE src/ui/gui/audiowaveform/AudioWaveform.cpp
+                src/ui/gui/audiowaveform/AudioWaveformView.cpp
+                src/ui/gui/controlpanels/ControlPanelView.cpp
+                src/ui/gui/controlpanels/ControlPanelPitchView.cpp
+                src/ui/gui/controlpanels/ControlPanelLpcView.cpp
+                src/ui/gui/controlpanels/ControlPanelPostView.cpp
+                src/ui/gui/MainWindow.cpp)
 endif()
 
 ###############################################################################
