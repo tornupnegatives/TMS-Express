@@ -1,5 +1,6 @@
 # TMS Express 🗣
-TMS Express generates bitstreams for the TMS5220 Voice Synthesis Processor.
+TMS Express generates bitstreams for the TMS5220 Voice Synthesis Processor. It
+also includes a TMS5220 emulator for synthesizing bitstreams as audio files.
 
 ![TMS Express GUI Screenshot](doc/screenshot.png)
 
@@ -21,33 +22,50 @@ Compared to existing encoders, TMS Express has the following advantages:
 
 Linux and Windows (via WSL) users can download the latest TMS Express binary
 from the [Releases](https://github.com/tornupnegatives/TMS-Express/releases)
-tab in GitHub.
+tab in GitHub. Please note that Windows is not officially supported and may not
+function correctly in all cases.
 
 ## macOS & Linux
 
-macOS and Linux users can donwload and install the latest TMS Express binary
-via Homebrew, using the below invocation. macOS binaries are also available
-from the [Releases](https://github.com/tornupnegatives/TMS-Express/releases)
-tab in GitHub.
+Dynamically linked binaries for macOS and Linux may be obtained using the
+Homebrew package manager. Statically linked binaries are provided in the
+[Releases](https://github.com/tornupnegatives/TMS-Express/releases) tab on
+GitHub.
 
 ```shell
 $ brew tap tornupnegatives/tap && brew install tmsexpress
 ```
 
 ## Compile from Source
-### Dependencies
-```shell
-# Ubuntu
-$ sudo apt install cmake libsndfile1-dev libsamplerate0-dev qt6-base-dev qt6-multimedia-dev libgl1-mesa-dev
 
-# macOS
+TMS Express may be compiled as either a command-line (CLI) application or a
+graphical (GUI) application, depending on the user's needs. The CLI version
+has fewer dependencies and will compile on a wider range of systems.
+
+### Installing Dependencies
+
+```shell
+# macOS #######################################################################
+
+$ brew install cmake libsamplerate libsndfile pkg-config
+
+# GUI build
 $ brew install cmake libsamplerate libsndfile pkg-config qt
+
+# Linux (Ubuntu) ##############################################################
+
+# CLI-only build
+$ sudo apt install cmake libsndfile1-dev libsamplerate0-dev pkg-config
+
+# GUI build
+$ sudo apt install cmake libsndfile1-dev libsamplerate0-dev pkg-config \
+  qt6-base-dev qt6-multimedia-dev libgl1-mesa-dev
 ```
 
 ### Compilation
 ```shell
-$ cmake -B build && cd build
-$ cmake --build . -j
+$ cmake -B build # For CLI only, pass -DTMSEXPRESS_BUILD_GUI=OFF
+$ cmake --build build -j
 ```
 
 ## Usage
