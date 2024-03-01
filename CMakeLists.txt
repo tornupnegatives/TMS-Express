@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
+# Copyright (C) 2024 Joseph Bellahcen <joeclb@icloud.com>
 
 ###############################################################################
 # CMake Configuration #########################################################
@@ -10,17 +10,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_definitions(-Wall -Wextra -Wpedantic)
 
-# Required for Qt
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
 ###############################################################################
 # Project Configuration #######################################################
 ###############################################################################
 
 project(TMS-Express)
 option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
+option(TMSEXPRESS_BUILD_GUI "Build GUI frontend" ON)
+
+if(TMSEXPRESS_BUILD_GUI)
+    # CMake provides the UIC, MOC, and RCC tools to aid in Qt app development
+    # - UIC: Converts .UI files to C/C++ headers
+    # - MOC: Produces "meta-object code" for Q_OBJECT classes
+    # - RCC: Embeds resource files into Qt application binary
+    set(CMAKE_AUTOUIC ON)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
+
+    add_compile_definitions(TMSEXPRESS_GUI=1)
+endif()
 
 ###############################################################################
 # Project Sources & Includes ##################################################
@@ -48,30 +56,40 @@ add_executable(${PROJECT_NAME}
     tms_express/bitstream/BitstreamGenerator.cpp
     tms_express/bitstream/PathUtils.cpp
 
-    # Frontend ###############################################################
-    tms_express/ui/cli/CommandLineApp.cpp
-
-    tms_express/ui/gui/audiowaveform/AudioWaveform.cpp
-    tms_express/ui/gui/audiowaveform/AudioWaveformView.cpp
-
-    tms_express/ui/gui/controlpanels/ControlPanelView.cpp
-    tms_express/ui/gui/controlpanels/ControlPanelPitchView.cpp
-    tms_express/ui/gui/controlpanels/ControlPanelLpcView.cpp
-    tms_express/ui/gui/controlpanels/ControlPanelPostView.cpp
-
-    tms_express/ui/gui/MainWindow.cpp
-
     # Main ####################################################################
+    tms_express/ui/cli/CommandLineApp.cpp
     tms_express/main.cpp
 )
+
+if(TMSEXPRESS_BUILD_GUI)
+    target_sources(${PROJECT_NAME} PRIVATE
+        tms_express/ui/gui/audiowaveform/AudioWaveform.cpp
+        tms_express/ui/gui/audiowaveform/AudioWaveformView.cpp
+        tms_express/ui/gui/controlpanels/ControlPanelView.cpp
+        tms_express/ui/gui/controlpanels/ControlPanelPitchView.cpp
+        tms_express/ui/gui/controlpanels/ControlPanelLpcView.cpp
+        tms_express/ui/gui/controlpanels/ControlPanelPostView.cpp
+        tms_express/ui/gui/MainWindow.cpp
+    )
+endif()
 
 ###############################################################################
 # Project Dependencies ########################################################
 ###############################################################################
 
-find_package(Qt6 COMPONENTS Core Gui Multimedia Widgets REQUIRED)
-find_package(PkgConfig REQUIRED)
+if(TMSEXPRESS_BUILD_GUI)
+    find_package(Qt6 COMPONENTS Core Gui Multimedia Widgets REQUIRED)
 
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        Qt::Core
+        Qt::Gui
+        Qt::Widgets
+        Qt::Multimedia
+    )
+endif()
+
+find_package(PkgConfig REQUIRED)
 pkg_check_modules(SndFile REQUIRED IMPORTED_TARGET sndfile)
 pkg_check_modules(SampleRate REQUIRED IMPORTED_TARGET samplerate)
 
@@ -79,10 +97,6 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     PkgConfig::SndFile
     PkgConfig::SampleRate
-    Qt::Core
-    Qt::Gui
-    Qt::Widgets
-    Qt::Multimedia
 )
 
 ###############################################################################
