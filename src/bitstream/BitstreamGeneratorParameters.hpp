@@ -1,7 +1,7 @@
-// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
+// Copyright (C) 2024 Joseph Bellahcen <joeclb@icloud.com>
 
-#ifndef TMS_EXPRESS_BITSTREAM_BITSTREAMGENERATORPARAMETERS_HPP_
-#define TMS_EXPRESS_BITSTREAM_BITSTREAMGENERATORPARAMETERS_HPP_
+#ifndef TMS_EXPRESS_SRC_BITSTREAM_BITSTREAMGENERATORPARAMETERS_HPP_
+#define TMS_EXPRESS_SRC_BITSTREAM_BITSTREAMGENERATORPARAMETERS_HPP_
 
 namespace tms_express {
 
@@ -53,7 +53,7 @@ struct LowerVocalTractParameters {
     int min_pitch_hz;
 };
 
-struct BitstreamGeneratorParameters {
+struct BitstreamParameters {
     EncoderStyle encoder_style;
     bool include_stop_frame;
 };
@@ -67,4 +67,4 @@ struct PostProcessorParameters {
 
 };  //  namespace tms_express
 
-#endif  //  TMS_EXPRESS_BITSTREAM_BITSTREAMGENERATORPARAMETERS_HPP_
+#endif  //  TMS_EXPRESS_SRC_BITSTREAM_BITSTREAMGENERATORPARAMETERS_HPP_
