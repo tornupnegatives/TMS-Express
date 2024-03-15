@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
+// Copyright (C) 2022-2024 Joseph Bellahcen <joeclb@icloud.com>
 
 #ifndef TMS_EXPRESS_SRC_BITSTREAM_BITSTREAMGENERATOR_HPP_
 #define TMS_EXPRESS_SRC_BITSTREAM_BITSTREAMGENERATOR_HPP_
@@ -19,7 +19,7 @@ class BitstreamGenerator {
     // Initializers ///////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
-    explicit BitstreamGenerator(std::string input, SharedParameters params);
+    explicit BitstreamGenerator(SharedParameters params);
 
     ///////////////////////////////////////////////////////////////////////////
     // Analysis ///////////////////////////////////////////////////////////////
@@ -43,13 +43,13 @@ class BitstreamGenerator {
     analyzeUpperTract(UpperVocalTractParameters params);
 
     /// @brief Categorizes each segment as voiced or unvoiced
-    /// @param coeffs LPC reflector coefficients
+    /// @param coeff_table LPC reflector coefficients
     /// @return Voicing table, with one voicing estimate per sample. A voicing
     ///         estimate of `true` corresponds to a voiced sample (vowel sound),
     ///         while an estimate of `false` corresponds to an unvoiced sample
     ///         (consonant sound)
     std::vector<bool> estimateVoicing(
-        const std::vector<std::vector<float>>& coeffs);
+        const std::vector<std::vector<float>>& coeff_table);
 
     ///////////////////////////////////////////////////////////////////////////
     // Encoding ///////////////////////////////////////////////////////////////
@@ -57,14 +57,33 @@ class BitstreamGenerator {
 
     /// @brief Post-processes frame table to apply analysis-independent edits
     /// @param frame_table Vector of Frame objects representing input audio
-    void applyPostProcessing(const std::vector<Frame>& frame_table);
+    void applyPostProcessing(std::vector<Frame>* frame_table,
+                             PostProcessorParameters params);
 
     /// @brief Converts frame table to bitstream
+    /// @param name Name representing bitstream
     /// @param frame_table Vector of Frame objects representing input audio
     /// @param params Bitstream parameters
     /// @return Serialized frame table, as a bitstream string
-    std::string serializeFrames(const std::vector<Frame>& frame_table,
+    std::string serializeFrames(const std::string& name,
+                                const std::vector<Frame>& frame_table,
                                 BitstreamParameters params);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Accessors //////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    std::string getInputPath() const;
+
+    void setInputPath(const std::string& path);
+
+ private:
+    ///////////////////////////////////////////////////////////////////////////
+    // Members ////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    std::string input_path_;
+    SharedParameters shared_params_;
 };
 
 };  // namespace tms_express

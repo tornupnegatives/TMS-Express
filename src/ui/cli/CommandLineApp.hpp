@@ -1,18 +1,19 @@
-// Copyright 2023 Joseph Bellahcen <joeclb@icloud.com>
+// Copyright (C) 2022-2024 Joseph Bellahcen <joeclb@icloud.com>
 
-#ifndef TMS_EXPRESS_USER_INTERFACES_COMMANDLINEAPP_HPP_
-#define TMS_EXPRESS_USER_INTERFACES_COMMANDLINEAPP_HPP_
+#ifndef TMS_EXPRESS_SRC_UI_CLI_COMMANDLINEAPP_HPP_
+#define TMS_EXPRESS_SRC_UI_CLI_COMMANDLINEAPP_HPP_
 
 #include <string>
 
 #include <CLI/CLI.hpp>
 
 #include "bitstream/BitstreamGenerator.hpp"
+#include "bitstream/BitstreamGeneratorParameters.hpp"
 
 namespace tms_express::ui {
 
 /// @brief Exposes command-line interface (CLI) for application
-class CommandLineApp: public CLI::App {
+class CommandLineApp : public CLI::App {
  public:
     ///////////////////////////////////////////////////////////////////////////
     // Initializers ///////////////////////////////////////////////////////////
@@ -70,8 +71,7 @@ class CommandLineApp: public CLI::App {
     float preemphasis_alpha_ = -0.9375f;
 
     /// @brief Bitstream format
-    BitstreamGenerator::EncoderStyle bitstream_format_ =
-        BitstreamGenerator::EncoderStyle::ENCODERSTYLE_ASCII;
+    EncoderStyle bitstream_format_ = EncoderStyle::ENCODER_STYLE_ASCII;
 
     /// @brief true to append stop frame to end of bitstream, false otherwise
     bool no_stop_frame_ = false;
@@ -97,4 +97,4 @@ class CommandLineApp: public CLI::App {
 
 };  // namespace tms_express::ui
 
-#endif  // TMS_EXPRESS_USER_INTERFACES_COMMANDLINEAPP_HPP_
+#endif  // TMS_EXPRESS_SRC_UI_CLI_COMMANDLINEAPP_HPP_
