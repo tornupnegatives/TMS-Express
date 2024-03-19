@@ -47,6 +47,7 @@ has fewer dependencies and will compile on a wider range of systems.
 ```shell
 # macOS #######################################################################
 
+# CLI-only build
 $ brew install cmake libsamplerate libsndfile pkg-config
 
 # GUI build
