@@ -123,7 +123,7 @@ cpmaddpackage(
     VERSION
     3.11.3
     OPTIONS
-    "JSON_MultipleHeaders OFF"
+    "JSON_Install ON"
     "JSON_SystemInclude ON")
 
 cpmaddpackage(
