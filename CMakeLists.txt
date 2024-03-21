@@ -121,10 +121,7 @@ cpmaddpackage(
     GITHUB_REPOSITORY
     nlohmann/json
     VERSION
-    3.11.3
-    OPTIONS
-    "JSON_Install ON"
-    "JSON_SystemInclude ON")
+    3.11.3)
 
 cpmaddpackage(
     samplerate
@@ -135,10 +132,8 @@ cpmaddpackage(
     OPTIONS
     "BUILD_TESTING OFF")
 
-target_link_libraries(
-    ${PROJECT_NAME}
-    PRIVATE CLI11 samplerate
-    PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME}
+                      PRIVATE CLI11 nlohmann_json samplerate)
 
 ###############################################################################
 # Artifacts & Sub-Targets #####################################################
