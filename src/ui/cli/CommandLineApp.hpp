@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "lib/CLI11.hpp"
+#include <CLI/CLI.hpp>
 
 #include "bitstream/BitstreamGenerator.hpp"
 

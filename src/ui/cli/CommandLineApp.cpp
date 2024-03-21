@@ -2,7 +2,7 @@
 
 #include "ui/cli/CommandLineApp.hpp"
 
-#include "lib/CLI11.hpp"
+#include <CLI/CLI.hpp>
 
 #include "bitstream/BitstreamGenerator.hpp"
 #include "bitstream/PathUtils.hpp"

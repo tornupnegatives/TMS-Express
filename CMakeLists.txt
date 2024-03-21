@@ -69,6 +69,10 @@ endif()
 # Project Dependencies ########################################################
 ###############################################################################
 
+# TMS Express uses QT for its graphical interface. Unfortunately, QT does not
+# play nicely with CMake's find_package tool, nor does it integrate well with
+# pkg-config. The host must ensure that QT is installed and present in the path
+
 if(TMSEXPRESS_BUILD_GUI)
     find_package(
         Qt6
@@ -86,6 +90,10 @@ if(TMSEXPRESS_BUILD_GUI)
                 Qt::Multimedia)
 endif()
 
+# TMS Express uses libsndfile for audio I/O. The host must ensure that
+# libsndfile is installed, but CMake can detect it via pkg-config. Note
+# that pkg-config must also be installed
+
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(
@@ -94,14 +102,41 @@ pkg_check_modules(
     IMPORTED_TARGET
     sndfile)
 
-pkg_check_modules(
-    SampleRate
-    REQUIRED
-    IMPORTED_TARGET
-    samplerate)
+target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile
-                                              PkgConfig::SampleRate)
+# The bulk of TMS Express' dependencies may be downloaded and configured using
+# the CMake Package Manager (CPM). An active internet connection is required
+
+include(cmake/CPM.cmake)
+
+cpmaddpackage(
+    CLI11
+    GITHUB_REPOSITORY
+    CLIUtils/CLI11
+    VERSION
+    2.4.1)
+
+cpmaddpackage(
+    json
+    GITHUB_REPOSITORY
+    nlohmann/json
+    VERSION
+    3.11.3)
+
+cpmaddpackage(
+    samplerate
+    GITHUB_REPOSITORY
+    libsndfile/libsamplerate
+    GIT_TAG
+    0.2.2
+    OPTIONS
+    "BUILD_TESTING OFF")
+
+# nlohmann's JSON library is exposed by CMake as an interface, so it is best
+# incorporated into TMS Express as a header, rather than attempting to link it
+include_directories(${json_SOURCE_DIR}/include)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE CLI11 samplerate)
 
 ###############################################################################
 # Artifacts & Sub-Targets #####################################################

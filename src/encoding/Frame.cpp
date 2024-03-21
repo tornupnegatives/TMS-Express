@@ -6,7 +6,7 @@
 #include <cmath>
 #include <vector>
 
-#include "lib/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "encoding/CodingTable.hpp"
 

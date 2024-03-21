@@ -6,7 +6,7 @@
 #include <fstream>
 #include <string>
 
-#include "lib/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "encoding/CodingTable.hpp"
 #include "encoding/Frame.hpp"
