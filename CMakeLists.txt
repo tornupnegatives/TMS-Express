@@ -132,8 +132,9 @@ cpmaddpackage(
     OPTIONS
     "BUILD_TESTING OFF")
 
-target_link_libraries(${PROJECT_NAME}
-                      PRIVATE CLI11 nlohmann_json samplerate)
+include_directories(${jnlohmann_json_SOURCE_DIR}/include)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE CLI11 nlohmann_json samplerate)
 
 ###############################################################################
 # Artifacts & Sub-Targets #####################################################
