@@ -48,19 +48,19 @@ has fewer dependencies and will compile on a wider range of systems.
 # macOS #######################################################################
 
 # CLI-only build
-$ brew install cmake libsamplerate libsndfile pkg-config
+$ brew install cmake libsndfile pkg-config
 
 # GUI build
-$ brew install cmake libsamplerate libsndfile pkg-config qt
+$ brew install cmake libsndfile pkg-config qt
 
 # Linux (Ubuntu) ##############################################################
 
 # CLI-only build
-$ sudo apt install cmake libsndfile1-dev libsamplerate0-dev pkg-config
+$ sudo apt install cmake libsndfile1-dev pkg-config
 
 # GUI build
-$ sudo apt install cmake libsndfile1-dev libsamplerate0-dev pkg-config \
-  qt6-base-dev qt6-multimedia-dev libgl1-mesa-dev
+$ sudo apt install cmake libsndfile1-dev pkg-config qt6-base-dev \
+   qt6-multimedia-dev libgl1-mesa-dev
 ```
 
 ### Compilation
