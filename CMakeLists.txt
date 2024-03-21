@@ -117,7 +117,7 @@ cpmaddpackage(
     2.4.1)
 
 cpmaddpackage(
-    nlohmann_json
+    json
     GITHUB_REPOSITORY
     nlohmann/json
     VERSION
@@ -132,9 +132,8 @@ cpmaddpackage(
     OPTIONS
     "BUILD_TESTING OFF")
 
-include_directories(${jnlohmann_json_SOURCE_DIR}/include)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE CLI11 nlohmann_json samplerate)
+include_directories(${json_SOURCE_DIR}/include)
+target_link_libraries(${PROJECT_NAME} PRIVATE CLI11 samplerate)
 
 ###############################################################################
 # Artifacts & Sub-Targets #####################################################
