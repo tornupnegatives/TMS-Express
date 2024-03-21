@@ -132,7 +132,10 @@ cpmaddpackage(
     OPTIONS
     "BUILD_TESTING OFF")
 
+# nlohmann's JSON library is exposed by CMake as an interface, so it is best
+# incorporated into TMS Express as a header, rather than attempting to link it
 include_directories(${json_SOURCE_DIR}/include)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE CLI11 samplerate)
 
 ###############################################################################
