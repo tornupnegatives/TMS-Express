@@ -102,7 +102,7 @@ pkg_check_modules(
     IMPORTED_TARGET
     sndfile)
 
-target_link_libraries(${PROJECT_NAME} PkgConfig::SndFile)
+target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile)
 
 # The bulk of TMS Express' dependencies may be downloaded and configured using
 # the CMake Package Manager (CPM). An active internet connection is required
@@ -135,11 +135,8 @@ cpmaddpackage(
     OPTIONS
     "BUILD_TESTING OFF")
 
-target_link_libraries(
-    ${PROJECT_NAME}
-    CLI11
-    nlohmann_json::nlohmann_json
-    samplerate)
+target_link_libraries(${PROJECT_NAME}
+                      PRIVATE CLI11 nlohmann_json::nlohmann_json samplerate)
 
 ###############################################################################
 # Artifacts & Sub-Targets #####################################################
