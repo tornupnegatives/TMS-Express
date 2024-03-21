@@ -135,8 +135,10 @@ cpmaddpackage(
     OPTIONS
     "BUILD_TESTING OFF")
 
-target_link_libraries(${PROJECT_NAME}
-                      PRIVATE CLI11 nlohmann_json::nlohmann_json samplerate)
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE CLI11 samplerate
+    PUBLIC nlohmann_json::nlohmann_json)
 
 ###############################################################################
 # Artifacts & Sub-Targets #####################################################
