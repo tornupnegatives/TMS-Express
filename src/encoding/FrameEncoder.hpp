@@ -20,16 +20,11 @@ class FrameEncoder {
     ///////////////////////////////////////////////////////////////////////////
 
     /// @brief Creates a new Frame Encoder with empty Frame buffer
-    /// @param include_hex_prefix true to include '0x' in front of hex bytes,
-    ///                             false otherwise
-    explicit FrameEncoder(bool include_hex_prefix = false);
+    FrameEncoder();
 
     /// @brief Creates a new Frame Encoder, starting with given Frame buffer
     /// @param frames Vector of Frames to encode
-    /// @param include_hex_prefix true to include '0x' in front of hex bytes,
-    ///                             false otherwise
-    explicit FrameEncoder(const std::vector<Frame> &frames,
-        bool include_hex_prefix = false);
+    explicit FrameEncoder(const std::vector<Frame> &frames);
 
     ///////////////////////////////////////////////////////////////////////////
     // Frame Appenders ////////////////////////////////////////////////////////
@@ -90,10 +85,8 @@ class FrameEncoder {
 
     /// @brief Converts binary string to ASCII hex byte
     /// @param bin_str Binary string corresponding to byte
-    /// @param include_hex_prefix true to include '0x' prefix, false otherwise
     /// @return ASCII hex representation of binary string
-    static std::string binToHex(const std::string &bin_str,
-        bool include_hex_prefix);
+    static std::string binToHex(const std::string &bin_str);
 
     /// @brief Reverses hex bytes in bitstream, effectively converting between
     ///         host representation and TMS6100 Voice Synthesis Memory format
@@ -139,9 +132,6 @@ class FrameEncoder {
 
     /// @brief Frame table
     std::vector<Frame> frames_;
-
-    /// @brief true to prefix hex bytes with '0x', false otherwise
-    bool include_hex_prefix_;
 };
 
 };  // namespace tms_express

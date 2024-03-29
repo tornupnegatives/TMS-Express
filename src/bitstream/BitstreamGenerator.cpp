@@ -143,7 +143,7 @@ std::string BitstreamGenerator::serializeFrames(
     const std::string& name, const std::vector<Frame>& frame_table,
     BitstreamParameters params) {
     auto encoder =
-        FrameEncoder(frame_table, params.encoder_style != ENCODER_STYLE_ASCII);
+        FrameEncoder(frame_table);
     std::string bitstream;
 
     switch (params.encoder_style) {

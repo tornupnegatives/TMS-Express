@@ -17,18 +17,14 @@ namespace tms_express {
 // Initializers ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-FrameEncoder::FrameEncoder(bool include_hex_prefix) {
-    include_hex_prefix_ = include_hex_prefix;
+FrameEncoder::FrameEncoder() {
     frames_ = std::vector<Frame>();
     binary_bitstream_ = std::vector<std::string>(1, "");
 }
 
-FrameEncoder::FrameEncoder(const std::vector<Frame> &frames,
-    bool include_hex_prefix) {
-    //
+FrameEncoder::FrameEncoder(const std::vector<Frame> &frames) {
     binary_bitstream_ = std::vector<std::string>(1, "");
     frames_ = std::vector<Frame>();
-    include_hex_prefix_ = include_hex_prefix;
 
     append(frames);
 }
@@ -162,7 +158,7 @@ std::string FrameEncoder::toHex(bool shouldAppendStopFrame) {
     // Reverse each byte and convert to hex
     for (auto byte : binary_bitstream_) {
         std::reverse(byte.begin(), byte.end());
-        hex_stream += binToHex(byte, include_hex_prefix_) + byte_delimiter;
+        hex_stream += binToHex(byte) + byte_delimiter;
     }
 
     // Remove final trailing comma
@@ -187,7 +183,7 @@ std::vector<std::byte> FrameEncoder::toBytes(bool append_stop_frame) {
     for (auto byte : binary_bitstream_) {
         std::reverse(byte.begin(), byte.end());
         auto data = std::byte(
-            std::stoul(binToHex(byte, include_hex_prefix_), nullptr, 16));
+            std::stoul(binToHex(byte), nullptr, 16));
         bytes.push_back(data);
     }
 
@@ -216,20 +212,12 @@ std::vector<Frame> FrameEncoder::getFrameTable() const {
 // Static Helpers /////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-std::string FrameEncoder::binToHex(const std::string &bin_str,
-    bool include_hex_prefix) {
-    //
+std::string FrameEncoder::binToHex(const std::string &bin_str) {
     // TODO(Joseph Bellahcen): Handle exception
     int value = std::stoi(bin_str, nullptr, 2);
-
     char hex_byte[6];
 
-    if (include_hex_prefix) {
-        snprintf(hex_byte, sizeof(hex_byte), "0x%02x", value);
-    } else {
-        snprintf(hex_byte, sizeof(hex_byte), "%02x", value);
-    }
-
+    snprintf(hex_byte, sizeof(hex_byte), "0x%02x", value);
     return {hex_byte};
 }
 
