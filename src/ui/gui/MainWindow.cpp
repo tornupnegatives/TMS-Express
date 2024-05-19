@@ -3,13 +3,13 @@
 #include "ui/gui/MainWindow.hpp"
 
 #include <QAction>
-#include <QMessageBox>
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QMainWindow>
 #include <QMediaPlayer>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QVBoxLayout>
 
 #include <QtMultimedia/QAudioOutput>
@@ -18,14 +18,16 @@
 #include <iostream>
 #include <vector>
 
+#include "bitstream/BitstreamGeneratorParameters.hpp"
 #include "lib/CRC.h"
 
+#include "analysis/Autocorrelation.hpp"
 #include "audio/AudioBuffer.hpp"
 #include "encoding/FramePostprocessor.hpp"
-#include "analysis/Autocorrelation.hpp"
+#include "ui/Application.hpp"
 #include "ui/gui/audiowaveform/AudioWaveformView.hpp"
-#include "ui/gui/controlpanels/ControlPanelPitchView.hpp"
 #include "ui/gui/controlpanels/ControlPanelLpcView.hpp"
+#include "ui/gui/controlpanels/ControlPanelPitchView.hpp"
 #include "ui/gui/controlpanels/ControlPanelPostView.hpp"
 
 namespace tms_express::ui {
@@ -34,12 +36,13 @@ namespace tms_express::ui {
 // Initializers ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent), tms_express::Application({SAMPLE_RATE_8KHZ, 25.0}) {
     // Set the minimum requirements for window dimensions and margins
     setMinimumSize(TE_WINDOW_MIN_WIDTH, TE_WINDOW_MIN_HEIGHT);
 
-    setContentsMargins(TE_WINDOW_MARGINS, TE_WINDOW_MARGINS,
-        TE_WINDOW_MARGINS, TE_WINDOW_MARGINS);
+    setContentsMargins(TE_WINDOW_MARGINS, TE_WINDOW_MARGINS, TE_WINDOW_MARGINS,
+                       TE_WINDOW_MARGINS);
 
     // The main widget will hold all contents of the Main Window
     main_widget_ = new QWidget(this);
@@ -80,10 +83,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     // The waveforms may be
     input_waveform_->setSizePolicy(QSizePolicy::Expanding,
-        QSizePolicy::Expanding);
+                                   QSizePolicy::Expanding);
 
     lpc_waveform_->setSizePolicy(QSizePolicy::Expanding,
-        QSizePolicy::Expanding);
+                                 QSizePolicy::Expanding);
 
     main_layout_->addWidget(input_waveform_);
     main_layout_->addWidget(lpc_waveform_);
@@ -130,11 +133,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void MainWindow::onOpenFile() {
-    auto filepath = QFileDialog::getOpenFileName(this,
-        "Open file",
-        QDir::homePath(),
-        "Audio Files (*.wav *.aif *.aiff *.raw *.wav *.caf *.flac);;" \
-        "ASCII Bitstream (*.lpc);;" \
+    auto filepath = QFileDialog::getOpenFileName(
+        this, "Open file", QDir::homePath(),
+        "Audio Files (*.wav *.aif *.aiff *.raw *.wav *.caf *.flac);;"
+        "ASCII Bitstream (*.lpc);;"
         "Binary Bitstream (*.bin)");
 
     // Do nothing if user cancels request
@@ -160,9 +162,9 @@ void MainWindow::onOpenFile() {
         // Enable gain normalization by default
         // ui->postGainNormalizeEnable->setChecked(true);
 
-        auto input_buffer_ptr = AudioBuffer::Create(
-            filepath.toStdString(), 8000,
-            lpc_control_->getAnalysisWindowWidth());
+        auto input_buffer_ptr =
+            AudioBuffer::Create(filepath.toStdString(), 8000,
+                                lpc_control_->getAnalysisWindowWidth());
 
         if (input_buffer_ptr == nullptr) {
             QMessageBox::critical(this, "Error", "Could not read audio file");
@@ -172,7 +174,7 @@ void MainWindow::onOpenFile() {
         input_buffer_ = input_buffer_ptr->copy();
         lpc_buffer_ = input_buffer_ptr->copy();
 
-        performPitchAnalysis();
+        analyzeLowerVocalTract();
         performLpcAnalysis();
         frame_postprocessor_ = FramePostprocessor(&frame_table_);
         performPostProc();
@@ -198,11 +200,10 @@ void MainWindow::onOpenFile() {
 }
 
 void MainWindow::onSaveBitstream() {
-    auto filepath = QFileDialog::getSaveFileName(this,
-        "Save bitstream",
-        QDir::homePath(),
-        "ASCII Bitstream (*.lpc);;" \
-        "Binary Bitstream (*.bin)");
+    auto filepath =
+        QFileDialog::getSaveFileName(this, "Save bitstream", QDir::homePath(),
+                                     "ASCII Bitstream (*.lpc);;"
+                                     "Binary Bitstream (*.bin)");
 
     if (filepath.isNull()) {
         qDebug() << "Save bitstream canceled";
@@ -215,9 +216,8 @@ void MainWindow::onSaveBitstream() {
 /// Export synthesized bitstream to disk
 void MainWindow::onExportAudio() {
     // Display file picker
-    auto filepath = QFileDialog::getSaveFileName(this,
-        "Export audio file",
-        QDir::homePath(),
+    auto filepath = QFileDialog::getSaveFileName(
+        this, "Export audio file", QDir::homePath(),
         "Audio Files (*.wav *.aif *.aiff *.raw *.wav *.caf *.flac)");
 
     if (filepath.isNull()) {
@@ -225,9 +225,9 @@ void MainWindow::onExportAudio() {
         return;
     }
 
-    synthesizer_.render(synthesizer_.getSamples(),
-        filepath.toStdString(), lpc_buffer_.getSampleRateHz(),
-        lpc_buffer_.getWindowWidthMs());
+    synthesizer_.render(synthesizer_.getSamples(), filepath.toStdString(),
+                        lpc_buffer_.getSampleRateHz(),
+                        lpc_buffer_.getWindowWidthMs());
 }
 
 void MainWindow::onInputAudioPlay() {
@@ -273,12 +273,12 @@ void MainWindow::onLpcAudioPlay() {
     // buffer checksum alone
     char filename[35];
 
-    uint checksum = (!lpc_buffer_.empty()) ?
-        samplesChecksum(lpc_buffer_.getSamples()) :
-        samplesChecksum(synthesizer_.getSamples());
+    uint checksum = (!lpc_buffer_.empty())
+                        ? samplesChecksum(lpc_buffer_.getSamples())
+                        : samplesChecksum(synthesizer_.getSamples());
 
     snprintf(filename, sizeof(filename), "tmsexpress_lpc_render_%x.wav",
-        checksum);
+             checksum);
 
     // Only render audio if this particular buffer does not exist
     auto temp_dir = std::filesystem::temp_directory_path();
@@ -286,9 +286,9 @@ void MainWindow::onLpcAudioPlay() {
 
     qDebug() << "Playing " << temp_dir.c_str();
 
-    synthesizer_.render(synthesizer_.getSamples(),
-        temp_dir, lpc_buffer_.getSampleRateHz(),
-        lpc_buffer_.getWindowWidthMs());
+    synthesizer_.render(synthesizer_.getSamples(), temp_dir,
+                        lpc_buffer_.getSampleRateHz(),
+                        lpc_buffer_.getWindowWidthMs());
 
     // Setup player and play
     player->setAudioOutput(audio_output_);
@@ -301,7 +301,7 @@ void MainWindow::onPitchParamEdit() {
     configureUiState();
 
     if (!input_buffer_.empty()) {
-        performPitchAnalysis();
+        analyzeLowerVocalTract();
         performLpcAnalysis();
 
         drawPlots();
@@ -335,31 +335,30 @@ void MainWindow::onPostProcEdit() {
 
 void MainWindow::configureUiSlots() {
     // Menu bar
-    connect(action_open_, &QAction::triggered, this,
-        &MainWindow::onOpenFile);
+    connect(action_open_, &QAction::triggered, this, &MainWindow::onOpenFile);
 
     connect(action_save_, &QAction::triggered, this,
-        &MainWindow::onSaveBitstream);
+            &MainWindow::onSaveBitstream);
 
     connect(action_export_, &QAction::triggered, this,
-        &MainWindow::onExportAudio);
+            &MainWindow::onExportAudio);
 
     // Control panels
     connect(pitch_control_, &ControlPanelPitchView::stateChangeSignal, this,
-        &MainWindow::onPitchParamEdit);
+            &MainWindow::onPitchParamEdit);
 
     connect(lpc_control_, &ControlPanelLpcView::stateChangeSignal, this,
-        &MainWindow::onLpcParamEdit);
+            &MainWindow::onLpcParamEdit);
 
     connect(post_control_, &ControlPanelPostView::stateChangeSignal, this,
-        &MainWindow::onPostProcEdit);
+            &MainWindow::onPostProcEdit);
 
     // Play buttons
     connect(input_waveform_, &AudioWaveformView::signalPlayButtonPressed, this,
-        &MainWindow::onInputAudioPlay);
+            &MainWindow::onInputAudioPlay);
 
     connect(lpc_waveform_, &AudioWaveformView::signalPlayButtonPressed, this,
-        &MainWindow::onLpcAudioPlay);
+            &MainWindow::onLpcAudioPlay);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -393,8 +392,8 @@ void MainWindow::drawPlots() {
         const auto max_pitch = static_cast<float>(pitch_estimator_.getMaxFrq());
 
         for (int i = 0; i < static_cast<int>(frame_table_.size()); i++) {
-            auto quantized_pitch = static_cast<float>(
-                frame_table_[i].quantizedPitch());
+            auto quantized_pitch =
+                static_cast<float>(frame_table_[i].quantizedPitch());
 
             tmp_pitch_curve_table[i] =
                 (TE_AUDIO_SAMPLE_RATE / quantized_pitch) / max_pitch;
@@ -411,38 +410,21 @@ void MainWindow::drawPlots() {
 // LPC Routines ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 
-void MainWindow::performPitchAnalysis() {
-    // Clear tables
+void MainWindow::analyzeLowerVocalTract() {
     input_buffer_.reset();
-    pitch_period_table_.clear();
     pitch_curve_table_.clear();
 
-    // Pre-process
-    if (pitch_control_->getHpfEnabled()) {
-        filter_.applyHighpass(input_buffer_, pitch_control_->getHpfCutoff());
-    }
+    auto samples = input_buffer_.getSamples();
+    pitch_period_table_ = Application::analyzeLowerVocalTract(
+        {pitch_control_->getHpfCutoff(), pitch_control_->getLpfCutoff(),
+         pitch_control_->getPreEmphasisAlpha(),
+         pitch_control_->getMaxPitchFrq(), pitch_control_->getMinPitchFrq()},
+        samples);
 
-    if (pitch_control_->getLpfEnabled()) {
-        filter_.applyLowpass(input_buffer_, pitch_control_->getLpfCutoff());
-    }
-
-    if (pitch_control_->getPreEmphasisEnabled()) {
-        filter_.applyPreEmphasis(input_buffer_,
-            pitch_control_->getPreEmphasisAlpha());
-    }
-
-    pitch_estimator_.setMaxPeriod(pitch_control_->getMinPitchFrq());
-    pitch_estimator_.setMinPeriod(pitch_control_->getMaxPitchFrq());
-
-    const auto max_pitch = static_cast<float>(pitch_estimator_.getMaxFrq());
-
-    for (const auto &segment : input_buffer_.getAllSegments()) {
-        auto acf = tms_express::Autocorrelation(segment);
-        auto period = pitch_estimator_.estimatePeriod(acf);
-        auto frq = pitch_estimator_.estimateFrequency(acf) / max_pitch;
-
-        pitch_period_table_.push_back(period);
-        pitch_curve_table_.push_back(frq);
+    for (auto period : pitch_period_table_) {
+        auto frequency = static_cast<float>(shared_params_.sample_rate_hz) /
+                         static_cast<float>(period);
+        pitch_curve_table_.push_back(frequency);
     }
 }
 
@@ -459,7 +441,7 @@ void MainWindow::performLpcAnalysis() {
         lpc_buffer_.setWindowWidthMs(lpc_control_->getAnalysisWindowWidth());
 
         qDebug() << "Adjusting window width for pitch and LPC buffers";
-        performPitchAnalysis();
+        analyzeLowerVocalTract();
     }
 
     // Pre-process
@@ -477,7 +459,7 @@ void MainWindow::performLpcAnalysis() {
         qDebug() << "PEF";
         qDebug() << (lpc_buffer_.empty());
         filter_.applyPreEmphasis(lpc_buffer_,
-            lpc_control_->getPreEmphasisAlpha());
+                                 lpc_control_->getPreEmphasisAlpha());
     }
 
     for (int i = 0; i < lpc_buffer_.getNSegments(); i++) {
@@ -530,17 +512,17 @@ void MainWindow::performPostProc() {
     synthesizer_.synthesize(frame_table_);
 }
 
-void MainWindow::importBitstream(const std::string &path) {
+void MainWindow::importBitstream(const std::string& path) {
     // Determine file extension
     auto filepath = QString::fromStdString(path);
     auto frame_encoder = FrameEncoder();
 
     if (filepath.endsWith(".lpc")) {
         try {
-            frame_encoder.importASCIIFromFile(path);
+            frame_table_ = Application::importBitstream(path);
         } catch (...) {
-            QMessageBox::critical(this, "Error",
-                "Could not read bitstream. File may be corrupt");
+            QMessageBox::critical(
+                this, "Error", "Could not read bitstream. File may be corrupt");
             return;
         }
     } else {
@@ -552,23 +534,19 @@ void MainWindow::importBitstream(const std::string &path) {
 
 void MainWindow::exportBitstream(const std::string& path) {
     auto filepath = QString::fromStdString(path);
-    auto frame_encoder = FrameEncoder(frame_table_, true);
 
     if (filepath.endsWith(".lpc")) {
-        auto hex = frame_encoder.toHex();
-
-        std::ofstream lpcOut;
-        lpcOut.open(path);
-        lpcOut << hex;
-        lpcOut.close();
+        BitstreamParameters params = {ENCODER_STYLE_ASCII, true};
+        Application::exportBitstream(frame_table_, params,
+                                     filepath.toStdString());
 
     } else if (filepath.endsWith(".bin")) {
+        auto frame_encoder = FrameEncoder(frame_table_);
         auto bin = frame_encoder.toBytes();
 
         std::ofstream binOut(path, std::ios::out | std::ios::binary);
-        binOut.write(
-            reinterpret_cast<char*>(bin.data()),
-            static_cast<int>(bin.size()));
+        binOut.write(reinterpret_cast<char*>(bin.data()),
+                     static_cast<int>(bin.size()));
     }
 }
 
@@ -584,10 +562,10 @@ int MainWindow::samplesChecksum(std::vector<float> samples) {
 
     checksum_buffer[buffer_size] =
         static_cast<char>(lpc_control_->getPreEmphasisAlpha() +
-        pitch_control_->getPreEmphasisAlpha());
+                          pitch_control_->getPreEmphasisAlpha());
 
-    auto checksum = CRC::Calculate(checksum_buffer, sizeof(float),
-        CRC::CRC_32());
+    auto checksum =
+        CRC::Calculate(checksum_buffer, sizeof(float), CRC::CRC_32());
 
     delete[] checksum_buffer;
     return checksum;

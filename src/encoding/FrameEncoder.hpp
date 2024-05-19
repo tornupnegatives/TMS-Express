@@ -45,7 +45,7 @@ class FrameEncoder {
     /// @brief Imports ASCII bitstream from disk
     /// @param path Path to ASCII bitstream file
     /// @return Number of Frames imported from file
-    size_t importASCIIFromFile(const std::string &path);
+    [[deprecated]] size_t importASCIIFromFile(const std::string &path);
 
     /// @brief Imports ASCII bitstream from string
     /// @param flat_bitstream String of comma-delimited ASCII hex bytes

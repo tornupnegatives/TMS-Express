@@ -3,6 +3,8 @@
 #ifndef TMS_EXPRESS_USER_INTERFACES_MAINWINDOW_HPP_
 #define TMS_EXPRESS_USER_INTERFACES_MAINWINDOW_HPP_
 
+#include "ui/Application.hpp"
+
 #include <QAction>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -38,7 +40,7 @@
 namespace tms_express::ui {
 
 /// @brief GUI frontend for application
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow, tms_express::Application {
     Q_OBJECT
 
  public:
@@ -102,7 +104,7 @@ class MainWindow : public QMainWindow {
 
     /// @brief Applies pre-processing to audio buffer and perform pitch analysis
     ///         to populate pitch curve table
-    void performPitchAnalysis();
+    void analyzeLowerVocalTract();
 
     /// @brief Applies pre-processing to LPC buffer and perform LPC analysis
     ///         to populate Frame table

@@ -7,6 +7,7 @@
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions(-Wall -Wextra -Wpedantic)
 
 ###############################################################################
@@ -50,7 +51,11 @@ add_executable(
     src/encoding/Synthesizer.cpp
     src/bitstream/BitstreamGenerator.cpp
     src/bitstream/PathUtils.cpp
+    src/ui/Application.cpp
+    src/ui/cli/EncoderCommand.cpp
+    src/ui/cli/SynthesizerCommand.cpp
     src/ui/cli/CommandLineApp.cpp
+    src/ui/cli/GuiCommand.cpp
     src/main.cpp)
 
 if(TMSEXPRESS_BUILD_GUI)
