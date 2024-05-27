@@ -19,15 +19,17 @@ namespace tms_express::ui {
 // Interface //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-void EncoderCommand::setup(CLI::App* app) {
+void EncoderCommand::setup(CLI::App* parent,
+                           const std::shared_ptr<Application>& app) {
     auto* sub =
-        app->add_subcommand("encode", "Converts audio file to bitstream");
+        parent->add_subcommand("encode", "Converts audio file to bitstream");
 
     // Parameter allocation ///////////////////////////////////////////////////
 
+    auto* shared_params = app->getSharedParams();
+
     auto input_path = std::make_shared<std::string>();
     auto output_path = std::make_shared<std::string>();
-    auto shared_params = std::make_shared<SharedParameters>();
     auto upper_params = std::make_shared<UpperVocalTractParameters>();
     auto lower_params = std::make_shared<LowerVocalTractParameters>();
     auto post_params = std::make_shared<PostProcessorParameters>();
@@ -120,16 +122,16 @@ void EncoderCommand::setup(CLI::App* app) {
 
     // Callback ///////////////////////////////////////////////////////////////
 
-    sub->callback([input_path, output_path, shared_params, upper_params,
-                   lower_params, post_params, bitstream_params]() {
-        run(*input_path, *output_path, *shared_params, *upper_params,
-            *lower_params, *post_params, *bitstream_params);
+    sub->callback([app, input_path, output_path, upper_params, lower_params,
+                   post_params, bitstream_params]() {
+        run(app, *input_path, *output_path, *upper_params, *lower_params,
+            *post_params, *bitstream_params);
     });
 }
 
-int EncoderCommand::run(const std::string& input_path,
+int EncoderCommand::run(const std::shared_ptr<Application>& app,
+                        const std::string& input_path,
                         const std::string& output_path,
-                        const SharedParameters& shared_params,
                         const UpperVocalTractParameters& upper_params,
                         const LowerVocalTractParameters& lower_params,
                         const PostProcessorParameters& post_params,
@@ -157,31 +159,30 @@ int EncoderCommand::run(const std::string& input_path,
 
     const std::string logger_id = "[encoder:" + audio_input + "]:\t";
 
-    auto buffer = AudioBuffer::Create(audio_input, shared_params.sample_rate_hz,
-                                      shared_params.window_width_ms);
+    auto buffer =
+        AudioBuffer::Create(audio_input, app->getSharedParams()->sample_rate_hz,
+                            app->getSharedParams()->window_width_ms);
 
     std::cout << logger_id << "Loaded " << buffer->getSamples().size()
               << " samples"
-              << "(" << buffer->getSampleRateHz() << " Hz)" << std::endl;
-
-    Application app(shared_params);
+              << " (" << buffer->getSampleRateHz() << " Hz)" << std::endl;
 
     auto pitch_table =
-        app.analyzeLowerVocalTract(lower_params, buffer->getSamples());
+        app->analyzeLowerVocalTract(lower_params, buffer->getSamples());
     auto [coeff_table, gain_table] =
-        app.analyzeUpperVocalTract(upper_params, buffer->getSamples());
-    auto voicing_table = app.estimateVoicing(coeff_table);
+        app->analyzeUpperVocalTract(upper_params, buffer->getSamples());
+    auto voicing_table = app->estimateVoicing(coeff_table);
 
-    auto frame_table = app.buildFrameTable(pitch_table, coeff_table, gain_table,
-                                           voicing_table);
+    auto frame_table = app->buildFrameTable(pitch_table, coeff_table,
+                                            gain_table, voicing_table);
 
-    app.postProcessFrameTable(&frame_table, post_params);
+    app->postProcessFrameTable(&frame_table, post_params);
 
     std::cout << logger_id << "Packed " << frame_table.size() << " frames"
               << std::endl;
 
     auto bitstream_path = output.getPaths().at(0);
-    app.exportBitstream(frame_table, bitstream_params, bitstream_path);
+    app->exportBitstream(frame_table, bitstream_params, bitstream_path);
     return 0;
 }
 

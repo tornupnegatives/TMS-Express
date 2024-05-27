@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Joseph Bellahcen <joeclb@icloud.com>
+// Copyright (C) 2022-2024 Joseph Bellahcen <joeclb@icloud.com>
 
 #ifndef TMS_EXPRESS_SRC_BITSTREAM_BITSTREAMGENERATORPARAMETERS_HPP_
 #define TMS_EXPRESS_SRC_BITSTREAM_BITSTREAMGENERATORPARAMETERS_HPP_
@@ -23,7 +23,8 @@ enum EncoderStyle {
     /// @brief Bitstream as JSON file
     ENCODER_STYLE_JSON,
 
-    //ENCODER_STYLE_BIN
+    // TODO(Joseph Bellahcen) Re-enable BIN encoding
+    // ENCODER_STYLE_BIN
 };
 
 /// @brief Supported LPC model order (number of coefficients)
@@ -86,11 +87,13 @@ struct LowerVocalTractParameters {
     int min_pitch_hz = kDefaultMinPitchHz;
 };
 
+/// @brief Defines bitstream format parameters
 struct BitstreamParameters {
     EncoderStyle encoder_style = kDefaultStyle;
     bool include_stop_frame = kDefaultIncludeStopFrame;
 };
 
+/// @brief Defines bitstream/frame-table post-processing parameters
 struct PostProcessorParameters {
     int gain_shift = kDefaultGainShift;
     bool normalize_gain = kDefaultNormalizeGain;

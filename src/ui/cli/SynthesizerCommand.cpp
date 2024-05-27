@@ -19,15 +19,17 @@ namespace tms_express::ui {
 // Interface //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-void SynthesizerCommand::setup(CLI::App* app) {
+void SynthesizerCommand::setup(CLI::App* parent,
+                               const std::shared_ptr<Application>& app) {
     auto* sub =
-        app->add_subcommand("synth", "Converts bitstream to audio file");
+        parent->add_subcommand("synth", "Converts bitstream to audio file");
 
     // Parameter allocation ///////////////////////////////////////////////////
 
+    auto* shared_params = app->getSharedParams();
+
     auto input_path = std::make_shared<std::string>();
     auto output_path = std::make_shared<std::string>();
-    auto shared_params = std::make_shared<SharedParameters>();
     auto upper_params = std::make_shared<UpperVocalTractParameters>();
     auto lower_params = std::make_shared<LowerVocalTractParameters>();
     auto post_params = std::make_shared<PostProcessorParameters>();
@@ -74,12 +76,13 @@ void SynthesizerCommand::setup(CLI::App* app) {
 
     // Callback ///////////////////////////////////////////////////////////////
 
-    sub->callback([input_path, output_path, post_params]() {
-        run(*input_path, *output_path, *post_params);
+    sub->callback([app, input_path, output_path, post_params]() {
+        run(app, *input_path, *output_path, *post_params);
     });
 }
 
-int SynthesizerCommand::run(const std::string& input_path,
+int SynthesizerCommand::run(const std::shared_ptr<Application>& app,
+                            const std::string& input_path,
                             const std::string& output_path,
                             const PostProcessorParameters& post_params) {
     // Open input and output files for inspection
@@ -89,10 +92,9 @@ int SynthesizerCommand::run(const std::string& input_path,
     auto bitstream_path = input.getPaths().at(0);
     const std::string logger_id = "[synth:" + bitstream_path + "]:\t";
 
-    Application app({});
-    auto frame_table = app.importBitstream(bitstream_path);
-    app.postProcessFrameTable(&frame_table, post_params);
-    auto samples = app.synthesizeFrameTable(frame_table);
+    auto frame_table = app->importBitstream(bitstream_path);
+    app->postProcessFrameTable(&frame_table, post_params);
+    auto samples = app->synthesizeFrameTable(frame_table);
     std::cout << logger_id << "Loaded " << samples.size() << " samples from "
               << frame_table.size() << " frames" << std::endl;
 

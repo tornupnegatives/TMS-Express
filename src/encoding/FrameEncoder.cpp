@@ -1,10 +1,11 @@
-// Copyright (C) 2023 Joseph Bellahcen <joeclb@icloud.com>
+// Copyright (C) 2022-2024 Joseph Bellahcen <joeclb@icloud.com>
 
 #include "encoding/FrameEncoder.hpp"
 
 #include <bitset>
 #include <fstream>
 #include <string>
+#include <utility>
 
 #include <nlohmann/json.hpp>
 
@@ -22,7 +23,7 @@ FrameEncoder::FrameEncoder() {
     binary_bitstream_ = std::vector<std::string>(1, "");
 }
 
-FrameEncoder::FrameEncoder(const std::vector<Frame> &frames) {
+FrameEncoder::FrameEncoder(const std::vector<Frame>& frames) {
     binary_bitstream_ = std::vector<std::string>(1, "");
     frames_ = std::vector<Frame>();
 
@@ -40,7 +41,7 @@ void FrameEncoder::append(Frame frame) {
     // The binary representation of a Frame is seldom cleanly divisible into
     // bytes. As such, the first few bits of a Frame may be packed into the
     // empty space of an existing vector element, or the last few bits may
-    // partially ccupy a new vector element
+    // partially occupy a new vector element
     //
     // Check to see if the previous byte is incomplete (contains less than 8
     // characters), and fill it if so
@@ -61,8 +62,8 @@ void FrameEncoder::append(Frame frame) {
     }
 }
 
-void FrameEncoder::append(const std::vector<Frame> &frames) {
-    for (const auto &frame : frames) {
+void FrameEncoder::append(const std::vector<Frame>& frames) {
+    for (const auto& frame : frames) {
         append(frame);
     }
 }
@@ -71,29 +72,30 @@ void FrameEncoder::append(const std::vector<Frame> &frames) {
 // (De-)Serialization ////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-size_t FrameEncoder::importASCIIFromFile(const std::string &path) {
+size_t FrameEncoder::importASCIIFromFile(const std::string& path) {
     // Flatten bitstream and remove delimiter
     std::ifstream file(path);
     std::string flat = std::string((std::istreambuf_iterator<char>(file)),
-                            std::istreambuf_iterator<char>());
+                                   std::istreambuf_iterator<char>());
 
     return importASCIIFromString(flat);
 }
 
 size_t FrameEncoder::importASCIIFromString(std::string flat_bitstream) {
     // Copy reversed-hex bytes into binary buffer
-    std::string buffer = reverseHexBytes(flat_bitstream);
+    std::string buffer = reverseHexBytes(std::move(flat_bitstream));
 
     // Parse frames
     frames_.clear();
-    const auto blank_frame = Frame(0, false, 0.0f, std::vector<float>(10, 0.f));
+    const auto blank_frame =
+        Frame(0, false, 0.0F, std::vector<float>(10, 0.0F));
 
     while (!buffer.empty()) {
         // TODO(Joseph Bellahcen): Handle exception
         auto energy_idx = std::stoul(buffer.substr(0, 4), nullptr, 2);
 
         // Stop frame
-        if (energy_idx == 0xf) {
+        if (energy_idx == 0xF) {
             break;
         }
 
@@ -133,10 +135,8 @@ size_t FrameEncoder::importASCIIFromString(std::string flat_bitstream) {
         }
 
         append(
-            Frame(pitch,
-            pitch != 0x0,
-            gain,
-            std::vector<float>{k1, k2, k3, k4, k5, k6, k7, k8, k9, k10}));
+            Frame(pitch, pitch != 0x0, gain,
+                  std::vector<float>{k1, k2, k3, k4, k5, k6, k7, k8, k9, k10}));
     }
 
     return frames_.size();
@@ -182,8 +182,7 @@ std::vector<std::byte> FrameEncoder::toBytes(bool append_stop_frame) {
     // Reverse each byte and convert to hex
     for (auto byte : binary_bitstream_) {
         std::reverse(byte.begin(), byte.end());
-        auto data = std::byte(
-            std::stoul(binToHex(byte), nullptr, 16));
+        auto data = std::byte(std::stoul(binToHex(byte), nullptr, 16));
         bytes.push_back(data);
     }
 
@@ -212,7 +211,7 @@ std::vector<Frame> FrameEncoder::getFrameTable() const {
 // Static Helpers /////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-std::string FrameEncoder::binToHex(const std::string &bin_str) {
+std::string FrameEncoder::binToHex(const std::string& bin_str) {
     // TODO(Joseph Bellahcen): Handle exception
     int value = std::stoi(bin_str, nullptr, 2);
     char hex_byte[6];
@@ -225,7 +224,7 @@ std::string FrameEncoder::reverseHexBytes(std::string bitstream) {
     std::string buffer;
 
     bitstream.erase(std::remove(bitstream.begin(), bitstream.end(), ','),
-        bitstream.end());
+                    bitstream.end());
 
     // TODO(Joseph Bellahcen): Handle prefix/no prefix
     for (int i = 0; i < static_cast<int>(bitstream.size()) - 1; i += 4) {
@@ -247,8 +246,8 @@ std::string FrameEncoder::reverseHexBytes(std::string bitstream) {
     return buffer;
 }
 
-void FrameEncoder::extractUnvoicedCoeffs(const std::string &chunk, float *k1,
-    float *k2, float *k3, float *k4) {
+void FrameEncoder::extractUnvoicedCoeffs(const std::string& chunk, float* k1,
+                                         float* k2, float* k3, float* k4) {
     //
     auto k1_idx = std::stoul(chunk.substr(11, 5), nullptr, 2);
     auto k2_idx = std::stoul(chunk.substr(16, 5), nullptr, 2);
@@ -262,8 +261,9 @@ void FrameEncoder::extractUnvoicedCoeffs(const std::string &chunk, float *k1,
     *k4 = coding_table::tms5220::k4.at(k4_idx);
 }
 
-void FrameEncoder::extractVoicedCoeffs(const std::string &chunk, float *k5,
-    float *k6, float *k7, float *k8, float *k9, float *k10) {
+void FrameEncoder::extractVoicedCoeffs(const std::string& chunk, float* k5,
+                                       float* k6, float* k7, float* k8,
+                                       float* k9, float* k10) {
     //
     auto k5_idx = std::stoul(chunk.substr(29, 4), nullptr, 2);
     auto k6_idx = std::stoul(chunk.substr(33, 4), nullptr, 2);

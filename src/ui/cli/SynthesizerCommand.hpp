@@ -3,11 +3,13 @@
 #ifndef TMS_EXPRESS_SRC_UI_CLI_SYNTHESIZERCOMMAND_HPP_
 #define TMS_EXPRESS_SRC_UI_CLI_SYNTHESIZERCOMMAND_HPP_
 
+#include <memory>
 #include <string>
 
 #include <CLI/CLI.hpp>
 
 #include "bitstream/BitstreamGeneratorParameters.hpp"
+#include "ui/Application.hpp"
 
 namespace tms_express::ui {
 
@@ -23,9 +25,16 @@ class SynthesizerCommand {
     // Interface //////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
-    static void setup(CLI::App* app);
+    static void setup(CLI::App* parent,
+                      const std::shared_ptr<Application>& app);
 
-    static int run(const std::string& input_path,
+ private:
+    ///////////////////////////////////////////////////////////////////////////
+    // Callback ///////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    static int run(const std::shared_ptr<Application>& app,
+                   const std::string& input_path,
                    const std::string& output_path,
                    const PostProcessorParameters& post_params);
 };

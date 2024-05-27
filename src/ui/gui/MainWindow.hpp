@@ -20,7 +20,6 @@
 
 #include "audio/AudioBuffer.hpp"
 #include "audio/AudioFilter.hpp"
-#include "bitstream/BitstreamGenerator.hpp"
 #include "encoding/Frame.hpp"
 #include "encoding/FrameEncoder.hpp"
 #include "encoding/FramePostprocessor.hpp"

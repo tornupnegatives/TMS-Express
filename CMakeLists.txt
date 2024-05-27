@@ -1,13 +1,15 @@
-# Copyright (C) 2024 Joseph Bellahcen <joeclb@icloud.com>
+# Copyright (C) 2022-2024 Joseph Bellahcen <joeclb@icloud.com>
 
 ###############################################################################
 # CMake Configuration #########################################################
 ###############################################################################
 
 cmake_minimum_required(VERSION 3.14)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Used by clangd language server
+
 add_definitions(-Wall -Wextra -Wpedantic)
 
 ###############################################################################
@@ -15,18 +17,15 @@ add_definitions(-Wall -Wextra -Wpedantic)
 ###############################################################################
 
 project(tmsexpress)
+
 option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
 option(TMSEXPRESS_BUILD_GUI "Build GUI frontend" ON)
 
 if(TMSEXPRESS_BUILD_GUI)
-    # Converts Qt designer (.UI) files to C/C++ headers
-    # set(CMAKE_AUTOUIC ON)
-
-    # Produces "meta-object code" for Qt Q_OBJECT classes
-    set(CMAKE_AUTOMOC ON)
-
-    # Embeds resource files into Qt application binary
-    # set(CMAKE_AUTORCC ON)
+    # Qt helpers
+    #set(CMAKE_AUTOUIC ON) # Converts Qt designer (.UI) files to C/C++ headers
+    set(CMAKE_AUTOMOC ON) # Produces "meta-object code" for Qt Q_OBJECT classes
+    #set(CMAKE_AUTORCC ON) # Embeds resource files into Qt application binary
 
     # Configures main method to include Qt application object
     add_compile_definitions(TMSEXPRESS_GUI=1)
@@ -40,33 +39,32 @@ include_directories(${CMAKE_CURRENT_LIST_DIR} src)
 
 add_executable(
     ${PROJECT_NAME}
+    src/analysis/Autocorrelation.cpp
+    src/analysis/LinearPredictor.cpp
+    src/analysis/PitchEstimator.cpp
     src/audio/AudioBuffer.cpp
     src/audio/AudioFilter.cpp
-    src/analysis/Autocorrelation.cpp
-    src/analysis/PitchEstimator.cpp
-    src/analysis/LinearPredictor.cpp
+    src/bitstream/PathUtils.cpp
     src/encoding/Frame.cpp
     src/encoding/FrameEncoder.cpp
     src/encoding/FramePostprocessor.cpp
     src/encoding/Synthesizer.cpp
-    src/bitstream/BitstreamGenerator.cpp
-    src/bitstream/PathUtils.cpp
+    src/main.cpp
     src/ui/Application.cpp
-    src/ui/cli/EncoderCommand.cpp
-    src/ui/cli/SynthesizerCommand.cpp
     src/ui/cli/CommandLineApp.cpp
+    src/ui/cli/EncoderCommand.cpp
     src/ui/cli/GuiCommand.cpp
-    src/main.cpp)
+    src/ui/cli/SynthesizerCommand.cpp)
 
 if(TMSEXPRESS_BUILD_GUI)
     target_sources(
         ${PROJECT_NAME}
         PRIVATE src/ui/gui/audiowaveform/AudioWaveform.cpp
                 src/ui/gui/audiowaveform/AudioWaveformView.cpp
-                src/ui/gui/controlpanels/ControlPanelView.cpp
-                src/ui/gui/controlpanels/ControlPanelPitchView.cpp
                 src/ui/gui/controlpanels/ControlPanelLpcView.cpp
+                src/ui/gui/controlpanels/ControlPanelPitchView.cpp
                 src/ui/gui/controlpanels/ControlPanelPostView.cpp
+                src/ui/gui/controlpanels/ControlPanelView.cpp
                 src/ui/gui/MainWindow.cpp)
 endif()
 
