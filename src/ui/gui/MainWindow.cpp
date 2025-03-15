@@ -12,7 +12,9 @@
 #include <QMenuBar>
 #include <QVBoxLayout>
 
+#ifndef WIN32
 #include <QtMultimedia/QAudioOutput>
+#endif
 
 #include <fstream>
 #include <iostream>
@@ -112,7 +114,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     menu_file->addAction(action_export_);
 
     player = new QMediaPlayer(this);
-    audio_output_ = new QAudioOutput(this);
 
     input_buffer_ = AudioBuffer();
     lpc_buffer_ = AudioBuffer();
@@ -251,11 +252,7 @@ void MainWindow::onInputAudioPlay() {
     qDebug() << "Playing " << temp_dir.c_str();
     input_buffer_.render(temp_dir);
 
-    // Setup player and play
-    player->setAudioOutput(audio_output_);
-    player->setSource(QUrl::fromLocalFile(temp_dir.c_str()));
-    audio_output_->setVolume(100);
-    player->play();
+    playAudio(temp_dir);
 }
 
 /// Play synthesized bitstream audio
@@ -290,11 +287,7 @@ void MainWindow::onLpcAudioPlay() {
         temp_dir, lpc_buffer_.getSampleRateHz(),
         lpc_buffer_.getWindowWidthMs());
 
-    // Setup player and play
-    player->setAudioOutput(audio_output_);
-    player->setSource(QUrl::fromLocalFile(temp_dir.c_str()));
-    audio_output_->setVolume(100);
-    player->play();
+    playAudio(temp_dir);
 }
 
 void MainWindow::onPitchParamEdit() {
@@ -591,6 +584,23 @@ int MainWindow::samplesChecksum(std::vector<float> samples) {
 
     delete[] checksum_buffer;
     return checksum;
+}
+
+void MainWindow::playAudio(std::filesystem::path path) {
+    #ifndef WIN32
+    // Setup player and play
+    QAudioOutput *audio_output_;
+    audio_output_ = new QAudioOutput(this);
+
+    qDebug() << "On macOS/Linux: Using QtMultimedia backend";
+    player->setAudioOutput(audio_output_);
+    player->setSource(QUrl::fromLocalFile(path.c_str()));
+    audio_output_->setVolume(100);
+    player->play();
+
+    // Because `audio_output_` belongs to the class, it does not need to be
+    // freed manually
+    #endif
 }
 
 };  // namespace tms_express::ui

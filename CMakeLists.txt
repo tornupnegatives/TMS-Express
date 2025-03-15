@@ -82,12 +82,20 @@ if(TMSEXPRESS_BUILD_GUI)
                    Widgets
         REQUIRED)
 
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PRIVATE Qt::Core
-                Qt::Gui
-                Qt::Widgets
-                Qt::Multimedia)
+    if(WIN32)
+        target_link_libraries(
+            ${PROJECT_NAME}
+            PRIVATE Qt::Core
+                    Qt::Gui
+                    Qt::Widgets)
+    else()
+        target_link_libraries(
+            ${PROJECT_NAME}
+            PRIVATE Qt::Core
+                    Qt::Gui
+                    Qt::Widgets
+                    Qt::Multimedia)
+    endif()
 endif()
 
 # TMS Express uses libsndfile for audio I/O. The host must ensure that
