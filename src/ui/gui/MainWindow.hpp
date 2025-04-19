@@ -7,11 +7,12 @@
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QMainWindow>
-#include <QMediaPlayer>
 #include <QMenuBar>
 #include <QVBoxLayout>
 
-#include <QtMultimedia/QAudioOutput>
+#ifndef WIN32
+#include <QMediaPlayer>
+#endif
 
 #include <string>
 #include <vector>
@@ -168,7 +169,9 @@ class MainWindow : public QMainWindow {
     // Qt Multimedia Members //////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
+    #ifndef WIN32
     QMediaPlayer *player;
+    #endif
 
     ///////////////////////////////////////////////////////////////////////////
     // Control Panel View Members /////////////////////////////////////////////

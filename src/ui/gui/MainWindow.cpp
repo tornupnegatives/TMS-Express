@@ -8,12 +8,16 @@
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QMainWindow>
-#include <QMediaPlayer>
 #include <QMenuBar>
 #include <QVBoxLayout>
 
 #ifndef WIN32
+#include <QMediaPlayer>
 #include <QtMultimedia/QAudioOutput>
+#else
+#include <windows.h>
+#include <mmsystem.h>
+#pragma comment(lib, "Winmm.lib")
 #endif
 
 #include <fstream>
@@ -113,7 +117,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     menu_file->addAction(action_save_);
     menu_file->addAction(action_export_);
 
+    #ifndef WIN32
     player = new QMediaPlayer(this);
+    #endif
 
     input_buffer_ = AudioBuffer();
     lpc_buffer_ = AudioBuffer();
@@ -250,7 +256,7 @@ void MainWindow::onInputAudioPlay() {
     auto temp_dir = std::filesystem::temp_directory_path();
     temp_dir.append(filename);
     qDebug() << "Playing " << temp_dir.c_str();
-    input_buffer_.render(temp_dir);
+    input_buffer_.render(temp_dir.string());
 
     playAudio(temp_dir);
 }
@@ -284,7 +290,7 @@ void MainWindow::onLpcAudioPlay() {
     qDebug() << "Playing " << temp_dir.c_str();
 
     synthesizer_.render(synthesizer_.getSamples(),
-        temp_dir, lpc_buffer_.getSampleRateHz(),
+        temp_dir.string(), lpc_buffer_.getSampleRateHz(),
         lpc_buffer_.getWindowWidthMs());
 
     playAudio(temp_dir);
@@ -600,6 +606,9 @@ void MainWindow::playAudio(std::filesystem::path path) {
 
     // Because `audio_output_` belongs to the class, it does not need to be
     // freed manually
+    #else
+    auto abs_path = std::filesystem::canonical(path);
+    PlaySound(abs_path.c_str(), NULL, SND_FILENAME | SND_SYNC); 
     #endif
 }
 

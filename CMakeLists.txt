@@ -74,27 +74,33 @@ endif()
 # pkg-config. The host must ensure that QT is installed and present in the path
 
 if(TMSEXPRESS_BUILD_GUI)
-    find_package(
-        Qt6
-        COMPONENTS Core
-                   Gui
-                   Multimedia
-                   Widgets
-        REQUIRED)
-
     if(WIN32)
+        find_package(
+            Qt6
+            COMPONENTS Core
+            Gui
+            Widgets
+            REQUIRED)
+
         target_link_libraries(
             ${PROJECT_NAME}
             PRIVATE Qt::Core
-                    Qt::Gui
-                    Qt::Widgets)
+            Qt::Gui
+            Qt::Widgets)
     else()
+        find_package(
+            Qt6
+            COMPONENTS Core
+            Gui
+            Multimedia
+            Widgets
+            REQUIRED)
         target_link_libraries(
             ${PROJECT_NAME}
             PRIVATE Qt::Core
-                    Qt::Gui
-                    Qt::Widgets
-                    Qt::Multimedia)
+            Qt::Gui
+            Qt::Widgets
+            Qt::Multimedia)
     endif()
 endif()
 
@@ -102,15 +108,28 @@ endif()
 # libsndfile is installed, but CMake can detect it via pkg-config. Note
 # that pkg-config must also be installed
 
-find_package(PkgConfig REQUIRED)
+if(WIN32)
+    include("build/libsndfile-1.2.2-win64/cmake/SndFileConfig.cmake")
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${SNDFILE_LIBRARIES} "winmm")
 
-pkg_check_modules(
-    SndFile
-    REQUIRED
-    IMPORTED_TARGET
-    sndfile)
+else()
+    find_package(PkgConfig REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile)
+    pkg_check_modules(
+        SndFile
+        REQUIRED
+        IMPORTED_TARGET
+        sndfile)
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile)
+endif()
+
+if (WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
+        COMMAND Qt6::windeployqt
+        ARGS $<TARGET_FILE:${PROJECT_NAME}>
+    )
+endif()
 
 # The bulk of TMS Express' dependencies may be downloaded and configured using
 # the CMake Package Manager (CPM). An active internet connection is required
