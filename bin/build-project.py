@@ -10,14 +10,19 @@ MACOS_DEPS = ["cmake", "libsndfile", "pkg-config", "qt"]
 LINUX_DEPS = ["cmake", "libsndfile1-dev", "pkg-config", "qt6-base-dev", "qt6-multimedia-dev", "libgl1-mesa-dev"]
 WIN_DEPS = ["cmake", "pkgconfiglite", "qt6-base-dev"]
 
-PROJ_CONF_CMD = ["cmake", "-B", "build"]
+PROJ_CONF_CMD = ["cmake", "-B", "build", "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"]
 PROJ_BUILD_CMD = ["cmake", "--build", "build", "--parallel"]
 
-# Pacakage manager commands
+# Package manager commands
 # To be combined with one of the `*_DEPS` variables
 MACOS_PKG_CMD = ["brew", "install"]
-LINUX_PKG_CMD = ["sudo", "apt", "install"]
+LINUX_PKG_CMD = ["apt", "install", "-y"]
 WIN_PKG_CMD = ["choco", "install"]
+
+# Artifacts
+MACOS_ARTIFACTS = ["./build/tmsexpress"]
+LINUX_ARTIFACTS = ["./build/tmsexpress"]
+WIN_ARTIFACTS = []
 
 # Set up logging
 logging.basicConfig(filename="tms-express-build.log", level=logging.INFO)
@@ -121,3 +126,6 @@ elif system_os == "Windows":
 run_command_and_check_status(install_cmd)
 run_command_and_check_status(PROJ_CONF_CMD)
 run_command_and_check_status(PROJ_BUILD_CMD)
+
+# Archive release directory
+
