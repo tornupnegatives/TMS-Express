@@ -61,11 +61,25 @@ class Builder:
         # The multimedia module ships with qt on macOS
 
     def _install_linux(self) -> None:
-        run("sudo apt-get update")
+        run("apt-get update")
         run(
-            "sudo apt-get install -y cmake libsndfile1-dev pkg-config "
+            "apt-get install -y cmake libsndfile1-dev pkg-config wget "
             "qt6-base-dev qt6-multimedia-dev libgl1-mesa-dev"
         )
+
+        if shutil.which("linuxdeployqt") is None:
+            url = (
+                "https://github.com/probonopd/linuxdeployqt/releases/download/"
+                "continuous/linuxdeployqt-continuous-x86_64.AppImage"
+            )
+            run(f"wget -nv {url} -O linuxdeployqt.AppImage")
+            run("chmod +x linuxdeployqt.AppImage")
+            run("./linuxdeployqt.AppImage --appimage-extract")
+            run(
+                "mv squashfs-root/usr/bin/linuxdeployqt /usr/local/bin/linuxdeployqt"
+            )
+            shutil.rmtree("squashfs-root")
+            Path("linuxdeployqt.AppImage").unlink()
 
     def _install_windows(self) -> None:
         run("choco install -y cmake")
@@ -123,11 +137,34 @@ class Builder:
         cfg = self.cfg
         app_dir = cfg.dist_dir / "AppDir"
         app_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy(cfg.build_dir / "tmsexpress", app_dir / "tmsexpress")
+
+        exe = app_dir / "tmsexpress"
+        shutil.copy(cfg.build_dir / "tmsexpress", exe)
+
+        desktop = app_dir / "tmsexpress.desktop"
+        desktop.write_text(
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=TMS Express\n"
+            "Exec=tmsexpress\n"
+            "Icon=tmsexpress\n"
+            "Categories=Utility;\n"
+        )
+
+        icon_src = cfg.root / "doc" / "screenshot.png"
+        icon_dst = app_dir / "tmsexpress.png"
+        if icon_src.exists():
+            shutil.copy(icon_src, icon_dst)
+
+        run(
         run(
             f"linuxdeployqt {app_dir/'tmsexpress'} -appimage -verbose=1 "
+            f"linuxdeployqt {desktop} -appimage -verbose=1 "
+            f"-qmldir={cfg.root / 'src'}"
             f"-qmldir={cfg.root / 'src'}"
         )
+        )
+
         appimage = cfg.dist_dir / "tmsexpress-x86_64.AppImage"
         return appimage
 
