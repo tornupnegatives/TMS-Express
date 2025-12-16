@@ -107,7 +107,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile)
 # The bulk of TMS Express' dependencies may be downloaded and configured using
 # the CMake Package Manager (CPM). An active internet connection is required
 
-include(cmake/CPM.cmake)
+file(
+  DOWNLOAD
+  https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.8/CPM.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
+  EXPECTED_HASH SHA256=78ba32abdf798bc616bab7c73aac32a17bbd7b06ad9e26a6add69de8f3ae4791
+)
+include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
 
 cpmaddpackage(
     CLI11
