@@ -204,11 +204,24 @@ void MainWindow::onSaveBitstream() {
         "ASCII Bitstream (*.lpc);;" \
         "Binary Bitstream (*.bin)");
 
-    if (filepath.isNull()) {
+    if (filepath.isNull() || filepath.isEmpty()) {
         qDebug() << "Save bitstream canceled";
         return;
     }
 
+    // Default to ASCII if requested file extension is invalid
+    QFileInfo fi(filepath);
+    QString ext = fi.suffix().toLower();
+
+    if (ext != "bin" && ext != "lpc") {
+        QMessageBox::warning(
+            this,
+            "Invalid Extension",
+            "The file must use .bin or .lpc.\nDefaulting to .lpc."
+        );
+    }
+
+    filepath = fi.path() + "/" + fi.completeBaseName() + ".lpc";
     exportBitstream(filepath.toStdString());
 }
 
@@ -569,6 +582,8 @@ void MainWindow::exportBitstream(const std::string& path) {
         binOut.write(
             reinterpret_cast<char*>(bin.data()),
             static_cast<int>(bin.size()));
+    } else {
+        qDebug() << "Unrecognized extension for file" << filepath;
     }
 }
 
