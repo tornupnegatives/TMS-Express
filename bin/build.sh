@@ -77,13 +77,14 @@ build_linux() {
     local binary_path="./build/AppDir/usr/bin/tmsexpress"
     local desktop_path="./build/AppDir/TMS-Express.desktop"
 
-    mkdir -p $appimage_dir/usr/bin
-    cp ./build/tmsexpress $binary_path
-    cp "./bin/TMS-Express.desktop" $desktop_path    
+    #cp -r ./dist/linux $appimage_dir
+    #mkdir -p $appimage_dir/usr/bin
+    #cp ./build/tmsexpress $binary_path
+    #cp "./bin/TMS-Express.desktop" $desktop_path    
 
-    local icon_path="./doc/icon.png"
-    local appimage_icon_path="$appimage_dir/tmsexpress.png"
-    cp $icon_path $appimage_icon_path
+    #local icon_path="./doc/icon.png"
+    #local appimage_icon_path="$appimage_dir/tmsexpress.png"
+    #cp $icon_path $appimage_icon_path
 
     cd ./build
     export APPIMAGE_EXTRACT_AND_RUN=1
@@ -92,10 +93,10 @@ build_linux() {
     export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so"
     export EXTRA_QT_MODULES="waylandcompositor"
     ./linuxdeploy-x86_64.AppImage \
-        --appdir ./Appdir \
-        --executable tmsexpress \
-        --desktop-file ../bin/TMS-Express.desktop \
-        --icon-file ../doc/icon.png \
+        --appdir $appimage_dir \
+        --executable ./tmsexpress \
+        --desktop-file ../dist/linux/TMS-Express.desktop \
+        --icon-file ../dist/linux/tmsexpress.png \
         --plugin qt \
         --plugin gstreamer \
         --output appimage
