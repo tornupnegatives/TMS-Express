@@ -1,25 +1,26 @@
 name: Unit Test
+
 on:
   push:
-    branches-ignore:
-      main
+    branches: [ main, develop ]
   pull_request:
+    branches: [ main, develop ]
 
 jobs:
-    unit-test:
-        runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout Repo
-              uses: actions/checkout@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Install Dependencies
-              run: sudo apt install cmake wget libsndfile1-dev qt6-base-dev qt6-multimedia-dev libgl1-mesa-dev
-            - name: Configure Build
-              run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DTMSEXPRESS_BUILD_TESTS=ON -DTMSEXPRESS_BUILD_GUI=OFF
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-            - name: Build
-              run: cmake --build ${{github.workspace}}/build --config Debug
+      - name: Build Docker image
+        run: |
+          docker build -f docker/test.dockerfile -t tmsexpress-test .
 
-            - name: Run tests
-              run: cd build && ctest
+      - name: Run tests in container
+        run: |
+          docker run --rm tmsexpress-test
