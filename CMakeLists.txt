@@ -69,6 +69,10 @@ endif()
 # Project Dependencies ########################################################
 ###############################################################################
 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    MACOSX_BUNDLE TRUE
+)
+
 # TMS Express uses QT for its graphical interface. Unfortunately, QT does not
 # play nicely with CMake's find_package tool, nor does it integrate well with
 # pkg-config. The host must ensure that QT is installed and present in the path
@@ -105,7 +109,6 @@ pkg_check_modules(
 target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile)
 
 # The bulk of TMS Express' dependencies may be downloaded and configured using
-# the CMake Package Manager (CPM). An active internet connection is required
 
 file(
   DOWNLOAD
@@ -120,14 +123,14 @@ cpmaddpackage(
     GITHUB_REPOSITORY
     CLIUtils/CLI11
     VERSION
-    2.4.1)
+    2.6.1)
 
 cpmaddpackage(
     json
     GITHUB_REPOSITORY
     nlohmann/json
     VERSION
-    3.11.3)
+    3.12.0)
 
 cpmaddpackage(
     samplerate
