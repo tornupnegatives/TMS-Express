@@ -43,10 +43,13 @@ build_macos() {
 
 build_linux() {
     export DEBIAN_FRONTEND=noninteractive
-    sudo apt update
-    sudo apt upgrade -y
-    sudo apt install -y \
+    apt update
+    apt upgrade -y
+    apt install -y \
         cmake pkg-config qmake6 \
+	build-essential \
+	git \
+	zip \
         wget file patchelf \
         libsndfile1-dev \
         qt6-base-dev qt6-multimedia-dev qt6-wayland \
