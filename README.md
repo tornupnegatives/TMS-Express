@@ -42,6 +42,20 @@ TMS Express may be compiled as either a command-line (CLI) application or a
 graphical (GUI) application, depending on the user's needs. The CLI version
 has fewer dependencies and will compile on a wider range of systems.
 
+### Linux
+
+Docker is the preferred environment for Linux development. Please ensure that
+Docker and Docker Compose are present on the system.
+
+```shell
+$ sudo apt install docker.io docker-compose-v2
+$ docker run -v .:/workdir -it ubuntu:jammy bash
+
+> ./bin/build/sh
+> exit
+```
+
+
 ### Installing Dependencies
 
 ```shell
