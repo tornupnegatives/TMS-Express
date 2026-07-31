@@ -30,8 +30,8 @@ build_macos() {
 
     # Manually copy missing QtDBus framework that macdeployqt fails to detect
     echo "Manually copying QtDBus framework..."
-    mkdir -p $release_pkg/Contents/Frameworks
-    cp -R $qt_path/lib/QtDBus.framework $release_pkg/Contents/Frameworks/
+    # mkdir -p $release_pkg/Contents/Frameworks
+    # cp -R $qt_path/lib/QtDBus.framework $release_pkg/Contents/Frameworks/
 
     # Run macdeployqt (ignore rpath errors - they're harmless)
     macdeployqt $release_pkg 2>&1 | grep -v "ERROR: Cannot resolve rpath" || true
