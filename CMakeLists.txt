@@ -1,120 +1,40 @@
 # Copyright (C) 2024 Joseph Bellahcen <joeclb@icloud.com>
+# cmake -B build
+# cd build
+# cmake --build .
+# cmake --install . --prefix .
 
-###############################################################################
-# CMake Configuration #########################################################
-###############################################################################
+#######################
+# CMake Configuration #
+########################
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_definitions(-Wall -Wextra -Wpedantic)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-###############################################################################
-# Project Configuration #######################################################
-###############################################################################
+#########################
+# Project Configuration #
+#########################
 
 project(tmsexpress)
 option(TMSEXPRESS_BUILD_TESTS "Build test programs" ON)
 option(TMSEXPRESS_BUILD_GUI "Build GUI frontend" ON)
 
-if(TMSEXPRESS_BUILD_GUI)
-    # Converts Qt designer (.UI) files to C/C++ headers
-    # set(CMAKE_AUTOUIC ON)
+################
+# Dependencies #
+################
 
-    # Produces "meta-object code" for Qt Q_OBJECT classes
-    set(CMAKE_AUTOMOC ON)
-
-    # Embeds resource files into Qt application binary
-    # set(CMAKE_AUTORCC ON)
-
-    # Configures main method to include Qt application object
-    add_compile_definitions(TMSEXPRESS_GUI=1)
-endif()
-
-###############################################################################
-# Project Sources & Includes ##################################################
-###############################################################################
-
-include_directories(${CMAKE_CURRENT_LIST_DIR} src)
-
-add_executable(
-    ${PROJECT_NAME}
-    src/audio/AudioBuffer.cpp
-    src/audio/AudioFilter.cpp
-    src/analysis/Autocorrelation.cpp
-    src/analysis/PitchEstimator.cpp
-    src/analysis/LinearPredictor.cpp
-    src/encoding/Frame.cpp
-    src/encoding/FrameEncoder.cpp
-    src/encoding/FramePostprocessor.cpp
-    src/encoding/Synthesizer.cpp
-    src/bitstream/BitstreamGenerator.cpp
-    src/bitstream/PathUtils.cpp
-    src/ui/cli/CommandLineApp.cpp
-    src/main.cpp)
-
-if(TMSEXPRESS_BUILD_GUI)
-    target_sources(
-        ${PROJECT_NAME}
-        PRIVATE src/ui/gui/audiowaveform/AudioWaveform.cpp
-                src/ui/gui/audiowaveform/AudioWaveformView.cpp
-                src/ui/gui/controlpanels/ControlPanelView.cpp
-                src/ui/gui/controlpanels/ControlPanelPitchView.cpp
-                src/ui/gui/controlpanels/ControlPanelLpcView.cpp
-                src/ui/gui/controlpanels/ControlPanelPostView.cpp
-                src/ui/gui/MainWindow.cpp)
-endif()
-
-###############################################################################
-# Project Dependencies ########################################################
-###############################################################################
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    MACOSX_BUNDLE TRUE
-)
-
-# TMS Express uses QT for its graphical interface. Unfortunately, QT does not
-# play nicely with CMake's find_package tool, nor does it integrate well with
-# pkg-config. The host must ensure that QT is installed and present in the path
-
-if(TMSEXPRESS_BUILD_GUI)
-    find_package(
-        Qt6
-        COMPONENTS Core
-                   Gui
-                   Multimedia
-                   Widgets
-        REQUIRED)
-
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PRIVATE Qt::Core
-                Qt::Gui
-                Qt::Widgets
-                Qt::Multimedia)
-endif()
-
-# TMS Express uses libsndfile for audio I/O. The host must ensure that
-# libsndfile is installed, but CMake can detect it via pkg-config. Note
-# that pkg-config must also be installed
-
+find_package(Qt6 COMPONENTS Core Gui Multimedia Widgets REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-pkg_check_modules(
-    SndFile
-    REQUIRED
-    IMPORTED_TARGET
-    sndfile)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::SndFile)
-
-# The bulk of TMS Express' dependencies may be downloaded and configured using
+pkg_check_modules(SndFile REQUIRED IMPORTED_TARGET sndfile)
 
 file(
-  DOWNLOAD
-  https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.8/CPM.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
-  EXPECTED_HASH SHA256=78ba32abdf798bc616bab7c73aac32a17bbd7b06ad9e26a6add69de8f3ae4791
+    DOWNLOAD
+    https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.8/CPM.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
+    EXPECTED_HASH SHA256=78ba32abdf798bc616bab7c73aac32a17bbd7b06ad9e26a6add69de8f3ae4791
 )
 include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
 
@@ -123,7 +43,7 @@ cpmaddpackage(
     GITHUB_REPOSITORY
     CLIUtils/CLI11
     VERSION
-    2.6.1)
+    2.6.2)
 
 cpmaddpackage(
     json
@@ -141,19 +61,81 @@ cpmaddpackage(
     OPTIONS
     "BUILD_TESTING OFF")
 
-# nlohmann's JSON library is exposed by CMake as an interface, so it is best
-# incorporated into TMS Express as a header, rather than attempting to link it
+#########################
+# Project Configuration #
+#########################
+
+qt_standard_project_setup()
+
+include_directories(${CMAKE_CURRENT_LIST_DIR} src)
 include_directories(${json_SOURCE_DIR}/include)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE CLI11 samplerate)
+qt_add_executable(
+    ${PROJECT_NAME}
+    src/audio/AudioBuffer.cpp
+    src/audio/AudioFilter.cpp
+    src/analysis/Autocorrelation.cpp
+    src/analysis/PitchEstimator.cpp
+    src/analysis/LinearPredictor.cpp
+    src/encoding/Frame.cpp
+    src/encoding/FrameEncoder.cpp
+    src/encoding/FramePostprocessor.cpp
+    src/encoding/Synthesizer.cpp
+    src/bitstream/BitstreamGenerator.cpp
+    src/bitstream/PathUtils.cpp
+    src/ui/cli/CommandLineApp.cpp
+    src/ui/gui/audiowaveform/AudioWaveform.cpp
+    src/ui/gui/audiowaveform/AudioWaveformView.cpp
+    src/ui/gui/controlpanels/ControlPanelView.cpp
+    src/ui/gui/controlpanels/ControlPanelPitchView.cpp
+    src/ui/gui/controlpanels/ControlPanelLpcView.cpp
+    src/ui/gui/controlpanels/ControlPanelPostView.cpp
+    src/ui/gui/MainWindow.cpp
+    src/main.cpp
+)
 
-###############################################################################
-# Artifacts & Sub-Targets #####################################################
-###############################################################################
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE
+    Qt::Core
+    Qt::Gui
+    Qt::Widgets
+    Qt::Multimedia
+    PkgConfig::SndFile
+    CLI11
+    samplerate
+)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME tmsexpress)
+##############
+# Deployment #
+##############
 
-if(TMSEXPRESS_BUILD_TESTS)
-    message(STATUS "Building TMS Express test suite")
-    include(test/CMakeLists.txt)
+install(TARGETS ${PROJECT_NAME}
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+set(deploy_tool_options_arg "")
+
+if(APPLE)
+    set(HOMEBREW_OPT "/opt/homebrew/opt")
+
+    set(deploy_tool_options_arg
+        -codesign=-
+        -libpath=${HOMEBREW_OPT}/qtsvg/lib
+        -libpath=${HOMEBREW_OPT}/qtvirtualkeyboard/lib
+        -libpath=${HOMEBREW_OPT}/qtwebengine/lib
+    )
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+    MACOSX_BUNDLE TRUE
+)
 endif()
+
+qt_generate_deploy_app_script(
+    TARGET ${PROJECT_NAME}
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_TOOL_OPTIONS ${deploy_tool_options_arg}
+)
+install(SCRIPT ${deploy_script})
