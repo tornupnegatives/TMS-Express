@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=TMS Express
+Comment=LPC speech encoder for the TMS5220
+Exec=tmsexpress
+Icon=tmsexpress
+Type=Application
+Categories=Utility
