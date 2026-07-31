@@ -94,6 +94,10 @@ qt_add_executable(
     src/main.cpp
 )
 
+if(TMSEXPRESS_BUILD_GUI)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE TMSEXPRESS_GUI)
+endif()
+
 target_link_libraries(
     ${PROJECT_NAME}
     PRIVATE

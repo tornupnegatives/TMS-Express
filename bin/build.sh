@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 function get_os() {
     case "$OSTYPE" in
@@ -16,29 +16,84 @@ function get_os() {
 build_macos() {
     brew install cmake libsndfile pkg-config qt
 
-    local build_dir="./build"
-    local qt_path=$(brew --prefix qt)
+    local build_dir="$(pwd)/build"
+    local release_pkg="$build_dir/tmsexpress.app"
+    local release_archive="$build_dir/TMS-Express-Darwin.zip"
+    local qt_plugin_path
+    local qt_path
+    qt_path="$(brew --prefix qt)"
+    qt_plugin_path="$("$qt_path/bin/qtpaths" --plugin-dir)"
 
-    export CMAKE_PREFIX_PATH=$qt_path
-    export LDFLAGS=-L/opt/homebrew/lib
+    export CMAKE_PREFIX_PATH="$qt_path"
 
-    cmake -B $build_dir -D "CMAKE_POLICY_VERSION_MINIMUM=3.5" "-DTMSEXPRESS_BUILD_TESTS=OFF"
-    cmake --build $build_dir
+    cmake -S . -B "$build_dir" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DTMSEXPRESS_BUILD_GUI=ON \
+        -DTMSEXPRESS_BUILD_TESTS=OFF
 
-    local release_pkg="./build/tmsexpress.app"
-    local release_archive="./build/TMS-Express-Darwin.zip"
+    # CMake replaces the executable but does not remove frameworks and plug-ins
+    # left by an earlier deployment. Those stale files can make macdeployqt fail.
+    rm -rf "$release_pkg"
+    cmake --build "$build_dir" --config Release --parallel
 
-    # Manually copy missing QtDBus framework that macdeployqt fails to detect
-    echo "Manually copying QtDBus framework..."
-    # mkdir -p $release_pkg/Contents/Frameworks
-    # cp -R $qt_path/lib/QtDBus.framework $release_pkg/Contents/Frameworks/
+    if [[ ! -d "$release_pkg" ]]; then
+        echo "Expected application bundle was not created: $release_pkg" >&2
+        return 1
+    fi
 
-    # Run macdeployqt (ignore rpath errors - they're harmless)
-    macdeployqt $release_pkg 2>&1 | grep -v "ERROR: Cannot resolve rpath" || true
+    # The default macdeployqt plug-in sweep includes unrelated Homebrew Qt
+    # modules. Copy only the plug-ins this application needs, then include them
+    # as deployment roots so their framework dependencies are bundled too.
+    mkdir -p \
+        "$release_pkg/Contents/PlugIns/platforms" \
+        "$release_pkg/Contents/PlugIns/multimedia" \
+        "$release_pkg/Contents/PlugIns/styles"
+    cp "$qt_plugin_path/platforms/libqcocoa.dylib" \
+        "$release_pkg/Contents/PlugIns/platforms/"
+    cp "$qt_plugin_path/multimedia/libdarwinmediaplugin.dylib" \
+        "$release_pkg/Contents/PlugIns/multimedia/"
+    cp "$qt_plugin_path/styles/libqmacstyle.dylib" \
+        "$release_pkg/Contents/PlugIns/styles/"
 
-    # Sign the app
-    codesign --deep --force --sign - $release_pkg
-    #zip -r $release_archive $release_pkg
+    local cocoa_plugin="$release_pkg/Contents/PlugIns/platforms/libqcocoa.dylib"
+    local multimedia_plugin="$release_pkg/Contents/PlugIns/multimedia/libdarwinmediaplugin.dylib"
+    local style_plugin="$release_pkg/Contents/PlugIns/styles/libqmacstyle.dylib"
+
+    # Do not hide deployment errors: an incomplete bundle often still signs but
+    # crashes when launched by Finder on a machine without Homebrew installed.
+    local deploy_output
+    if ! deploy_output="$(
+        "$qt_path/bin/macdeployqt" "$release_pkg" \
+            -always-overwrite \
+            -no-codesign \
+            -no-plugins \
+            "-executable=$cocoa_plugin" \
+            "-executable=$multimedia_plugin" \
+            "-executable=$style_plugin" 2>&1
+    )"; then
+        printf '%s\n' "$deploy_output" >&2
+        return 1
+    fi
+    printf '%s\n' "$deploy_output"
+
+    # Some macdeployqt versions print deployment failures but still return 0.
+    if grep -q '^ERROR:' <<<"$deploy_output"; then
+        echo "macdeployqt reported an incomplete bundle" >&2
+        return 1
+    fi
+
+    # Ad-hoc signing makes every copied framework and plug-in internally
+    # consistent. A Developer ID identity can replace "-" for distribution.
+    codesign --deep --force --sign - "$release_pkg"
+    codesign --verify --deep --strict --verbose=2 "$release_pkg"
+
+    # ditto preserves the symlinks and resource metadata used by frameworks.
+    ditto -c -k --sequesterRsrc --keepParent \
+        "$release_pkg" "$release_archive"
+
+    echo "Created $release_pkg"
+    echo "Created $release_archive"
 }
 
 build_linux() {
@@ -113,23 +168,28 @@ function main() {
     echo "TMS Express Build Script"
     echo "------------------------"
 
-    local os=$(get_os)
+    local os
+    os="$(get_os)"
+    local project_dir
+    project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    cd "$project_dir"
+
     local build_dir="./build"
 
-    if [ $os == "unknown" ]; then
+    if [[ "$os" == unknown* ]]; then
         echo "Cannot build TMS Express on OS: $os";
-        return -1
+        return 1
     fi
 
     mkdir -p $build_dir
 
-    if [ $os == "Darwin" ]; then
+    if [[ "$os" == "Darwin" ]]; then
         build_macos
-    elif [ $os == "Linux" ]; then
+    elif [[ "$os" == "Linux" ]]; then
         build_linux
     else
         echo "Unsupported OS: $os"
-        exit -1
+        exit 1
     fi
 }
 
